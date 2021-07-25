@@ -21,6 +21,7 @@ in {
       url = "https://ftpmirror.gnu.org/gmp/gmp-${version}.tar.bz2";
       sha256 = versionHashes.${version};
     };
+    buildTools = build.autotools;
     buildDeps = [cc];# autoconf automake libtool];
   };
 }

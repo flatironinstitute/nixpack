@@ -1,13 +1,19 @@
 let
   lib = import ./lib.nix;
+
   mergePrefs = a: b:
-    if b == null then a else a // b; # TODO
+    if a == null then b else
+    if b == null then a else
+    # TODO
+    a // b;
+
   versionKeys = s: builtins.sort lib.versionNewer (builtins.attrNames s);
 
   packsWithPrefs = prefs: lib.fix (packs: with packs; {
-    inherit lib mergePrefs versionKeys prefs;
+    inherit lib versionKeys prefs;
     withPrefs = p: packsWithPrefs (mergePrefs prefs p);
 
+    /* given a requested prefence, and a package attribute, compute the resolved argument */
     resolveArg = pref: name: arg:
       if builtins.isAttrs arg then
         /* dependency */
@@ -36,13 +42,14 @@ let
         pref
       else throw "invalid arg ${name}: ${pref} (for ${toString pref})";
 
-    chooseArgs = pprefs: args:
+    resolveArgs = pprefs: args:
       builtins.mapAttrs (name: resolveArg (pprefs.${name} or null) name) args;
 
     packageWithPrefs = pprefs: gen: let 
         self = { extern = ""; } // (if builtins.isPath gen then import gen packs else gen) args;
         name = self.name;
-        args = chooseArgs (mergePrefs (mergePrefs prefs.global (prefs.${name} or null)) pprefs) (removeAttrs self ["name" "prefs" "build"]);
+        args = resolveArgs (mergePrefs (mergePrefs prefs.global (prefs.${name} or null)) pprefs)
+          (removeAttrs self ["name" "build"]);
         defaults = {
           inherit (prefs) system;
           builder = ./builder.sh;
@@ -56,12 +63,16 @@ let
           derivation (defaults // self.build);
       in drv // overrides;
 
-    package = packageWithPrefs {};
+    package = packageWithPrefs null;
     
+    build = {
+      autotools = package build/autotools;
+    };
+
     gmp = package packages/gmp;
     gcc = package packages/gcc;
 
-    bootstrapPacks = packs.withPrefs { global = { cc = { extern = "/usr"; }; }; };
+    bootstrapPacks = withPrefs { global = { cc = { extern = "/usr"; }; }; };
     cc = bootstrapPacks.gcc;
   });
 
