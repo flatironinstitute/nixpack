@@ -1,1 +1,1 @@
-import ./pack.nix
+import ./spack.nix

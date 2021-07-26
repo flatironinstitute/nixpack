@@ -14,6 +14,7 @@ rec {
 
   flip = f: a: b: f b a;
   fix = f: let x = f x; in x;
+  coalesce = d: x: if x == null then d else x;
 
   traceId = x: trace x x;
 
@@ -30,9 +31,9 @@ rec {
   versionAtLeast = v1: v2: compareVersions v2 v1 <= 0;
   versionAtMost  = v1: v2: compareVersions v2 v1 >= 0;
 
-  /* spack version spec semantics: does v match m? */
+  /* spack version spec semantics: does v match m? (TODO: commas) */
   versionMatches = m: v:
-    let
+    if m == null then true else let
       ms = split ":" m;
       ml = length ms;
       vs = splitVersion v;
