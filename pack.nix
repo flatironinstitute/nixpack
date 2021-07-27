@@ -5,79 +5,162 @@ let
     if a == null then b else
     if b == null then a else
     # TODO
-    a // b;
+    lib.recursiveUpdate a b;
 
   versionKeys = s: builtins.sort lib.versionNewer (builtins.attrNames s);
 
-  packsWithPrefs = prefs: lib.fix (packs: with packs; {
-    inherit lib versionKeys prefs;
-    withPrefs = p: packsWithPrefs (mergePrefs prefs p);
+  isPackage = p: p ? withPrefs;
 
-    /* given a requested prefence, and a package attribute, compute the resolved argument */
-    resolveArg = pref: name: arg:
-      if builtins.isAttrs arg then
-        /* dependency */
-        if builtins.isAttrs pref && pref ? withPrefs then
-          /* forced package */
-          if arg ? withPrefs then pref else pref.withPrefs arg
-        else if arg ? withPrefs then
-          arg.withPrefs pref
-        else
-          /* pull from packs */
-          packs.${name}.withPrefs (mergePrefs arg pref)
-      else if pref == null then
-        /* no preference: use default */
-        if builtins.isList arg then builtins.head arg else arg
-      else if name == "version" then let
-        /* special version matching: a (list of) version constraint */
-          v = builtins.filter (v: lib.allIfList (p: lib.versionMatches p v) pref) arg;
-        in if v == [] then throw "no version matching ${toString pref} from ${builtins.concatStringsSep "," pref}" else builtins.head v
-      else if builtins.isList arg then
-        /* list of options */
-        if builtins.elem pref arg
-          then pref
-          else throw "invalid arg ${name}: ${pref} (of ${builtins.concatStringsSep "," pref})"
-      else if builtins.typeOf arg == builtins.typeOf pref then
-        /* a simple value: any value of that type */
-        pref
-      else throw "invalid arg ${name}: ${pref} (for ${toString pref})";
+  packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
+    inherit lib versionKeys;
+    prefs = packPrefs;
+    withPrefs = p: packsWithPrefs (mergePrefs packPrefs p);
 
-    resolveArgs = pprefs: args:
-      builtins.mapAttrs (name: resolveArg (pprefs.${name} or null) name) args;
+    spack = builtins.fetchGit ({ url = "git://github.com/spack/spack"; name = "spack"; } // packPrefs.spackGit);
+    defaultSpackConfig = {
+      bootstrap = { enable = false; };
+      config = {
+        locks = false;
+      };
+      compilers = [{ compiler = {
+        spec = "null@0";
+        paths = {
+          cc = null;
+          cxx = null;
+          f77 = null;
+          fc = null;
+        };
+        operating_system = prefs.os;
+        modules = [];
+      }; }];
+    };
+    spackConfig = import spack/config.nix packs
+      (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
 
-    packageWithPrefs = pprefs: gen: let 
-        self = { extern = ""; } // (if builtins.isPath gen then import gen packs else gen) args;
-        name = self.name;
-        args = resolveArgs (mergePrefs (mergePrefs prefs.global (prefs.${name} or null)) pprefs)
-          (removeAttrs self ["name" "build"]);
+    spackPackageWithPrefs = 
+      let
         defaults = {
-          inherit (prefs) system;
-          builder = ./builder.sh;
-          name = "${name}-${args.version}";
+          version = [];
+          variants = {};
+          compiler = null;
+          depends = {};
+          build = {};
+          extern = null;
+          paths = {};
+          finalize = {};
         };
-        overrides = {
-          prefs = pprefs;
-          withPrefs = p: packageWithPrefs (mergePrefs pprefs p) gen;
+        resolveEach = resolver: pref:
+          builtins.mapAttrs (name: resolver name pref.${name} or null);
+        resolvePackage = name: pref: arg:
+          if isPackage pref then
+            /* forced package */
+            pref
+          else if isPackage arg then
+            arg.withPrefs pref
+          else if arg == false || pref == false then
+            false
+          else
+            packs.${name}.withPrefs (mergePrefs arg pref);
+        resolvers = {
+          version = pref: arg:
+            let
+            /* special version matching: a (list of) version constraint */
+              v = builtins.filter (v: lib.allIfList (p: lib.versionMatches p v) pref) arg;
+            in if v == [] then throw "no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}" else builtins.head v;
+          variants = resolveEach (name: pref: arg:
+            if pref == null then
+              /* no preference: use default */
+              if builtins.isList arg then builtins.head arg else arg
+            else if builtins.isList arg then
+              /* list of options */
+              if builtins.elem pref arg
+                then pref
+                else throw "invalid arg ${name}: ${pref} (of ${builtins.concatStringsSep "," pref})"
+            else if builtins.typeOf arg == builtins.typeOf pref then
+              /* a simple value: any value of that type */
+              pref
+            else throw "invalid arg ${name}: ${pref} (for ${toString pref})");
+          compiler = resolvePackage "compiler";
+          depends = resolveEach resolvePackage;
+          build = lib.coalesce;
+          extern = lib.coalesce;
         };
-        drv = if args.extern != "" then { outPath = args.extern; } else
-          derivation (defaults // self.build);
-      in drv // overrides;
+        render = lab: pkg: if pkg == false then {} else
+          let
+            prep = p: lib.mapKeys (a: "${p}_${a}");
+            vars = builtins.parseDrvName pkg.name // {
+                variants = builtins.attrNames pkg.args.variants;
+              } // prep "variant" pkg.args.variants
+                // pkg.paths or {};
+          in prep lab vars;
+      in
+      prefs: gen: let
+        desc = defaults //
+          (if builtins.isPath gen then import gen packs else gen) args;
+        pname = desc.name;
+        name = "${pname}-${args.version}";
+        mprefs = mergePrefs (mergePrefs packPrefs.global packPrefs.${pname} or null) prefs;
+        args = builtins.mapAttrs (a: resolve: resolve mprefs.${a} or null desc.${a}) resolvers;
+        extern = args.extern != null;
+        build = {
+          inherit (packPrefs) system os;
+          PYTHONPATH = "${spack}/lib/spack:${spack}/lib/spack/external";
+          builder = "/usr/bin/python3";
+          args = [spack/builder.py];
+          inherit (packs) spackConfig;
+          inherit name;
+          compiler = args.compiler;
+        } // render "out" { inherit name args; }
+          // render "compiler" args.compiler;
+        drv = if extern
+          then { inherit name; outPath = args.extern; }
+          else derivation (build // args.build);
+        pkg = drv // {
+          inherit prefs args;
+          withPrefs = p: spackPackageWithPrefs (mergePrefs prefs p) gen;
+          withArgs = gen2: spackPackageWithPrefs prefs (args: gen args // gen2 args);
+          paths = builtins.mapAttrs (a: p: "${drv.outPath}/${p}") desc.paths;
+        };
+        finalize = desc.finalize;
+      in pkg // (if builtins.isFunction desc.finalize then desc.finalize pkg else desc.finalize);
 
-    package = packageWithPrefs null;
+    spackPackage = spackPackageWithPrefs null;
     
-    build = {
-      autotools = package build/autotools;
+    m4 = spackPackage (args: {
+      name = "m4";
+      version = ["1.4.19" "1.4.18" "1.4.17"];
+      variants = {
+        sigsegv = true;
+      };
+      depends = {
+        libsigsegv = if args.variants.sigsegv then {} else false;
+      };
+      tags = ["build-tools"];
+    });
+
+    baseGcc = spackPackage (args: {
+      name = "gcc";
+      version = ["11.1.0" "10.3.0" "10.2.0" "7.5.0" "4.8.5"];
+      paths = {
+        cc = "bin/gcc";
+        cxx = "bin/g++";
+        f77 = "bin/gfortran";
+        fc = "bin/gfortran";
+      };
+      compiler = false;
+    });
+
+    gcc = baseGcc.withPrefs {
+      compiler = bootstrapPacks.compiler;
     };
 
-    gmp = package packages/gmp;
-    gcc = package packages/gcc;
+    systemGcc = baseGcc.withPrefs {
+      extern = "/usr";
+      version = ["4.8.5"];
+    };
 
-    bootstrapPacks = withPrefs { global = { cc = { extern = "/usr"; }; }; };
-    cc = bootstrapPacks.gcc;
+    bootstrapPacks = withPrefs { compiler = "systemGcc"; };
+    compiler = packs.${prefs.compiler or "gcc"};
   });
 
-
-in packsWithPrefs {
-  system = "x86_64-linux";
-  global = {};
-}
+in packsWithPrefs (import ./prefs.nix)

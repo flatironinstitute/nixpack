@@ -1,8 +1,15 @@
 {
-  system = "x86_64-linux";
+  system = builtins.currentSystem;
   os = "centos7";
-  global = {};
   spackGit = {
-    url = "git://github.com/spack/spack";
+    rev = "4a19741a3681e6dcae5d35a22be1a7aa95022a13";
   };
+  spackConfig = {
+    config = {
+      source_cache = "/mnt/home/spack/cache";
+      build_jobs = 28; /* overridden by NIX_BUILD_CORES */
+    };
+  };
+  compiler = "gcc";
+  global = {};
 }
