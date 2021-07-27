@@ -11,6 +11,7 @@ if not sys.executable: # why not?
 os.environ['PATH'] = '/bin:/usr/bin'
 
 import spack.main # because otherwise you get recursive import errors
+import llnl.util.lang
 
 # monkeypatch store.layout for the few things we need
 class NixLayout():
@@ -24,9 +25,20 @@ class NixStore():
     layout = NixLayout()
 spack.store.store = NixStore()
 
+# disable post_install hooks (sbang, permissions)
 def post_install(spec):
     pass
 spack.hooks.post_install = post_install
+
+# disable index use in package repo
+class NixRepoPath(spack.repo.RepoPath):
+    def __init__(self):
+        repo_dirs = spack.config.get('repos')
+        super().__init__(*repo_dirs)
+        sys.meta_path.append(self)
+    def is_virtual(self, pkg_name, use_index=False):
+        return super().is_virtual(pkg_name, use_index)
+spack.repo.path = llnl.util.lang.Singleton(NixRepoPath)
 
 class NixSpec(spack.spec.Spec):
     def __init__(self, label, compiler):
@@ -59,7 +71,8 @@ spack.config.set('config:build_stage', [os.environ['PWD']], 'command_line')
 cores = int(os.environ['NIX_BUILD_CORES'])
 if cores > 0:
     spack.config.set('config:build_jobs', cores, 'command_line')
-if os.getenv('compiler'):
+depends = os.environ['depends'].split()
+if 'compiler' in depends:
     comp = NixSpec('compiler', None)
     compiler = spack.spec.CompilerSpec(comp.name, comp.versions)
     spack.config.set('compilers', [{'compiler': {
@@ -72,9 +85,11 @@ if os.getenv('compiler'):
 else:
     compiler = spack.spec.CompilerSpec("null@0")
 spec = NixSpec('out', compiler)
-for dep in os.environ['depends'].split():
-    depspec = NixSpec(dep, compiler)
-    print(depspec)
+for dep in depends:
+    if dep == 'compiler': continue
+    dspec = spec._evaluate_dependency_conditions(dep)
+    dspec.spec = NixSpec(dep, compiler)
+    spec._add_dependency(dspec.spec, dspec.type)
 
 pkg = spec.package
 spack.build_environment.setup_package(pkg, True)

@@ -102,7 +102,7 @@ let
         renderDepends = deps:
           let depnames = builtins.filter (d: deps.${d} != false) (builtins.attrNames deps);
           in { depends = depnames; } // lib.concatAttrs (map (d:
-            { "${d}" = d; } // render d deps.${d}) depnames);
+            { "${d}" = deps.${d}; } // render d deps.${d}) depnames);
       in
       prefs: gen: let
         desc = lib.recursiveUpdate defaults
@@ -139,12 +139,16 @@ let
       name = "m4";
       version = ["1.4.19" "1.4.18" "1.4.17"];
       variants = {
-        sigsegv = false;
+        sigsegv = true;
       };
       depends = {
         libsigsegv = if args.variants.sigsegv then {} else false;
       };
-      tags = ["build-tools"];
+    });
+
+    libsigsegv = spackPackage (args: {
+      name = "libsigsegv";
+      version = ["2.13" "2.12" "2.11" "2.10"];
     });
 
     baseGcc = spackPackage (args: {
@@ -161,16 +165,17 @@ let
       };
     });
 
-    gcc = baseGcc.withPrefs {
+    gcc = baseGcc.withArgs (args: {
       depends = {
         compiler = bootstrapPacks.compiler;
+        m4 = {};
       };
-    };
+    });
 
-    systemGcc = baseGcc.withPrefs {
+    systemGcc = baseGcc.withArgs (args: {
       extern = "/usr";
       version = ["4.8.5"];
-    };
+    });
 
     bootstrapPacks = withPrefs { compiler = "systemGcc"; };
     compiler = packs.${prefs.compiler or "gcc"};
