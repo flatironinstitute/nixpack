@@ -1,13 +1,7 @@
 let
   lib = import ./lib.nix;
 
-  mergePrefs = a: b:
-    if a == null then b else
-    if b == null then a else
-    # TODO
-    lib.recursiveUpdate a b;
-
-  versionKeys = s: builtins.sort lib.versionNewer (builtins.attrNames s);
+  mergePrefs = lib.recursiveUpdate; # TODO
 
   isPackage = p: p ? withPrefs;
 
@@ -47,7 +41,7 @@ let
           version = [];
           variants = {};
           depends = {
-            compiler = null;
+            compiler = {};
           };
           build = {};
           extern = null;
@@ -62,10 +56,10 @@ let
             pref
           else if isPackage arg then
             arg.withPrefs pref
-          else if arg == false || pref == false then
+          else if arg == false || pref == false || arg == null && pref == null then
             false
           else
-            packs.${name}.withPrefs (mergePrefs arg pref);
+            (packs.${name} or throw "dependent package ${name} not found").withPrefs (mergePrefs arg pref);
         resolvers = {
           namespace = lib.coalesce;
           version = pref: arg:
@@ -75,6 +69,7 @@ let
               then throw "no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}"
               else builtins.head v;
           variants = resolveEach (name: pref: arg:
+            let err = throw "invalid variant ${name}: ${pref} (for ${toString pref})"; in
             if pref == null then
               /* no preference: use default */
               if builtins.isList arg then builtins.head arg else arg
@@ -82,11 +77,18 @@ let
               /* list of options */
               if builtins.elem pref arg
                 then pref
-                else throw "invalid arg ${name}: ${pref} (of ${builtins.concatStringsSep "," pref})"
+                else err
             else if builtins.typeOf arg == builtins.typeOf pref then
-              /* a simple value: any value of that type */
-              pref
-            else throw "invalid arg ${name}: ${pref} (for ${toString pref})");
+              if builtins.isAttrs arg then
+                /* multi */
+                let r = arg // pref; in
+                if builtins.attrNames r == builtins.attrNames arg && builtins.all builtins.isBool (builtins.attrValues r) then
+                  r
+                else err
+              else
+                /* a simple value: any value of that type */
+                pref
+            else err);
           depends = resolveEach resolvePackage;
           extern = lib.coalesce;
         };
@@ -110,7 +112,10 @@ let
         pname = desc.name;
         name = "${pname}-${args.version}";
         mprefs = mergePrefs (mergePrefs packPrefs.global packPrefs.${pname} or null) prefs;
-        args = builtins.mapAttrs (a: resolve: resolve mprefs.${a} or null desc.${a}) resolvers;
+        resolved = builtins.mapAttrs (a: resolve: resolve mprefs.${a} or null desc.${a}) resolvers;
+        args = resolved // {
+          whenVersion = v: lib.when (lib.versionMatches v resolved.version);
+        };
         extern = args.extern != null;
         build = {
           inherit (packPrefs) system os;
@@ -142,7 +147,7 @@ let
         sigsegv = true;
       };
       depends = {
-        libsigsegv = if args.variants.sigsegv then {} else false;
+        libsigsegv = lib.when args.variants.sigsegv {};
       };
     });
 
@@ -153,12 +158,33 @@ let
 
     baseGcc = spackPackage (args: {
       name = "gcc";
-      version = ["11.1.0" "10.3.0" "10.2.0" "7.5.0" "4.8.5"];
+      version = ["11.1.0" "10.3.0" "10.2.0" "7.5.0" "4.8.5" "master"];
       paths = {
         cc = "bin/gcc";
         cxx = "bin/g++";
         f77 = "bin/gfortran";
         fc = "bin/gfortran";
+      };
+      variants = {
+        languages = {
+          c = true;
+          "c++" = true;
+          fortran = true;
+          ada = false;
+          brig = false;
+          go = false;
+          java = false;
+          jit = false;
+          lto = false;
+          objc = false;
+          "obj-c++" = false;
+        };
+        binutils = false;
+        piclibs = false;
+        strip = false;
+        nvptx = false;
+        bootstrap = false;
+        graphite = false;
       };
       depends = {
         compiler = false;
@@ -168,7 +194,15 @@ let
     gcc = baseGcc.withArgs (args: {
       depends = {
         compiler = bootstrapPacks.compiler;
-        m4 = {};
+        flex = args.whenVersion "master" {};
+        gmp = { version = "4.3.2:"; };
+        mpfr = lib.coalesce
+          (args.whenVersion ":9.9" { version = "2.4.2:3.1.6"; })
+          (args.whenVersion "10:" { version = "3.1.0:"; });
+        mpc = args.whenVersion "4.5:" { version = "1.0.1:"; };
+        isl = lib.when args.variants.graphite (lib.coalesces
+          [ args.whenVersion "5.0:5.2" { version = "0.14"; } /* ... */]);
+        zlib = args.whenVersion "6:" {};
       };
     });
 

@@ -7,6 +7,7 @@ rec {
     compareVersions
     concatMap
     elemAt
+    filter
     foldl'
     hasAttr
     head
@@ -23,7 +24,9 @@ rec {
 
   flip = f: a: b: f b a;
   fix = f: let x = f x; in x;
+  when = c: x: if c then x else null;
   coalesce = x: d: if x == null then d else x;
+  coalesces = l: let r = filter (x: x != null) l; in when (r != []) (head r);
 
   traceId = x: trace x x;
 
