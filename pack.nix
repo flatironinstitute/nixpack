@@ -21,6 +21,9 @@ let
       bootstrap = { enable = false; };
       config = {
         locks = false;
+        install_tree = {
+          root = "/rootless-spack";
+        };
       };
       compilers = [{ compiler = {
         spec = "null@0";
@@ -40,10 +43,12 @@ let
     spackPackageWithPrefs = 
       let
         defaults = {
+          namespace = "builtin";
           version = [];
           variants = {};
-          compiler = null;
-          depends = {};
+          depends = {
+            compiler = null;
+          };
           build = {};
           extern = null;
           paths = {};
@@ -62,11 +67,13 @@ let
           else
             packs.${name}.withPrefs (mergePrefs arg pref);
         resolvers = {
+          namespace = lib.coalesce;
           version = pref: arg:
-            let
-            /* special version matching: a (list of) version constraint */
-              v = builtins.filter (v: lib.allIfList (p: lib.versionMatches p v) pref) arg;
-            in if v == [] then throw "no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}" else builtins.head v;
+            /* special version matching: a (list of intersected) version constraint */
+            let v = builtins.filter (v: lib.allIfList (p: lib.versionMatches p v) pref) arg;
+            in if v == []
+              then throw "no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}"
+              else builtins.head v;
           variants = resolveEach (name: pref: arg:
             if pref == null then
               /* no preference: use default */
@@ -80,23 +87,26 @@ let
               /* a simple value: any value of that type */
               pref
             else throw "invalid arg ${name}: ${pref} (for ${toString pref})");
-          compiler = resolvePackage "compiler";
           depends = resolveEach resolvePackage;
-          build = lib.coalesce;
           extern = lib.coalesce;
         };
         render = lab: pkg: if pkg == false then {} else
           let
             prep = p: lib.mapKeys (a: "${p}_${a}");
             vars = builtins.parseDrvName pkg.name // {
+                namespace = pkg.args.namespace;
                 variants = builtins.attrNames pkg.args.variants;
               } // prep "variant" pkg.args.variants
                 // pkg.paths or {};
           in prep lab vars;
+        renderDepends = deps:
+          let depnames = builtins.filter (d: deps.${d} != false) (builtins.attrNames deps);
+          in { depends = depnames; } // lib.concatAttrs (map (d:
+            { "${d}" = d; } // render d deps.${d}) depnames);
       in
       prefs: gen: let
-        desc = defaults //
-          (if builtins.isPath gen then import gen packs else gen) args;
+        desc = lib.recursiveUpdate defaults
+          ((if builtins.isPath gen then import gen packs else gen) args);
         pname = desc.name;
         name = "${pname}-${args.version}";
         mprefs = mergePrefs (mergePrefs packPrefs.global packPrefs.${pname} or null) prefs;
@@ -109,16 +119,15 @@ let
           args = [spack/builder.py];
           inherit (packs) spackConfig;
           inherit name;
-          compiler = args.compiler;
         } // render "out" { inherit name args; }
-          // render "compiler" args.compiler;
+          // renderDepends args.depends;
         drv = if extern
           then { inherit name; outPath = args.extern; }
-          else derivation (build // args.build);
+          else derivation (build // desc.build);
         pkg = drv // {
           inherit prefs args;
           withPrefs = p: spackPackageWithPrefs (mergePrefs prefs p) gen;
-          withArgs = gen2: spackPackageWithPrefs prefs (args: gen args // gen2 args);
+          withArgs = gen': spackPackageWithPrefs prefs (args: gen args // gen' args);
           paths = builtins.mapAttrs (a: p: "${drv.outPath}/${p}") desc.paths;
         };
         finalize = desc.finalize;
@@ -130,7 +139,7 @@ let
       name = "m4";
       version = ["1.4.19" "1.4.18" "1.4.17"];
       variants = {
-        sigsegv = true;
+        sigsegv = false;
       };
       depends = {
         libsigsegv = if args.variants.sigsegv then {} else false;
@@ -147,11 +156,15 @@ let
         f77 = "bin/gfortran";
         fc = "bin/gfortran";
       };
-      compiler = false;
+      depends = {
+        compiler = false;
+      };
     });
 
     gcc = baseGcc.withPrefs {
-      compiler = bootstrapPacks.compiler;
+      depends = {
+        compiler = bootstrapPacks.compiler;
+      };
     };
 
     systemGcc = baseGcc.withPrefs {

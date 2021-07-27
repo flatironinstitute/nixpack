@@ -7,11 +7,14 @@ rec {
     compareVersions
     concatMap
     elemAt
+    foldl'
+    hasAttr
     head
     isAttrs
     isList
     length
     listToAttrs
+    mapAttrs
     split
     splitVersion
     tail
@@ -57,22 +60,13 @@ rec {
   mapKeys = f: set:
     listToAttrs (map (a: { name = f a; value = set.${a}; }) (attrNames set));
 
-  /* stolen from nix (could be improved for our case) */
-  zipAttrsWith = f: sets:
-    listToAttrs (map (name: {
-      inherit name;
-      value = f name (catAttrs name sets);
-    }) (concatMap attrNames sets));
+  /* like nixpkgs.lib.recursiveUpdate but treat nulls as missing */
+  recursiveUpdate = a: b:
+    if isAttrs a && isAttrs b then
+      mapAttrs (k: v: if hasAttr k a && hasAttr k b then recursiveUpdate a.${k} v else v) (a // b)
+    else if b == null then a
+    else b;
 
-  recursiveUpdate = lhs: rhs:
-    let f = attrPath:
-      zipAttrsWith (n: values:
-        let here = attrPath ++ [n]; in
-        if tail values == []
-        || !(isAttrs (head (tail values)) && isAttrs (head values)) then
-          head values
-        else
-          f here values
-      );
-    in f [] [rhs lhs];
+  /* should this be lazy? */
+  concatAttrs = foldl' (a: b: a // b) {};
 }
