@@ -3,10 +3,34 @@ let
 
   mergePrefs = lib.recursiveUpdate; # TODO
 
+  /* unify two package prefs, making sure they're compatible */
+  intersectPrefs = let
+      err = a: b: throw "incompatible prefs: ${a} vs ${b}";
+      intersectScalar = lib.coalesceWith (a: b: if a == b then a else err a b);
+      intersectors = {
+        version = a: b:
+          if builtins.isList a then
+            if builtins.isList b then
+              a ++ b
+            else
+              a ++ [b]
+          else if builtins.isList b then
+            [a] ++ b
+          else
+            [a b];
+        variants = lib.mergeWith (a: b: if a == b then a else
+          if builtins.isList a && builtins.isList b then a ++ b
+          else err a b);
+      };
+    in lib.coalesceWith (lib.mergeWithKeys (k: intersectors.${k} or intersectScalar));
+
+  intersectPrefsList = builtins.foldl' intersectPrefs null;
+
   isPackage = p: p ? withPrefs;
 
   packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
-    inherit lib versionKeys;
+    inherit lib intersectPrefs intersectPrefsList;
+    inherit (lib) when;
     prefs = packPrefs;
     withPrefs = p: packsWithPrefs (mergePrefs packPrefs p);
 
@@ -72,12 +96,12 @@ let
           else if arg == false || pref == false || arg == null && pref == null then
             false
           else
-            (packs.${name} or (throw "dependent package ${name} not found")).withPrefs (mergePrefs arg pref);
+            (packs.repo.${name} or (throw "dependent package ${name} not found")).withPrefs (mergePrefs arg pref);
         resolvers = {
           namespace = lib.coalesce;
           version = pref: arg:
             /* special version matching: a (list of intersected) version constraint */
-            let v = builtins.filter (v: lib.allIfList (p: lib.versionMatches p v) pref) arg;
+            let v = builtins.filter (v: lib.versionMatches v pref) arg;
             in if v == []
               then throw "no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}"
               else builtins.head v;
@@ -134,7 +158,8 @@ let
         mprefs = mergePrefs (mergePrefs packPrefs.global packPrefs.${pname} or null) prefs;
         resolved = builtins.mapAttrs (a: resolve: resolve mprefs.${a} or null desc.${a}) resolvers;
         args = resolved // {
-          whenVersion = v: lib.when (lib.versionMatches v resolved.version);
+          versionMatches = lib.versionMatches resolved.version;
+          variantMatches = v: lib.variantMatches resolved.variants.${v};
         };
         extern = args.extern != null;
         build = spackBuilder // {
@@ -158,26 +183,10 @@ let
     spackPackage = spackPackageWithPrefs null;
 
     # generate nix package metadata from spack repos
-    spackGenerate = derivation (spackBuilder // {
-      name = "spack-generate";
+    spackRepo = derivation (spackBuilder // {
+      name = "spack-repo";
       args = [spack/generate.py];
       inherit spackCache;
-    });
-    
-    m4 = spackPackage (args: {
-      name = "m4";
-      version = ["1.4.19" "1.4.18" "1.4.17"];
-      variants = {
-        sigsegv = true;
-      };
-      depends = {
-        libsigsegv = lib.when args.variants.sigsegv {};
-      };
-    });
-
-    libsigsegv = spackPackage (args: {
-      name = "libsigsegv";
-      version = ["2.13" "2.12" "2.11" "2.10"];
     });
 
     baseGcc = spackPackage (args: {
@@ -218,15 +227,6 @@ let
     gcc = baseGcc.withArgs (args: {
       depends = {
         compiler = bootstrapPacks.compiler;
-        flex = args.whenVersion "master" {};
-        gmp = { version = "4.3.2:"; };
-        mpfr = lib.coalesce
-          (args.whenVersion ":9.9" { version = "2.4.2:3.1.6"; })
-          (args.whenVersion "10:" { version = "3.1.0:"; });
-        mpc = args.whenVersion "4.5:" { version = "1.0.1:"; };
-        isl = lib.when args.variants.graphite (lib.coalesces
-          [ args.whenVersion "5.0:5.2" { version = "0.14"; } /* ... */]);
-        zlib = args.whenVersion "6:" {};
       };
     });
 
@@ -237,6 +237,8 @@ let
 
     bootstrapPacks = withPrefs { compiler = "systemGcc"; };
     compiler = packs.${prefs.compiler or "gcc"};
+
+    repo = import spackRepo packs // { inherit compiler; };
   });
 
 in packsWithPrefs (import ./prefs.nix)
