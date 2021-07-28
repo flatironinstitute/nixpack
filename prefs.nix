@@ -12,4 +12,5 @@
   };
   compiler = "gcc";
   global = {};
+  spackPython = "/usr/bin/python3";
 }

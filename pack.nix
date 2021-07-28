@@ -27,12 +27,25 @@ let
           f77 = null;
           fc = null;
         };
-        operating_system = prefs.os;
+        operating_system = packPrefs.os;
         modules = [];
       }; }];
     };
     spackConfig = import spack/config.nix packs
       (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
+
+    spackBuilder = {
+      inherit (packPrefs) system os;
+      builder = packPrefs.spackPython;
+      PYTHONPATH = "${spack}/lib/spack:${spack}/lib/spack/external";
+      inherit (packs) spackConfig;
+    };
+
+    # pre-generated spack repo index cache
+    spackCache = derivation (spackBuilder // {
+      name = "spack-cache";
+      args = [spack/cache.py];
+    });
 
     spackPackageWithPrefs = 
       let
@@ -59,7 +72,7 @@ let
           else if arg == false || pref == false || arg == null && pref == null then
             false
           else
-            (packs.${name} or throw "dependent package ${name} not found").withPrefs (mergePrefs arg pref);
+            (packs.${name} or (throw "dependent package ${name} not found")).withPrefs (mergePrefs arg pref);
         resolvers = {
           namespace = lib.coalesce;
           version = pref: arg:
@@ -78,27 +91,34 @@ let
               if builtins.elem pref arg
                 then pref
                 else err
-            else if builtins.typeOf arg == builtins.typeOf pref then
-              if builtins.isAttrs arg then
-                /* multi */
-                let r = arg // pref; in
+            else if builtins.isAttrs arg then
+              /* multi */
+              let r = arg // (
+                  if builtins.isAttrs pref then pref else
+                  if builtins.isList pref then
+                    builtins.listToAttrs (builtins.map (name: { inherit name; value = true; }) pref)
+                  else err); in
                 if builtins.attrNames r == builtins.attrNames arg && builtins.all builtins.isBool (builtins.attrValues r) then
                   r
                 else err
-              else
-                /* a simple value: any value of that type */
-                pref
+            else if builtins.typeOf arg == builtins.typeOf pref then
+              /* a simple value: any value of that type */
+              pref
             else err);
           depends = resolveEach resolvePackage;
           extern = lib.coalesce;
         };
+        renderVariant = v:
+          if builtins.isAttrs v then
+            builtins.filter (n: v.${n}) (builtins.attrNames v)
+          else v;
         render = lab: pkg: if pkg == false then {} else
           let
             prep = p: lib.mapKeys (a: "${p}_${a}");
             vars = builtins.parseDrvName pkg.name // {
                 namespace = pkg.args.namespace;
                 variants = builtins.attrNames pkg.args.variants;
-              } // prep "variant" pkg.args.variants
+              } // prep "variant" (builtins.mapAttrs (n: renderVariant) pkg.args.variants)
                 // pkg.paths or {};
           in prep lab vars;
         renderDepends = deps:
@@ -117,12 +137,9 @@ let
           whenVersion = v: lib.when (lib.versionMatches v resolved.version);
         };
         extern = args.extern != null;
-        build = {
-          inherit (packPrefs) system os;
-          PYTHONPATH = "${spack}/lib/spack:${spack}/lib/spack/external";
-          builder = "/usr/bin/python3";
+        build = spackBuilder // {
           args = [spack/builder.py];
-          inherit (packs) spackConfig;
+          inherit spackCache;
           inherit name;
         } // render "out" { inherit name args; }
           // renderDepends args.depends;
@@ -139,6 +156,13 @@ let
       in pkg // (if builtins.isFunction desc.finalize then desc.finalize pkg else desc.finalize);
 
     spackPackage = spackPackageWithPrefs null;
+
+    # generate nix package metadata from spack repos
+    spackGenerate = derivation (spackBuilder // {
+      name = "spack-generate";
+      args = [spack/generate.py];
+      inherit spackCache;
+    });
     
     m4 = spackPackage (args: {
       name = "m4";

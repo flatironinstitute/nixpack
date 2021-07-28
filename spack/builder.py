@@ -9,6 +9,7 @@ if not sys.executable: # why not?
     sys.executable = os.environ['builder']
 
 os.environ['PATH'] = '/bin:/usr/bin'
+os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
 
 import spack.main # because otherwise you get recursive import errors
 import llnl.util.lang
@@ -29,16 +30,6 @@ spack.store.store = NixStore()
 def post_install(spec):
     pass
 spack.hooks.post_install = post_install
-
-# disable index use in package repo
-class NixRepoPath(spack.repo.RepoPath):
-    def __init__(self):
-        repo_dirs = spack.config.get('repos')
-        super().__init__(*repo_dirs)
-        sys.meta_path.append(self)
-    def is_virtual(self, pkg_name, use_index=False):
-        return super().is_virtual(pkg_name, use_index)
-spack.repo.path = llnl.util.lang.Singleton(NixRepoPath)
 
 class NixSpec(spack.spec.Spec):
     def __init__(self, label, compiler):
@@ -67,6 +58,7 @@ class NixSpec(spack.spec.Spec):
             self.compiler_flags[f] = []
 
 spack.config.command_line_scopes = [os.environ['spackConfig']]
+spack.config.set('config:misc_cache', os.environ['spackCache'], 'command_line')
 spack.config.set('config:build_stage', [os.environ['PWD']], 'command_line')
 cores = int(os.environ['NIX_BUILD_CORES'])
 if cores > 0:
