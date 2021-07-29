@@ -8,6 +8,12 @@ Nix on the outside, spack on the inside.
 
 This is a terrible, horrible work in progress, and you probably shouldn't touch it yet unless you understand both systems well.
 
+## Usage
+
+- install and configure nix sufficient to build derivations
+- edit `prefs.nix` (`spackConfig` and `bootstrapCompiler` are critical)
+- run `nix-build -A pkgs.foo` to build the spack package `foo`
+
 ## Implementation and terminology
 
 In nixpkgs, there's mainly the concept of package, and arguments that can be overridden.
@@ -105,6 +111,10 @@ These contain `desc`, `prefs`, and `spec` metadata attributes with the above thi
 
 Global user preferences.
 See `prefs.nix`.
+
+### Bootstrapping
+
+The configured `bootstrapCompiler` is used to build the configured `compiler`, which is used to build all other packages.
 
 ### `packs`
 
