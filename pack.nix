@@ -251,15 +251,12 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
 
   repo = import spackRepo repoLib;
 
-  bootstrapPacks = packs.withPrefs { compiler = packPrefs.bootstrapCompiler; };
+  bootstrapPacks = packs.withPrefs {
+    compiler = packPrefs.bootstrapCompiler;
+  };
 
   pkgs = builtins.mapAttrs spackPackage repo // {
-    compiler = getPackage prefs.compiler {
-      depends = {
-        compiler = "bootstrapCompiler";
-      };
-    };
-    bootstrapCompiler = bootstrapPacks.pkgs.compiler;
+    compiler = bootstrapPacks.getPackage prefs.compiler {};
   };
 });
 
