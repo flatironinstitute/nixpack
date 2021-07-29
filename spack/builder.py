@@ -5,6 +5,8 @@ import os
 print(os.environ)
 import sys
 
+# TODO clear env vars (as used?)
+
 if not sys.executable: # why not?
     sys.executable = os.environ['builder']
 

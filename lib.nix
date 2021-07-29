@@ -25,6 +25,8 @@ rec {
     trace
     ;
 
+  id = x: x;
+  const = x: y: x;
   flip = f: a: b: f b a;
   fix = f: let x = f x; in x;
   when = c: x: if c then x else null;
