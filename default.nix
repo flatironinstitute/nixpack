@@ -1,1 +1,1 @@
-import ./pack.nix
+import ./pack.nix (import ./prefs.nix)

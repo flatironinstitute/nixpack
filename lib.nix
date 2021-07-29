@@ -31,6 +31,8 @@ rec {
   coalesce = x: d: if x == null then d else x;
   coalesces = l: let r = filter (x: x != null) l; in when (r != []) (head r);
   coalesceWith = f: a: b: if a == null then b else if b == null then a else f a b;
+  toList = x: if isList x then x else [x];
+  fromList = x: if isList x && length x == 1 then head x else x;
 
   traceId = x: trace x x;
 
@@ -41,11 +43,6 @@ rec {
       lb = length b;
     in
       la == 0 || lb >= la && head a == head b && listHasPrefix (tail a) (tail b);
-
-  versionOlder   = v1: v2: compareVersions v2 v1 > 0;
-  versionNewer   = v1: v2: compareVersions v2 v1 < 0;
-  versionAtLeast = v1: v2: compareVersions v2 v1 <= 0;
-  versionAtMost  = v1: v2: compareVersions v2 v1 >= 0;
 
   mapKeys = f: set:
     listToAttrs (map (a: { name = f a; value = set.${a}; }) (attrNames set));
@@ -65,26 +62,47 @@ rec {
   /* should this be lazy? */
   concatAttrs = foldl' (a: b: a // b) {};
 
+  splitRegex = r: s: filter isString (split r s);
+
+  versionOlder   = v1: v2: compareVersions v2 v1 > 0;
+  versionNewer   = v1: v2: compareVersions v2 v1 < 0;
+  versionAtLeast = v1: v2: compareVersions v2 v1 <= 0;
+  versionAtMost  = v1: v2: compareVersions v2 v1 >= 0;
+
+  versionRange = v: let
+      s = splitRegex ":" v;
+      l = length s;
+    in
+      if l == 1 then { min = v; max = v; } else
+      if l == 2 then { min = head s; max = elemAt s 1; } else
+      throw "invalid version range ${v}";
+
   /* spack version spec semantics: does concrete version v match spec m? */
   versionMatches = v: match:
     if match == null then true else
     if isList match then all (versionMatches v) match else
     let
+      vs = splitVersion v;
       versionMatch = m: let
-        ms = split ":" m;
-        ml = length ms;
-        vs = splitVersion v;
-        ma = head ms;
-        mb = elemAt ms 2;
-      in     if ml == 1 then listHasPrefix (splitVersion ma) vs
-        else if ml == 3 then versionAtLeast v ma &&
-          (versionAtMost v mb || listHasPrefix (splitVersion mb) vs)
-        else throw "invalid version match ${m}";
-    in any versionMatch (filter isString (split "," match));
+        mr = versionRange m;
+      in versionAtLeast v mr.min &&
+         (versionAtMost v mr.max || listHasPrefix (splitVersion mr.max) vs);
+    in any versionMatch (splitRegex "," match);
+
+  versionsOverlap = a: b:
+    let
+      as = splitRegex "," a;
+      bs = splitRegex "," b;
+      vo = a: b: let
+        ar = versionRange a;
+        br = versionRange b;
+      in versionAtMost ar.max br.min &&
+         versionAtMost br.max ar.min;
+    in any (a: any (vo a) bs) as;
 
   /* does concrete variant v match spec m? */
-  variantMatches = v: m:
+  variantMatches = v: ms: all (m:
     if isAttrs v then v.${m} else
     if isList v then elem m v else
-    v == m;
+    v == m) (toList ms);
 }

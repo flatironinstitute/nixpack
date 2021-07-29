@@ -2,8 +2,7 @@
 
 import os
 import sys
-import numbers
-from pprint import PrettyPrinter
+from collections import defaultdict
 
 os.environ['PATH'] = '/bin:/usr/bin'
 os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
@@ -26,7 +25,7 @@ class Nix:
         if parens:
             out.write(')')
 
-class Var(Nix, str):
+class Expr(Nix, str):
     def print(self, indent, out):
         out.write(self)
 
@@ -104,6 +103,16 @@ class And(Nix):
                 out.write(' && ')
             self.paren(a, indent, out)
 
+class Eq(Nix):
+    prec = 11
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+    def print(self, indent, out):
+        self.paren(self.a, indent, out)
+        out.write(' == ')
+        self.paren(self.b, indent, out)
+
 nixStrEsc = str.maketrans({'"': '\\"', '\\': '\\\\', '$': '\\$', '\n': '\\n', '\r': '\\r', '\t': '\\t'})
 def printNix(x, indent=0, out=sys.stdout):
     if isinstance(x, Nix):
@@ -127,18 +136,20 @@ def printNix(x, indent=0, out=sys.stdout):
         raise TypeError(x)
 
 
-def variant(v):
-    d = v.default
+def variant(p, v):
+    d = str(v.default)
     if v.multi and v.values is not None:
         d = d.split(',')
         return {x: x in d for x in v.values}
+    elif v.values == (True, False):
+        return d.upper() == 'TRUE'
     elif v.values:
         l = list(v.values)
         try:
             l.remove(d)
             l.insert(0, d)
         except ValueError:
-            print(f"Warning: variant {v.name} default {v.default!r} not in {v.values!r}", file=sys.stderr)
+            print(f"{p.name}: variant {v.name} default {v.default!r} not in {v.values!r}", file=sys.stderr)
         return l
     else:
         return d
@@ -154,41 +165,76 @@ def specPrefs(s):
         p['depends'] = {x.name: specPrefs(x) for x in d}
     return p
 
-def whenCondition(s, a):
+def conditions(p, s):
     c = []
-    if s.versions != spack.spec._any_version:
-        c.append(App('args.versionMatches', str(s.versions)))
-    if s.variants:
-        for n, v in s.variants.items():
-            c.append(App('args.variantMatches', n, v.value))
-    if s.compiler or s._dependencies or s.architecture or s.compiler_flags:
-        # TODO?
-        print(f"Warning: unsupported condition spec: {s}", file=sys.stderr)
+    def addConditions(a, s):
+        if s.versions != spack.spec._any_version:
+            c.append(App(a+'.versionMatches', str(s.versions)))
+        if s.variants:
+            for n, v in s.variants.items():
+                c.append(App(a+'.variantMatches', n, v.value))
+        if s.compiler:
+            if s.compiler.name:
+                c.append(Eq(Expr(a+'.depends.compiler._name'), s.compiler.name))
+            if s.compiler.versions != spack.spec._any_version:
+                c.append(App(a+'.depends.compiler.versionMatches', str(s.compiler.versions)))
+        for d in s.dependencies():
+            addConditions(a+'.depends.'+d.name+'.args', d)
+        if s.architecture:
+            if s.architecture.os:
+                c.append(Eq(Expr('packs.os'), s.architecture.os))
+            if s.architecture.platform:
+                c.append(Eq(Expr('packs.platform'), s.architecture.platform))
+            if s.architecture.target:
+                # this isn't actually correct due to fancy targets but good enough for this
+                c.append(Eq(Expr('packs.target'), str(s.architecture.target).rstrip(':')))
+        if s.compiler_flags:
+            print(f"{p.name}: unsupported condition spec: {s}", file=sys.stderr)
+    addConditions('args', s)
+    return c
+
+def whenCondition(p, s, a):
+    c = conditions(p, s)
     if not c:
         return a
     return App('when', And(*c), a)
 
-def depend(d):
-    c = [whenCondition(w, specPrefs(s.spec)) for w, s in d.items()]
+def depend(p, d):
+    c = [whenCondition(p, w, specPrefs(s.spec)) for w, s in d.items()]
     if len(c) == 1:
         return c[0]
-    return App('intersectPrefsList', List(c))
+    return App('intersectPrefs', List(c))
+
+def provide(p, wv):
+    c = [whenCondition(p, w, str(v)) for w, v in wv]
+    if len(c) == 1:
+        return c[0]
+    return App('unionVersions', List(c))
 
 packs = dict()
+virtuals = defaultdict(set)
 for p in spack.repo.path.all_packages():
-    print(f"Generating {p.name}...")
+    #print(f"Generating {p.name}...")
+    desc = { 'name': p.name };
     vers = [(i.get('preferred',False), not (v.isdevelop() or i.get('deprecated',False)), v)
             for v, i in p.versions.items()]
     vers.sort(reverse = True)
-    version = [str(v) for _, _, v in vers]
-    variants = {n: variant(v) for n, v in p.variants.items()}
-    depends = {n: depend(d) for n, d in p.dependencies.items()}
-    packs[p.name] = App(Var('spackPackage'), Fun('args', {
-        'name': p.name,
-        'version': version,
-        'variants': variants,
-        'depends': depends
-    }))
+    desc['version'] = [str(v) for _, _, v in vers]
+    if p.variants:
+        desc['variants'] = {n: variant(p, v) for n, v in p.variants.items()}
+    if p.dependencies:
+        desc['depends'] = {n: depend(p, d) for n, d in p.dependencies.items()}
+    if p.provided:
+        provides = defaultdict(list)
+        for v, cs in p.provided.items():
+            provides[v.name].extend((c, v.versions) for c in cs)
+            virtuals[v.name].add(p.name)
+        desc['provides'] = {v: provide(p, c) for v, c in provides.items()}
+    packs[p.name] = App('spackPackage', Fun('args', desc))
+for v, p in virtuals.items():
+    assert v not in packs
+    packs[v] = App("spackVirtual", v, List(p))
+
 with open(os.environ['out'], 'w') as f:
-    print("{ spackPackage, when, intersectPrefsList, ... } @ packs:", file=f)
+    print("{ spackPackage, spackVirtual, when, intersectPrefs, unionVersions, ... } @ packs:", file=f)
     printNix(packs, out=f)
