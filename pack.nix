@@ -6,7 +6,7 @@ prefsUpdate = lib.recursiveUpdate; # TODO
 
 /* unify two prefs, making sure they're compatible */
 prefsIntersect = let
-    err = a: b: throw "incompatible prefs: ${a} vs ${b}";
+    err = a: b: throw "incompatible prefs: ${builtins.toJSON a} vs ${builtins.toJSON b}";
     intersectScalar = lib.coalesceWith (a: b: if a == b then a else err a b);
     intersectors = {
       version = a: b:
@@ -50,11 +50,13 @@ repoOverrides = {
 };
 
 packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
+  label = packPrefs.label or "root";
   prefs = packPrefs;
   withPrefs = p: packsWithPrefs (prefsUpdate packPrefs p);
   inherit lib;
 
-  spack = builtins.fetchGit ({ url = "git://github.com/spack/spack"; name = "spack"; } // packPrefs.spackGit);
+  spack = builtins.fetchGit ({ url = "git://github.com/spack/spack"; name = "spack"; } //
+    packPrefs.spackGit);
   defaultSpackConfig = {
     bootstrap = { enable = false; };
     config = {
@@ -93,7 +95,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
 
   /* look up a package requirement and instantiate it with prefs */
   getPackage = arg:
-    if arg == null then
+    if /* builtins.trace "${label}.${builtins.toJSON arg}" */ arg == null then
       pref: null
     else if builtins.isString arg then
       pkgsWithPrefs.${arg} or (throw "package ${arg} not found")
@@ -162,8 +164,9 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
             deps = resolveEach (name: prefsIntersect) (lib.filterAttrs select arg) pref;
             /* propagate runtime depends into children */
             rdeps = lib.filterAttrs (name: isRDepend) deps;
+            rdeps' = builtins.mapAttrs (name: dep: builtins.removeAttrs dep ["type"]) rdeps;
             depprefs = deps // builtins.mapAttrs (name: dep: 
-              prefsIntersect dep { depends = rdeps; }) rdeps;
+              prefsIntersect dep { depends = rdeps'; }) rdeps;
           /* resolve an actual package */
           in builtins.mapAttrs getPackage depprefs;
       };
@@ -257,6 +260,11 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
     inherit (packPrefs) os;
   };
 
+  bootstrapPacks = packs.withPrefs {
+    compiler = packPrefs.bootstrapCompiler;
+    label = "bootstrap";
+  };
+
   /* full metadata repo package descriptions */
   repo = import spackRepo repoLib;
 
@@ -268,9 +276,6 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: pkg: pkg null) pkgsWithPrefs;
 
-  bootstrapPacks = packs.withPrefs {
-    compiler = packPrefs.bootstrapCompiler;
-  };
 });
 
 in packsWithPrefs
