@@ -128,7 +128,7 @@ def printNix(x, indent=0, out=sys.stdout):
     elif isinstance(x, float):
         # messy but rare (needed for nix parsing #5063)
         out.write('%.15e'%x)
-    elif isinstance(x, (list, tuple)):
+    elif isinstance(x, (list, tuple, set)):
         List(x).print(indent, out)
     elif isinstance(x, dict):
         Attrs(x).print(indent, out)
@@ -170,6 +170,11 @@ def specPrefs(s):
         p['depends'] = {x.name: specPrefs(x) for x in d}
     return p
 
+def depPrefs(d):
+    p = specPrefs(d.spec)
+    p['type'] = d.type
+    return p
+
 def conditions(p, s):
     c = []
     def addConditions(a, s):
@@ -203,7 +208,7 @@ def whenCondition(p, s, a):
     return App('when', And(*c), a)
 
 def depend(p, d):
-    c = [whenCondition(p, w, specPrefs(s.spec)) for w, s in d.items()]
+    c = [whenCondition(p, w, depPrefs(s)) for w, s in d.items()]
     if len(c) == 1:
         return c[0]
     return App('prefsIntersection', List(c))
@@ -219,7 +224,8 @@ virtuals = defaultdict(set)
 namespaces = ' '.join(r.namespace for r in spack.repo.path.repos)
 print(f"Generating package repo for {namespaces}...")
 for p in spack.repo.path.all_packages():
-    desc = {};
+    desc = dict()
+    desc['namespace'] = p.namespace;
     vers = [(i.get('preferred',False), not (v.isdevelop() or i.get('deprecated',False)), v)
             for v, i in p.versions.items()]
     vers.sort(reverse = True)

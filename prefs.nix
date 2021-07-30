@@ -19,6 +19,7 @@
   spackPython = "/usr/bin/python3";
   global = {
     /* preferences to apply to every package -- generally not needed */
+    tests = false;
   };
   package = {
     /* preferences for individual packages:

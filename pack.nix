@@ -34,6 +34,9 @@ versionsUnion = l:
 
 isPackage = p: p ? withPrefs;
 
+isRDepend = d: let t = d.type or []; in
+  builtins.elem "link" t || builtins.elem "run" t;
+
 /* overrides to the spack repo */
 repoOverrides = {
   gcc = {
@@ -89,20 +92,15 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   });
 
   /* look up a package requirement and instantiate it with prefs */
-  getPackage = arg: pref:
+  getPackage = arg:
     if arg == null then
-      null
+      pref: null
     else if builtins.isString arg then
-      if builtins.hasAttr arg repo then
-        /* try to get an unresolved package from the repo first */
-        spackPackageWithPrefs arg repo.${arg} pref
-      else
-        /* and fall back to a resolved one (really just "compiler") */
-        (pkgs.${arg} or (throw "package ${arg} not found")).withPrefs pref
+      pkgsWithPrefs.${arg} or (throw "package ${arg} not found")
     else if isPackage arg then
-      arg.withPrefs pref
+      arg.withPrefs /* is this needed? */
     else if arg ? name then
-      getPackage (arg.name) (prefsIntersect arg pref)
+      pref: getPackage arg.name (prefsIntersect arg pref)
     else throw "invalid package";
 
   spackPackageWithPrefs = pname:
@@ -113,29 +111,26 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
         version = [];
         variants = {};
         depends = {
-          compiler = {};
+          compiler = {
+            type = ["build"];
+          };
         };
         provides = {};
         build = {};
-        extern = null;
         paths = {};
       };
 
       /* combining preferences with descriptor to get concrete package spec */
-      resolveEach = resolver: pref:
-        builtins.mapAttrs (name: resolver name pref.${name} or null);
-      resolvePackage = name: pref: arg:
-        if arg == null then null else
-          getPackage name (prefsIntersect arg pref);
+      resolveEach = resolver: arg: pref:
+        builtins.mapAttrs (name: resolver name pref.${name} or null) arg;
       resolvers = {
-        namespace = lib.coalesce;
-        version = pref: arg:
+        version = mprefs: arg: pref:
           /* special version matching: a (list of intersected) version constraint */
           let v = builtins.filter (v: lib.versionMatches v pref) arg;
           in if v == []
             then throw "${pname}: no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}"
             else builtins.head v;
-        variants = resolveEach (name: pref: arg:
+        variants = mprefs: resolveEach (name: pref: arg:
           let err = throw "${pname}: invalid variant ${name}: ${toString pref} (for ${toString arg})"; in
           if pref == null then
             /* no preference: use default */
@@ -159,8 +154,18 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
             /* a simple value: any value of that type */
             pref
           else err);
-        depends = resolveEach resolvePackage;
-        extern = lib.coalesce;
+        depends = mprefs: arg: pref:
+          if mprefs.extern or null != null then null else let
+            /* filter out disabled or test-only depends */
+            select = name: dep: dep != null && (mprefs.tests == true || dep.type != ["test"]);
+            /* combine package-specified prefs with user prefs */
+            deps = resolveEach (name: prefsIntersect) (lib.filterAttrs select arg) pref;
+            /* propagate runtime depends into children */
+            rdeps = lib.filterAttrs (name: isRDepend) deps;
+            depprefs = deps // builtins.mapAttrs (name: dep: 
+              prefsIntersect dep { depends = rdeps; }) rdeps;
+          /* resolve an actual package */
+          in builtins.mapAttrs getPackage depprefs;
       };
 
       /* adding metadata environment variables about a package to the build */
@@ -168,7 +173,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
         if builtins.isAttrs v then
           builtins.filter (n: v.${n}) (builtins.attrNames v)
         else v;
-      render = lab: pkg: if pkg == null then {} else
+      render = lab: pkg:
         let
           prep = p: lib.mapKeys (a: "${p}_${a}");
           vars = builtins.parseDrvName pkg.name // {
@@ -178,9 +183,40 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
               // pkg.paths or {};
         in prep lab vars;
       renderDepends = deps:
-        let depnames = builtins.filter (d: deps.${d} != null) (builtins.attrNames deps);
+        let depnames = builtins.attrNames deps;
         in { depends = depnames; } // lib.concatAttrs (map (d:
           { "${d}" = deps.${d}; } // render d deps.${d}) depnames);
+
+      /* constructing a real package */
+      package = gen: prefs: let
+          desc = lib.recursiveUpdate defaults (gen spec) // repoOverrides.${pname} or {};
+          name = "${pname}-${spec.version}";
+          mprefs = prefsUpdate (prefsUpdate packPrefs.global packPrefs.package.${pname} or null) prefs;
+          resolved = builtins.mapAttrs (a: resolve: resolve mprefs desc.${a} mprefs.${a} or null) resolvers;
+          spec = resolved // {
+            inherit (desc) namespace;
+            versionMatches = lib.versionMatches resolved.version;
+            variantMatches = v: lib.variantMatches resolved.variants.${v};
+          };
+          extern = mprefs.extern or null;
+          build = spackBuilder // {
+            args = [spack/builder.py];
+            inherit spackCache name;
+            inherit (mprefs) tests;
+          } // render "out" { inherit name spec; }
+            // renderDepends spec.depends;
+          drv = if extern != null
+            then { inherit name; outPath = extern; }
+            else derivation (build // desc.build);
+        in drv // {
+            inherit (desc) provides;
+            inherit spec;
+            paths = builtins.mapAttrs (a: p: "${drv.outPath}/${p}") desc.paths;
+            prefs = mprefs;
+            /* overrides */
+            withPrefs = p: spackPackageWithPrefs pname gen (prefsUpdate prefs p);
+            withDesc = gen': spackPackageWithPrefs pname (args: gen args // gen' args) prefs;
+          };
 
       /* constructing virtual packages, which resolve to a specific package as soon as prefs are applied */
       virtual = providers: prefs: let
@@ -193,33 +229,6 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
           choice = builtins.filter checkOpt opts;
         in if choice == [] then "no providers for ${pname}@${vers}" else builtins.head choice;
 
-      /* constructing a real package */
-      package = gen: prefs: let
-          desc = lib.recursiveUpdate defaults (gen spec) // repoOverrides.${pname} or {};
-          name = "${pname}-${spec.version}";
-          mprefs = prefsUpdate (prefsUpdate packPrefs.global packPrefs.package.${pname} or null) prefs;
-          resolved = builtins.mapAttrs (a: resolve: resolve mprefs.${a} or null desc.${a}) resolvers;
-          extern = resolved.extern != null;
-          spec = (if extern then builtins.removeAttrs resolved ["build" "depends"] else resolved) // {
-            versionMatches = lib.versionMatches resolved.version;
-            variantMatches = v: lib.variantMatches resolved.variants.${v};
-          };
-          build = spackBuilder // {
-            args = [spack/builder.py];
-            inherit spackCache name;
-          } // render "out" { inherit name spec; }
-            // renderDepends spec.depends;
-          drv = if extern
-            then { inherit name; outPath = spec.extern; }
-            else derivation (build // desc.build);
-        in drv // {
-            inherit (desc) provides;
-            inherit spec;
-            paths = builtins.mapAttrs (a: p: "${drv.outPath}/${p}") desc.paths;
-            prefs = mprefs;
-            withPrefs = p: spackPackageWithPrefs pname gen (prefsUpdate prefs p);
-            withDesc = gen': spackPackageWithPrefs pname (args: gen args // gen' args) prefs;
-          };
     in desc:
       if builtins.isList desc then
         virtual desc
@@ -248,14 +257,19 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
     inherit (packPrefs) os;
   };
 
+  /* full metadata repo package descriptions */
   repo = import spackRepo repoLib;
+
+  /* partially applied packages, which take preferences as argument */
+  pkgsWithPrefs = builtins.mapAttrs spackPackageWithPrefs repo // {
+    compiler = bootstrapPacks.getPackage prefs.compiler;
+  };
+
+  /* fully applied resolved packages with default preferences */
+  pkgs = builtins.mapAttrs (name: pkg: pkg null) pkgsWithPrefs;
 
   bootstrapPacks = packs.withPrefs {
     compiler = packPrefs.bootstrapCompiler;
-  };
-
-  pkgs = builtins.mapAttrs spackPackage repo // {
-    compiler = bootstrapPacks.getPackage prefs.compiler {};
   };
 });
 

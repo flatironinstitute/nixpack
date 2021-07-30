@@ -8,7 +8,7 @@ import functools
 if not sys.executable: # why not?
     sys.executable = os.environ.pop('builder')
 
-os.environ['PATH'] = '/bin:/usr/bin'
+os.environ['PATH'] = '/bin:/usr/bin' # XXX: where do we get things spack needs?
 os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
 
 import spack.main # otherwise you get recursive import errors
@@ -101,6 +101,10 @@ for dep in depends:
     dspec.spec = NixSpec(dep, compiler)
     spec._add_dependency(dspec.spec, dspec.type)
 
+opts = {'install_deps': False, 'verbose': True}
+if os.environ.pop('tests', False):
+    opts['tests'] = True
+
 def wrapPhase(p, f, *args):
     nixLog({'action': 'setPhase', 'phase': p})
     return f(*args)
@@ -111,4 +115,4 @@ os.makedirs(spack.store.layout.metadata_path(spec), exist_ok=True)
 for pn, pa in zip(pkg.phases, pkg._InstallPhase_phases):
     pf = getattr(pkg, pa)
     setattr(pkg, pa, functools.partial(wrapPhase, pn, pf))
-spack.installer.build_process(pkg, {'verbose': True})
+spack.installer.build_process(pkg, opts)

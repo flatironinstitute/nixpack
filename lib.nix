@@ -7,6 +7,7 @@ rec {
     catAttrs
     compareVersions
     concatMap
+    deepSeq
     elem
     elemAt
     filter
@@ -33,18 +34,18 @@ rec {
   coalesce = x: d: if x == null then d else x;
   coalesces = l: let r = filter (x: x != null) l; in when (r != []) (head r);
   coalesceWith = f: a: b: if a == null then b else if b == null then a else f a b;
+  mapNullable = f: a: if a == null then a else f a;
+
   toList = x: if isList x then x else [x];
   fromList = x: if isList x && length x == 1 then head x else x;
 
   traceId = x: trace x x;
+  traceLabel = s: x: trace ("${s}: ${builtins.toJSON x}") x;
+  traceId' = x: deepSeq x (trace x x);
 
   /* is a a prefix of b? */
   listHasPrefix = a: b:
-    let
-      la = length a;
-      lb = length b;
-    in
-      la == 0 || lb >= la && head a == head b && listHasPrefix (tail a) (tail b);
+    a == [] || b != [] && head a == head b && listHasPrefix (tail a) (tail b);
 
   mapKeys = f: set:
     listToAttrs (map (a: { name = f a; value = set.${a}; }) (attrNames set));
@@ -63,6 +64,9 @@ rec {
 
   /* should this be lazy? */
   concatAttrs = foldl' (a: b: a // b) {};
+
+  filterAttrs = pred: set:
+    listToAttrs (concatMap (name: let v = set.${name}; in if pred name v then [{ inherit name; value = v; }] else []) (attrNames set));
 
   splitRegex = r: s: filter isString (split r s);
 
