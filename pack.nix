@@ -206,8 +206,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
           };
           build = spackBuilder // {
             args = [spack/builder.py];
-            inherit spackCache;
-            name = "${name}-${spec.version}";
+            inherit spackCache name;
           } // render "out" { inherit name spec; }
             // renderDepends spec.depends;
           drv = if extern

@@ -1,0 +1,15 @@
+dir=$PWD
+nix=/cm/shared/sw/nix
+
+export NIX_REMOTE=daemon
+export NIX_STORE_DIR=$nix/store
+export NIX_STATE_DIR=$nix/state
+export NIX_LINK=$HOME/.nix-profile
+export PATH=$NIX_LINK/bin:$PATH
+export MANPATH=$NIX_LINK/share/man:$MANPATH
+export NIX_SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt
+export NIX_PATH=local=$dir
+export TMPDIR=/dev/shm
+
+module add modules-nix
+module add nix/nix nix/git

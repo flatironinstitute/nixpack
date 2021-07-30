@@ -216,9 +216,10 @@ def provide(p, wv):
 
 packs = dict()
 virtuals = defaultdict(set)
+namespaces = ' '.join(r.namespace for r in spack.repo.path.repos)
+print(f"Generating package repo for {namespaces}...")
 for p in spack.repo.path.all_packages():
-    #print(f"Generating {p.name}...")
-    desc = { 'name': p.name };
+    desc = {};
     vers = [(i.get('preferred',False), not (v.isdevelop() or i.get('deprecated',False)), v)
             for v, i in p.versions.items()]
     vers.sort(reverse = True)
@@ -234,9 +235,12 @@ for p in spack.repo.path.all_packages():
             virtuals[v.name].add(p.name)
         desc['provides'] = {v: provide(p, c) for v, c in provides.items()}
     packs[p.name] = Fun('spec', desc)
+n = len(packs)
+print(f"Generated {n} packages")
 for v, p in virtuals.items():
     assert v not in packs
     packs[v] = List(p)
+print(f"Generated {len(packs)-n} virtuals")
 
 with open(os.environ['out'], 'w') as f:
     print("spackLib: with spackLib;", file=f)

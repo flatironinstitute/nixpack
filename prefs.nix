@@ -29,6 +29,7 @@
     name = "gcc";
     version = "7.5.0";
   };
+  /* must be set to an external compiler capable of building compiler (above) */
   bootstrapCompiler = {
     name = "gcc";
     version = "4.8.5";
