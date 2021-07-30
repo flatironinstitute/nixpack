@@ -2,8 +2,7 @@
 
 A hybrid of the [nix package manager](https://github.com/NixOS/nix) and [spack](https://github.com/spack/spack) where nix (without nixpkgs) is used to solve and manage packages, using the package repository and builds from spack.
 
-If you love nix's expressiveness and efficiency, but don't need nixpkgs purity (in the sense of independence from the host system), if you like the spack packages but are tired of managing roots and concretizations, this may be for you.
-
+If you love nix's expressiveness and efficiency, but don't need the purity of nixpkgs (in the sense of independence from the host system)... if you like the spack packages but are tired of managing roots and concretizations, this may be for you.
 Nix on the outside, spack on the inside.
 
 This is a terrible, horrible work in progress, and you probably shouldn't touch it yet unless you understand both systems well.
@@ -13,6 +12,11 @@ This is a terrible, horrible work in progress, and you probably shouldn't touch 
 - install and configure nix sufficient to build derivations
 - edit `prefs.nix` (`spackConfig` and `bootstrapCompiler` are critical)
 - run `nix-build -A pkgs.foo` to build the spack package `foo`
+
+## Compatibility
+
+nixpack uses an unmodified checkout of spack (as specified in `spackGit`), and should work with other forks as well.
+However, it makes many assumptions about the internals of spack builds, so may not work on different versions.
 
 ## Implementation and terminology
 
