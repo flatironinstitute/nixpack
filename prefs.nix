@@ -6,7 +6,12 @@
     /* default:
     url = "git://github.com/spack/spack";
     */
-    rev = "4a19741a3681e6dcae5d35a22be1a7aa95022a13";
+    ref = "develop";
+    rev = "b4c6c11e689b2292a1411e4fc60dcd49c929246d";
+    /*
+    url = "git://github.com/flatironinstitute/spack";
+    ref = "scc";
+    */
   };
   /* extra config settings for spack itself */
   spackConfig = {
@@ -22,8 +27,14 @@
     tests = false;
   };
   package = {
-    /* preferences for individual packages:
-    */
+    /* preferences for individual packages or virtuals */
+    openmpi = {
+      version = "4.0";
+    };
+    mpi = {
+      /* providers can be (optional) lists of names or { name; ...prefs } */
+      provider = [ "openmpi" ];
+    };
   };
   compiler = {
     /* preferences for global compiler */
@@ -35,13 +46,5 @@
     name = "gcc";
     version = "4.8.5";
     extern = "/usr";
-  };
-  providers = {
-    /* global preferences for virtual providers */
-    mpi = [ {
-        name = "openmpi";
-        version = "4.0,1.0";
-      }
-    ];
   };
 }

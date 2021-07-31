@@ -104,7 +104,6 @@ example = {
 ### package spec
 
 A resolved (concrete) package specifier created by applying (optional) package preferences to a package descriptor.
-These are 
 
 ### package
 
@@ -123,4 +122,4 @@ The configured `bootstrapCompiler` is used to build the configured `compiler`, w
 ### `packs`
 
 The world, like `nixpkgs`.
-Package descriptions are in `repo`, and resolved packages are in `pkgs`.
+It contains `repo` with package descriptor generators, `specs`, and `pkgs`.

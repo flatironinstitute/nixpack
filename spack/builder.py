@@ -4,6 +4,10 @@ from typing import Tuple
 import os
 import sys
 import functools
+import json
+
+from pprint import pprint
+pprint(dict(os.environ))
 
 if not sys.executable: # why not?
     sys.executable = os.environ.pop('builder')
@@ -53,65 +57,69 @@ system = os.environ.pop('system')
 archos = os.environ.pop('os')
 
 class NixSpec(spack.spec.Spec):
-    def __init__(self, label, compiler):
+    def __init__(self, spec, top=False):
         super().__init__(normal=True, concrete=True)
-        def getenv(*args):
-            v = [label]
-            v.extend(args)
-            return os.environ.pop('_'.join(v))
-
-        self.name = getenv('name')
-        self.namespace = getenv('namespace')
-        version = getenv('version')
+        self.name = spec['name']
+        self.namespace = spec['namespace']
+        version = spec['version']
         self.versions = spack.version.VersionList([spack.version.Version(version)])
-        self.compiler = compiler
         self._set_architecture(target=target, platform=platform, os=archos)
-        self._prefix = spack.util.prefix.Prefix(getenv())
-        assert set(getenv('variants').split()) == self.package.variants.keys()
-        for n, v in self.package.variants.items():
-            s = getenv('variant',n)
-            if s in ('', '1'):
-                v = spack.variant.BoolValuedVariant(n, not not s)
-            elif v.multi:
-                v = spack.variant.MultiValuedVariant(n, s.split())
+        self._prefix = spack.util.prefix.Prefix(os.environ.pop('out') if top else spec['pkg'])
+        variants = spec['variants']
+        assert variants.keys() == self.package.variants.keys()
+        for n, s in variants.items():
+            v = self.package.variants[n]
+            if isinstance(s, bool):
+                v = spack.variant.BoolValuedVariant(n, s)
+            elif isinstance(s, list):
+                v = spack.variant.MultiValuedVariant(n, s)
+            elif isinstance(s, dict):
+                v = spack.variant.MultiValuedVariant(n, [k for k,v in s.items() if v])
             else:
                 v = spack.variant.AbstractVariant(n, s)
             self.variants[n] = v
+        for n, d in spec['depends'].items():
+            s = NixSpec(d)
+            if n == 'compiler':
+                self.compiler_spec = s
+                self.compiler = spack.spec.CompilerSpec(s.name, s.versions)
+            else:
+                dspec = self._evaluate_dependency_conditions(n)
+                dspec.spec = s
+                self._add_dependency(dspec.spec, dspec.type)
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
+        self.paths = {n: os.path.join(self.prefix, p) for n, p in spec['paths'].items()}
+        self.tests = spec['tests']
 
 os.environ.pop('name')
-depends = os.environ.pop('depends').split()
-if 'compiler' in depends:
-    comp = NixSpec('compiler', None)
-    compiler = spack.spec.CompilerSpec(comp.name, comp.versions)
-    spack.config.set('compilers', [{'compiler': {
-        'spec': str(compiler),
-        'paths': {v: os.environ.pop('compiler_'+v, None) for v in ['cc','cxx','f77','fc']},
-        'modules': [],
-        'operating_system': comp.architecture.os,
-        'target': str(comp.architecture.target)
-    }}], 'command_line')
-else:
-    compiler = spack.spec.CompilerSpec("null@0")
-spec = NixSpec('out', compiler)
-for dep in depends:
-    if dep == 'compiler': continue
-    dspec = spec._evaluate_dependency_conditions(dep)
-    dspec.spec = NixSpec(dep, compiler)
-    spec._add_dependency(dspec.spec, dspec.type)
+jspec = json.loads(os.environ.pop('spec'))
+#pprint(jspec)
+spec = NixSpec(jspec, True)
+spack.config.set('compilers', [{'compiler': {
+    'spec': str(spec.compiler),
+    'paths': spec.compiler_spec.paths,
+    'modules': [],
+    'operating_system': archos,
+    'target': target,
+}}], 'command_line')
 
-opts = {'install_deps': False, 'verbose': True}
-if os.environ.pop('tests', False):
-    opts['tests'] = True
+opts = {
+        'install_deps': False,
+        'verbose': False,
+        'tests': spec.tests,
+    }
 
 def wrapPhase(p, f, *args):
     nixLog({'action': 'setPhase', 'phase': p})
     return f(*args)
 
 pkg = spec.package
+print(f"spacking {spec} to {pkg.prefix}")
 spack.build_environment.setup_package(pkg, True)
 os.makedirs(spack.store.layout.metadata_path(spec), exist_ok=True)
+with open(os.path.join(spack.store.layout.metadata_path(spec), "spec"), "w") as sf:
+    print(spec, file=sf)
 for pn, pa in zip(pkg.phases, pkg._InstallPhase_phases):
     pf = getattr(pkg, pa)
     setattr(pkg, pa, functools.partial(wrapPhase, pn, pf))

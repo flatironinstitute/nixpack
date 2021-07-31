@@ -36,12 +36,14 @@ rec {
   coalesceWith = f: a: b: if a == null then b else if b == null then a else f a b;
   mapNullable = f: a: if a == null then a else f a;
 
-  toList = x: if isList x then x else [x];
+  toList = x: if isList x then x else if x == null then [] else [x];
   fromList = x: if isList x && length x == 1 then head x else x;
 
   traceId = x: trace x x;
   traceLabel = s: x: trace ("${s}: ${builtins.toJSON x}") x;
   traceId' = x: deepSeq x (trace x x);
+
+  remove = e: filter (x: x != e);
 
   /* is a a prefix of b? */
   listHasPrefix = a: b:
@@ -70,10 +72,10 @@ rec {
 
   splitRegex = r: s: filter isString (split r s);
 
-  versionOlder   = v1: v2: compareVersions v2 v1 > 0;
-  versionNewer   = v1: v2: compareVersions v2 v1 < 0;
-  versionAtLeast = v1: v2: compareVersions v2 v1 <= 0;
-  versionAtMost  = v1: v2: compareVersions v2 v1 >= 0;
+  versionOlder   = v1: v2: compareVersions v1 v2 < 0;
+  versionNewer   = v1: v2: compareVersions v1 v2 > 0;
+  versionAtLeast = v1: v2: compareVersions v1 v2 >= 0;
+  versionAtMost  = v1: v2: compareVersions v1 v2 <= 0;
 
   versionRange = v: let
       s = splitRegex ":" v;
@@ -91,8 +93,8 @@ rec {
       vs = splitVersion v;
       versionMatch = m: let
         mr = versionRange m;
-      in versionAtLeast v mr.min &&
-         (versionAtMost v mr.max || listHasPrefix (splitVersion mr.max) vs);
+        in versionAtLeast v mr.min &&
+           (versionAtMost v mr.max || listHasPrefix (splitVersion mr.max) vs);
     in any versionMatch (splitRegex "," match);
 
   versionsOverlap = a: b:

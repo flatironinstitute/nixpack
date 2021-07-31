@@ -179,15 +179,15 @@ def conditions(p, s):
     c = []
     def addConditions(a, s):
         if s.versions != spack.spec._any_version:
-            c.append(App(a+'.versionMatches', str(s.versions)))
+            c.append(App("versionMatches", Expr(a+'.version'), str(s.versions)))
         if s.variants:
             for n, v in s.variants.items():
-                c.append(App(a+'.variantMatches', n, unlist(v.value)))
+                c.append(App("variantMatches", Expr(a+'.variants.'+n), unlist(v.value)))
         if s.compiler:
             if s.compiler.name:
-                c.append(Eq(Expr(a+'.depends.compiler._name'), s.compiler.name))
+                c.append(Eq(Expr(a+'.depends.compiler.name'), s.compiler.name))
             if s.compiler.versions != spack.spec._any_version:
-                c.append(App(a+'.depends.compiler.versionMatches', str(s.compiler.versions)))
+                c.append(App("versionMatches", Expr(a+'.depends.compiler.version'), str(s.compiler.versions)))
         for d in s.dependencies():
             addConditions(a+'.depends.'+d.name+'.spec', d)
         if s.architecture:
