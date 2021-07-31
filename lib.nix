@@ -49,6 +49,8 @@ rec {
   listHasPrefix = a: b:
     a == [] || b != [] && head a == head b && listHasPrefix (tail a) (tail b);
 
+  union = a: b: a ++ filter (x: ! elem x a) b;
+
   mapKeys = f: set:
     listToAttrs (map (a: { name = f a; value = set.${a}; }) (attrNames set));
 

@@ -9,19 +9,11 @@ prefsIntersect = let
     err = a: b: throw "incompatible prefs: ${builtins.toJSON a} vs ${builtins.toJSON b}";
     intersectScalar = lib.coalesceWith (a: b: if a == b then a else err a b);
     intersectors = {
-      version = a: b:
-        if builtins.isList a then
-          if builtins.isList b then
-            a ++ b
-          else
-            a ++ [b]
-        else if builtins.isList b then
-          [a] ++ b
-        else
-          [a b];
+      version = a: b: lib.union (lib.toList a) (lib.toList b);
       variants = lib.mergeWith (a: b: if a == b then a else
-        if builtins.isList a && builtins.isList b then a ++ b
+        if builtins.isList a && builtins.isList b then lib.union a b
         else err a b);
+      type = lib.union;
     };
   in lib.coalesceWith (lib.mergeWithKeys (k: intersectors.${k} or intersectScalar));
 
