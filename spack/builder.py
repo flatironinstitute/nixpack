@@ -49,6 +49,8 @@ system = os.environ.pop('system')
 archos = os.environ.pop('os')
 
 class NixSpec(spack.spec.Spec):
+    # to re-use identical specs so id is reasonable
+    specCache = dict()
     def __init__(self, spec, top=False):
         super().__init__(normal=True, concrete=True)
         self.name = spec['name']
@@ -56,7 +58,9 @@ class NixSpec(spack.spec.Spec):
         version = spec['version']
         self.versions = spack.version.VersionList([spack.version.Version(version)])
         self._set_architecture(target=target, platform=platform, os=archos)
-        self._prefix = spack.util.prefix.Prefix(os.environ.pop('out') if top else spec['pkg'])
+        pkg = os.environ.pop('out') if top else spec['pkg']
+        self._prefix = spack.util.prefix.Prefix(pkg)
+
         variants = spec['variants']
         assert variants.keys() == self.package.variants.keys()
         for n, s in variants.items():
@@ -70,19 +74,31 @@ class NixSpec(spack.spec.Spec):
             else:
                 v = spack.variant.AbstractVariant(n, s)
             self.variants[n] = v
+        for f in self.compiler_flags.valid_compiler_flags():
+            self.compiler_flags[f] = []
+        self.tests = spec['tests']
+        self.paths = {n: os.path.join(self.prefix, p) for n, p in spec['paths'].items()}
+        self._as_compiler = None
+
+        self.specCache[pkg] = self
         for n, d in spec['depends'].items():
-            s = NixSpec(d)
+            try:
+                s = self.specCache[d['pkg']]
+            except KeyError:
+                s = NixSpec(d)
             if n == 'compiler':
                 self.compiler_spec = s
-                self.compiler = spack.spec.CompilerSpec(s.name, s.versions)
+                self.compiler = s.as_compiler
             else:
                 dspec = self._evaluate_dependency_conditions(n)
                 dspec.spec = s
                 self._add_dependency(dspec.spec, dspec.type)
-        for f in self.compiler_flags.valid_compiler_flags():
-            self.compiler_flags[f] = []
-        self.paths = {n: os.path.join(self.prefix, p) for n, p in spec['paths'].items()}
-        self.tests = spec['tests']
+
+    @property
+    def as_compiler(self):
+        if not self._as_compiler:
+            self._as_compiler = spack.spec.CompilerSpec(self.name, self.versions)
+        return self._as_compiler
 
 os.environ.pop('name')
 specf = os.environ.pop('specPath', None)
