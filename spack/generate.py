@@ -4,13 +4,8 @@ import os
 import sys
 from collections import defaultdict
 
-os.environ['PATH'] = '/bin:/usr/bin'
-os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
-
-import spack.main # because otherwise you get recursive import errors
-
-spack.config.command_line_scopes = [os.environ['spackConfig']]
-spack.config.set('config:misc_cache', os.environ['spackCache'], 'command_line')
+import nixpack
+import spack
 
 class Nix:
     prec = 0
@@ -221,7 +216,7 @@ def provide(p, wv):
 
 packs = dict()
 virtuals = defaultdict(set)
-namespaces = ' '.join(r.namespace for r in spack.repo.path.repos)
+namespaces = ', '.join(r.namespace for r in spack.repo.path.repos)
 print(f"Generating package repo for {namespaces}...")
 for p in spack.repo.path.all_packages():
     desc = dict()

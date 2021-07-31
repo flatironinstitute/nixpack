@@ -2,20 +2,14 @@
 from typing import Tuple
 
 import os
-import sys
 import functools
 import json
 
-from pprint import pprint
-pprint(dict(os.environ))
+#from pprint import pprint
+#pprint(dict(os.environ))
 
-if not sys.executable: # why not?
-    sys.executable = os.environ.pop('builder')
-
-os.environ['PATH'] = '/bin:/usr/bin' # XXX: where do we get things spack needs?
-os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
-
-import spack.main # otherwise you get recursive import errors
+import nixpack
+import spack
 import llnl.util.lang
 
 # monkeypatch store.layout for the few things we need
@@ -35,8 +29,6 @@ def post_install(spec):
     pass
 spack.hooks.post_install = post_install
 
-spack.config.command_line_scopes = [os.environ.pop('spackConfig')]
-spack.config.set('config:misc_cache', os.environ.pop('spackCache'), 'command_line')
 spack.config.set('config:build_stage', [os.environ.pop('NIX_BUILD_TOP')], 'command_line')
 cores = int(os.environ.pop('NIX_BUILD_CORES', 0))
 if cores > 0:
@@ -93,7 +85,12 @@ class NixSpec(spack.spec.Spec):
         self.tests = spec['tests']
 
 os.environ.pop('name')
-jspec = json.loads(os.environ.pop('spec'))
+specf = os.environ.pop('specPath', None)
+if specf:
+    with open(specf, 'r') as sf:
+        jspec = json.load(sf)
+else:
+    jspec = json.loads(os.environ.pop('spec'))
 #pprint(jspec)
 spec = NixSpec(jspec, True)
 spack.config.set('compilers', [{'compiler': {

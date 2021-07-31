@@ -96,10 +96,17 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   spackConfig = import spack/config.nix packs
     (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
 
+  spackNixLib = derivation {
+    name = "nix-spack-py";
+    inherit (packPrefs) system;
+    builder = spack/install.sh;
+    src = spack/nixpack.py;
+  };
+
   spackBuilder = {
     inherit (packPrefs) system os;
     builder = packPrefs.spackPython;
-    PYTHONPATH = "${spack}/lib/spack:${spack}/lib/spack/external";
+    PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
     inherit (packs) spackConfig;
   };
 
@@ -223,6 +230,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
           args = [spack/builder.py];
           inherit spackCache name;
           spec = builtins.toJSON pkg;
+          passAsFile = ["spec"];
         });
     in drv // {
       spec = pkg // { pkg = drv; };
