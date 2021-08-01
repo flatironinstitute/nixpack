@@ -48,6 +48,8 @@ system = os.environ.pop('system')
 (target, platform) = system.split('-', 1)
 archos = os.environ.pop('os')
 
+nullCompiler = spack.spec.CompilerSpec('gcc', '0')
+
 class NixSpec(spack.spec.Spec):
     # to re-use identical specs so id is reasonable
     specCache = dict()
@@ -78,6 +80,7 @@ class NixSpec(spack.spec.Spec):
             self.compiler_flags[f] = []
         self.tests = spec['tests']
         self.paths = {n: os.path.join(self.prefix, p) for n, p in spec['paths'].items()}
+        self.compiler = nullCompiler
         self._as_compiler = None
 
         self.specCache[pkg] = self
@@ -109,13 +112,16 @@ else:
     jspec = json.loads(os.environ.pop('spec'))
 #pprint(jspec)
 spec = NixSpec(jspec, True)
-spack.config.set('compilers', [{'compiler': {
-    'spec': str(spec.compiler),
-    'paths': spec.compiler_spec.paths,
-    'modules': [],
-    'operating_system': archos,
-    'target': target,
-}}], 'command_line')
+if spec.compiler != nullCompiler:
+    spack.config.set('compilers', [{'compiler': {
+        'spec': str(spec.compiler),
+        'paths': spec.compiler_spec.paths,
+        'modules': [],
+        'operating_system': archos,
+        'target': target,
+    }}], 'command_line')
+else:
+    pass
 
 opts = {
         'install_deps': False,

@@ -44,23 +44,20 @@ defaultDesc = {
   extern = null;
 };
 
-/* overrides to the spack repo */
-repoOverrides = {
-  gcc = {
-    paths = {
-      cc = "bin/gcc";
-      cxx = "bin/g++";
-      f77 = "bin/gfortran";
-      fc = "bin/gfortran";
-    };
-  };
-};
+patchDesc = patch: gen: spec: let desc = gen spec; in
+  desc // lib.applyOptional (lib.applyOptional patch spec) desc;
+patchRepo = patch: repo: repo //
+  builtins.mapAttrs (name: f: patchDesc f (repo.${name} or (spec: {}))) patch;
 
 packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   label = packPrefs.label or "root";
   prefs = packPrefs;
-  withPrefs = p: packsWithPrefs (prefsUpdate packPrefs p);
+  withPrefs = p: packsWithPrefs (lib.recursiveUpdate packPrefs p);
   inherit lib;
+
+  systemSplit = lib.splitRegex "-" packPrefs.system;
+  target = builtins.head systemSplit;
+  platform = builtins.elemAt systemSplit 1;
 
   spack = builtins.fetchGit ({ url = "git://github.com/spack/spack"; name = "spack"; } //
     packPrefs.spackGit);
@@ -74,7 +71,8 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
       };
     };
     compilers = [{ compiler = {
-      spec = "null@0";
+      /* fake null compiler */
+      spec = "gcc@0";
       paths = {
         cc = null;
         cxx = null;
@@ -82,6 +80,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
         fc = null;
       };
       operating_system = packPrefs.os;
+      target = target;
       modules = [];
     }; }];
   };
@@ -175,12 +174,13 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
         , extern ? uprefs.extern or null
         , tests ? uprefs.tests or null
         }: let
-          desc = lib.recursiveUpdate defaultDesc (gen spec) // repoOverrides.${name} or {};
+          desc = lib.recursiveUpdate defaultDesc (gen spec);
           spec = desc // {
             inherit name;
             tests    = lib.coalesce tests false;
             extern   = lib.coalesce extern desc.extern;
-            version  = resolveVersion  desc.version  version;
+            version  = if spec.extern != null && lib.versionIsConcrete version then version
+              else     resolveVersion  desc.version  version;
             variants = resolveVariants desc.variants (variants // uprefs.variants or {});
             depends = if spec.extern != null then {} else
               resolveDepends spec.tests desc.depends (depends // uprefs.depends or {});
@@ -236,13 +236,10 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
     inherit spackCache;
   });
 
-  systemSplit = lib.splitRegex "-" packPrefs.system;
   repoLib = {
     /* utilities needed by the repo */
     inherit (lib) when versionMatches variantMatches;
-    inherit prefsIntersection versionsUnion;
-    platform = builtins.head systemSplit;
-    target = builtins.elemAt systemSplit 1;
+    inherit prefsIntersection versionsUnion platform target;
     inherit (packPrefs) os;
   };
 
@@ -252,7 +249,9 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   };
 
   /* full metadata repo package descriptions */
-  repo = import spackRepo repoLib;
+  repo = patchRepo packPrefs.repoPatch
+    (patchRepo (import ./patch.nix lib)
+    (import spackRepo repoLib));
 
   /* partially applied specs, which take preferences as argument */
   resolvers = builtins.mapAttrs resolveSpec repo // {

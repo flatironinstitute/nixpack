@@ -28,6 +28,10 @@
   };
   package = {
     /* preferences for individual packages or virtuals */
+    cpio = {
+      extern = "/usr";
+      version = "2.11";
+    };
     openmpi = {
       version = "4.0";
     };
@@ -46,5 +50,12 @@
     name = "gcc";
     version = "4.8.5";
     extern = "/usr";
+  };
+  repoPatch = {
+    /* updates or additions to the spack repo (see patch.nix)
+    package = [spec: [old:]] {
+      new...
+    };
+    */
   };
 }

@@ -15,11 +15,13 @@ rec {
     hasAttr
     head
     isAttrs
+    isFunction
     isList
     isString
     length
     listToAttrs
     mapAttrs
+    match
     split
     splitVersion
     tail
@@ -35,6 +37,8 @@ rec {
   coalesces = l: let r = filter (x: x != null) l; in when (r != []) (head r);
   coalesceWith = f: a: b: if a == null then b else if b == null then a else f a b;
   mapNullable = f: a: if a == null then a else f a;
+
+  applyOptional = f: x: if isFunction f then f x else f;
 
   toList = x: if isList x then x else if x == null then [] else [x];
   fromList = x: if isList x && length x == 1 then head x else x;
@@ -59,11 +63,9 @@ rec {
 
   mergeWith = f: mergeWithKeys (k: f);
 
-  /* like nixpkgs.lib.recursiveUpdate but treat nulls as missing */
   recursiveUpdate = a: b:
     if isAttrs a && isAttrs b then
       mergeWith recursiveUpdate a b
-    else if b == null then a
     else b;
 
   /* should this be lazy? */
@@ -78,6 +80,8 @@ rec {
   versionNewer   = v1: v2: compareVersions v1 v2 > 0;
   versionAtLeast = v1: v2: compareVersions v1 v2 >= 0;
   versionAtMost  = v1: v2: compareVersions v1 v2 <= 0;
+
+  versionIsConcrete = v: v != null && match "[:,]" v == null;
 
   versionRange = v: let
       s = splitRegex ":" v;
