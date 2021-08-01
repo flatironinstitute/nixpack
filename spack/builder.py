@@ -56,22 +56,23 @@ class NixSpec(spack.spec.Spec):
     # to re-use identical specs so id is reasonable
     specCache = dict()
     nixSpecFile = '.nixpack.spec';
-    def __init__(self, spec, prefix):
-        if isinstance(spec, str):
-            self.specCache[spec] = self
-            with open(spec, 'r') as sf:
-                spec = json.load(sf)
+
+    def __init__(self, nixspec, prefix):
+        if isinstance(nixspec, str):
+            self.specCache[nixspec] = self
+            with open(nixspec, 'r') as sf:
+                nixspec = json.load(sf)
 
         super().__init__(normal=True, concrete=True)
-        self.name = spec['name']
-        self.namespace = spec['namespace']
-        version = spec['version']
+        self.name = nixspec['name']
+        self.namespace = nixspec['namespace']
+        version = nixspec['version']
         self.versions = spack.version.VersionList([spack.version.Version(version)])
         self._set_architecture(target=target, platform=platform, os=archos)
         self._prefix = spack.util.prefix.Prefix(prefix)
-        self.external_path = spec['extern']
+        self.external_path = nixspec['extern']
 
-        variants = spec['variants']
+        variants = nixspec['variants']
         assert variants.keys() == self.package.variants.keys()
         for n, s in variants.items():
             v = self.package.variants[n]
@@ -86,15 +87,15 @@ class NixSpec(spack.spec.Spec):
             self.variants[n] = v
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
-        self.tests = spec['tests']
-        self.paths = {n: os.path.join(self.prefix, p) for n, p in spec['paths'].items()}
+        self.tests = nixspec['tests']
+        self.paths = {n: os.path.join(self.prefix, p) for n, p in nixspec['paths'].items()}
         self.compiler = nullCompiler
         self._as_compiler = None
         # would be nice to use nix hash, but nix and python use different base32 alphabets
-        #if not spec['extern'] and prefix.startswith(nixStore):
+        #if not nixspec['extern'] and prefix.startswith(nixStore):
         #    self._hash, nixname = prefix[len(nixStore):].lstrip('/').split('-', 1)
 
-        for n, d in spec['depends'].items():
+        for n, d in list(nixspec['depends'].items()):
             if isinstance(d, str):
                 key = d
             else:
@@ -115,6 +116,11 @@ class NixSpec(spack.spec.Spec):
                 dspec = self._evaluate_dependency_conditions(n)
                 dspec.spec = spec
                 self._add_dependency(dspec.spec, dspec.type)
+                if not ('link' in dspec.type or 'run' in dspec.type):
+                    # trim build dep references
+                    del nixspec['depends'][n]
+
+        self.nixspec = nixspec
 
     @property
     def as_compiler(self):
@@ -147,11 +153,9 @@ print(spec.tree(cover='edges', format=spack.spec.default_format + ' {prefix}'))
 spack.build_environment.setup_package(pkg, True)
 
 # create and stash some metadata
-mtdp = spack.store.layout.metadata_path(spec)
-os.makedirs(mtdp, exist_ok=True)
-shutil.copyfile(nixspec, os.path.join(spec.prefix, NixSpec.nixSpecFile))
-with open(os.path.join(mtdp, "spec"), "w") as sf:
-    print(spec, file=sf)
+os.makedirs(pkg.metadata_dir, exist_ok=True)
+with open(os.path.join(spec.prefix, NixSpec.nixSpecFile), 'w') as sf:
+    json.dump(spec.nixspec, sf)
 
 # log build phases to nix
 def wrapPhase(p, f, *args):
@@ -164,3 +168,6 @@ for pn, pa in zip(pkg.phases, pkg._InstallPhase_phases):
 
 # do the actual install
 spack.installer.build_process(pkg, opts)
+
+# cleanup spack logs (to avoid spurious references)
+#shutil.rmtree(pkg.metadata_dir)
