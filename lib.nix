@@ -40,6 +40,7 @@ rec {
 
   applyOptional = f: x: if isFunction f then f x else f;
 
+  cons = x: l: [x] ++ l;
   toList = x: if isList x then x else if x == null then [] else [x];
   fromList = x: if isList x && length x == 1 then head x else x;
 
@@ -48,6 +49,10 @@ rec {
   traceId' = x: deepSeq x (trace x x);
 
   remove = e: filter (x: x != e);
+  nubBy = eq: l:
+    if l == [] then l else
+    let x = head l; in
+    cons x (nubBy eq (filter (y: ! (eq x y)) (tail l)));
 
   /* is a a prefix of b? */
   listHasPrefix = a: b:

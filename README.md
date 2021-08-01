@@ -108,7 +108,7 @@ A resolved (concrete) package specifier created by applying (optional) package p
 ### package
 
 An actual derivation.
-These contain `desc`, `prefs`, and `spec` metadata attributes with the above things.
+These contain a `spec` metadata attribute.
 
 ### preferences
 
@@ -122,4 +122,4 @@ The configured `bootstrapCompiler` is used to build the configured `compiler`, w
 ### `packs`
 
 The world, like `nixpkgs`.
-It contains `repo` with package descriptor generators, `specs`, and `pkgs`.
+It contains `repo` with package descriptor generators and `pkgs`.

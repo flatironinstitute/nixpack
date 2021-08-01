@@ -108,17 +108,17 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   });
 
   /* look up a package requirement and resolve it with prefs */
-  getSpec = arg:
+  getPackage = arg:
     if /* builtins.trace "${label}.${builtins.toJSON arg}" */ arg == null then
       pref: null
     else if builtins.isString arg then
       resolvers.${arg} or (throw "package ${arg} not found")
     else if arg ? name then
-      pref: getSpec arg.name (prefsIntersect (builtins.removeAttrs arg ["name"]) pref)
+      pref: getPackage arg.name (prefsIntersect (builtins.removeAttrs arg ["name"]) pref)
     else throw "invalid package";
 
   /* resolve a named package descriptor into a concrete spec (concretize) */
-  resolveSpec = name:
+  resolvePackage = name:
     let
       uprefs = prefsUpdate packPrefs.global packPrefs.package.${name} or null;
       /* combining preferences with descriptor to get concrete package spec */
@@ -163,8 +163,9 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
           rdeps = makeDeps tdeps.right;
           odeps = makeDeps tdeps.wrong;
           deps = builtins.mapAttrs (name: dep: prefsIntersect dep { depends = rdeps; }) rdeps // odeps;
+          /* TODO propagate back up? */
         /* resolve an actual package */
-        in builtins.mapAttrs getSpec deps;
+        in builtins.mapAttrs getPackage deps;
 
       /* resolving a real package */
       package = gen:
@@ -185,7 +186,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
             depends = if spec.extern != null then {} else
               resolveDepends spec.tests desc.depends (depends // uprefs.depends or {});
           };
-        in spec;
+        in makePackage spec;
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
       virtual = providers:
@@ -194,12 +195,12 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
         , ...
         } @ prefs: let
           provs = lib.toList (lib.coalesce provider providers);
-          opts = builtins.map (o: getSpec o (builtins.removeAttrs prefs ["version" "provider"])) provs;
+          opts = builtins.map (o: getPackage o (builtins.removeAttrs prefs ["version" "provider"])) provs;
           check = opt:
-            let prov = opt.provides.${name} or null; in 
+            let prov = opt.spec.provides.${name} or null; in 
             prov != null && lib.versionsOverlap version prov;
           choice = builtins.filter check opts;
-        in if choice == [] then "no providers for ${name}@${vers}" else builtins.head choice;
+        in if choice == [] then "no providers for ${name}@${version}" else builtins.head choice;
 
     in desc:
       if builtins.isList desc then
@@ -210,23 +211,23 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
         package (lib.const desc)
       else throw "${name}: invalid package descriptor ${toString (builtins.typeOf desc)}";
 
+  /* create a package from a spec */
   makePackage = spec: let
       name = "${spec.name}-${spec.version}";
-      pkg = spec // { depends = builtins.mapAttrs (name: dep: (makePackage dep).spec) spec.depends; };
       drv = if spec.extern != null
         then {
           inherit name;
-          outPath = spec.extern;
+          out = spec.extern;
         }
-        else derivation (spackBuilder // {
+        else builtins.removeAttrs (derivation (spackBuilder // {
           args = [spack/builder.py];
           inherit spackCache name;
-          spec = builtins.toJSON pkg;
+          spec = builtins.toJSON spec;
           passAsFile = ["spec"];
-        });
+        })) ["PYTHONPATH" "spackConfig" "spackCache" "passAsFile"];
     in drv // {
-      spec = pkg // { pkg = drv; };
-      paths = builtins.mapAttrs (a: p: "${drv.outPath}/${p}") spec.paths;
+      inherit spec;
+      #paths = builtins.mapAttrs (a: p: "${drv.out}/${p}") spec.paths;
     };
 
   # generate nix package metadata from spack repos
@@ -254,15 +255,12 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
     (import spackRepo repoLib));
 
   /* partially applied specs, which take preferences as argument */
-  resolvers = builtins.mapAttrs resolveSpec repo // {
-    compiler = bootstrapPacks.getSpec prefs.compiler;
+  resolvers = builtins.mapAttrs resolvePackage repo // {
+    compiler = bootstrapPacks.getPackage prefs.compiler;
   };
 
   /* fully applied resolved packages with default preferences */
-  specs = builtins.mapAttrs (name: spec: spec {}) resolvers;
-
-  /* fully applied resolved packages with default preferences */
-  pkgs = builtins.mapAttrs (name: makePackage) specs;
+  pkgs = builtins.mapAttrs (name: res: res {}) resolvers;
 
 });
 

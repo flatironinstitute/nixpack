@@ -27,4 +27,5 @@ in
   intel-mpi = nocompiler;
   intel-oneapi-mkl = nocompiler;
   intel-oneapi-mpi = nocompiler;
+  intel-oneapi-tbb = nocompiler;
 }

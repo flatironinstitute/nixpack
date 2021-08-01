@@ -3,6 +3,7 @@ from typing import Tuple
 
 import os
 import functools
+import shutil
 import json
 
 #from pprint import pprint
@@ -49,19 +50,26 @@ system = os.environ.pop('system')
 archos = os.environ.pop('os')
 
 nullCompiler = spack.spec.CompilerSpec('gcc', '0')
+nixStore = os.environ.pop('NIX_STORE')
 
 class NixSpec(spack.spec.Spec):
     # to re-use identical specs so id is reasonable
     specCache = dict()
-    def __init__(self, spec, top=False):
+    nixSpecFile = '.nixpack.spec';
+    def __init__(self, spec, prefix):
+        if isinstance(spec, str):
+            self.specCache[spec] = self
+            with open(spec, 'r') as sf:
+                spec = json.load(sf)
+
         super().__init__(normal=True, concrete=True)
         self.name = spec['name']
         self.namespace = spec['namespace']
         version = spec['version']
         self.versions = spack.version.VersionList([spack.version.Version(version)])
         self._set_architecture(target=target, platform=platform, os=archos)
-        pkg = os.environ.pop('out') if top else spec['pkg']
-        self._prefix = spack.util.prefix.Prefix(pkg)
+        self._prefix = spack.util.prefix.Prefix(prefix)
+        self.external_path = spec['extern']
 
         variants = spec['variants']
         assert variants.keys() == self.package.variants.keys()
@@ -82,19 +90,30 @@ class NixSpec(spack.spec.Spec):
         self.paths = {n: os.path.join(self.prefix, p) for n, p in spec['paths'].items()}
         self.compiler = nullCompiler
         self._as_compiler = None
+        # would be nice to use nix hash, but nix and python use different base32 alphabets
+        #if not spec['extern'] and prefix.startswith(nixStore):
+        #    self._hash, nixname = prefix[len(nixStore):].lstrip('/').split('-', 1)
 
-        self.specCache[pkg] = self
         for n, d in spec['depends'].items():
+            if isinstance(d, str):
+                key = d
+            else:
+                # extern: name + prefix should be enough
+                key = f"{d['name']}:{d['out']}"
             try:
-                s = self.specCache[d['pkg']]
+                spec = self.specCache[key]
             except KeyError:
-                s = NixSpec(d)
+                if isinstance(d, str):
+                    spec = NixSpec(os.path.join(d, self.nixSpecFile), d)
+                else:
+                    spec = NixSpec(d['spec'], d['out'])
+                self.specCache[key] = spec
             if n == 'compiler':
-                self.compiler_spec = s
-                self.compiler = s.as_compiler
+                self.compiler_spec = spec
+                self.compiler = spec.as_compiler
             else:
                 dspec = self._evaluate_dependency_conditions(n)
-                dspec.spec = s
+                dspec.spec = spec
                 self._add_dependency(dspec.spec, dspec.type)
 
     @property
@@ -104,14 +123,8 @@ class NixSpec(spack.spec.Spec):
         return self._as_compiler
 
 os.environ.pop('name')
-specf = os.environ.pop('specPath', None)
-if specf:
-    with open(specf, 'r') as sf:
-        jspec = json.load(sf)
-else:
-    jspec = json.loads(os.environ.pop('spec'))
-#pprint(jspec)
-spec = NixSpec(jspec, True)
+nixspec = os.environ.pop('specPath')
+spec = NixSpec(nixspec, os.environ.pop('out'))
 if spec.compiler != nullCompiler:
     spack.config.set('compilers', [{'compiler': {
         'spec': str(spec.compiler),
@@ -129,17 +142,25 @@ opts = {
         'tests': spec.tests,
     }
 
+pkg = spec.package
+print(spec.tree(cover='edges', format=spack.spec.default_format + ' {prefix}'))
+spack.build_environment.setup_package(pkg, True)
+
+# create and stash some metadata
+mtdp = spack.store.layout.metadata_path(spec)
+os.makedirs(mtdp, exist_ok=True)
+shutil.copyfile(nixspec, os.path.join(spec.prefix, NixSpec.nixSpecFile))
+with open(os.path.join(mtdp, "spec"), "w") as sf:
+    print(spec, file=sf)
+
+# log build phases to nix
 def wrapPhase(p, f, *args):
     nixLog({'action': 'setPhase', 'phase': p})
     return f(*args)
 
-pkg = spec.package
-print(f"spacking {spec} to {pkg.prefix}")
-spack.build_environment.setup_package(pkg, True)
-os.makedirs(spack.store.layout.metadata_path(spec), exist_ok=True)
-with open(os.path.join(spack.store.layout.metadata_path(spec), "spec"), "w") as sf:
-    print(spec, file=sf)
 for pn, pa in zip(pkg.phases, pkg._InstallPhase_phases):
     pf = getattr(pkg, pa)
     setattr(pkg, pa, functools.partial(wrapPhase, pn, pf))
+
+# do the actual install
 spack.installer.build_process(pkg, opts)
