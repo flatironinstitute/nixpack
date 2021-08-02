@@ -63,7 +63,7 @@ class NixSpec(spack.spec.Spec):
             with open(nixspec, 'r') as sf:
                 nixspec = json.load(sf)
 
-        super().__init__(normal=True, concrete=True)
+        super().__init__()
         self.name = nixspec['name']
         self.namespace = nixspec['namespace']
         version = nixspec['version']
@@ -75,7 +75,6 @@ class NixSpec(spack.spec.Spec):
         variants = nixspec['variants']
         assert variants.keys() == self.package.variants.keys()
         for n, s in variants.items():
-            v = self.package.variants[n]
             if isinstance(s, bool):
                 v = spack.variant.BoolValuedVariant(n, s)
             elif isinstance(s, list):
@@ -85,10 +84,8 @@ class NixSpec(spack.spec.Spec):
             else:
                 v = spack.variant.AbstractVariant(n, s)
             self.variants[n] = v
-        for f in self.compiler_flags.valid_compiler_flags():
-            self.compiler_flags[f] = []
         self.tests = nixspec['tests']
-        self.paths = {n: os.path.join(self.prefix, p) for n, p in nixspec['paths'].items()}
+        self.paths = {n: os.path.join(prefix, p) for n, p in nixspec['paths'].items()}
         self.compiler = nullCompiler
         self._as_compiler = None
         # would be nice to use nix hash, but nix and python use different base32 alphabets
@@ -120,6 +117,9 @@ class NixSpec(spack.spec.Spec):
                     # trim build dep references
                     del nixspec['depends'][n]
 
+        for f in self.compiler_flags.valid_compiler_flags():
+            self.compiler_flags[f] = []
+        self.architecture.target.optimization_flags(self.compiler)
         self.nixspec = nixspec
 
     @property
@@ -139,8 +139,11 @@ if spec.compiler != nullCompiler:
         'operating_system': archos,
         'target': target,
     }}], 'command_line')
-else:
-    pass
+spack.spec.Spec.inject_patches_variant(spec)
+spec._mark_concrete()
+
+pkg = spec.package
+print(spec.tree(cover='edges', format=spack.spec.default_format + ' {prefix}'))
 
 opts = {
         'install_deps': False,
@@ -148,8 +151,7 @@ opts = {
         'tests': spec.tests,
     }
 
-pkg = spec.package
-print(spec.tree(cover='edges', format=spack.spec.default_format + ' {prefix}'))
+print(spec.variants.get('patches'))
 spack.build_environment.setup_package(pkg, True)
 
 # create and stash some metadata

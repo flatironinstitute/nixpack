@@ -56,7 +56,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   inherit lib;
 
   systemSplit = lib.splitRegex "-" packPrefs.system;
-  target = builtins.head systemSplit;
+  target = packPrefs.target or (builtins.head systemSplit);
   platform = builtins.elemAt systemSplit 1;
 
   spack = builtins.fetchGit ({ url = "git://github.com/spack/spack"; name = "spack"; } //

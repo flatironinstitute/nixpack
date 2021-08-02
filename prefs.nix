@@ -1,5 +1,6 @@
 {
   system = builtins.currentSystem;
+  target = "broadwell";
   os = "centos7";
   /* where to get the spack respository */
   spackGit = {
