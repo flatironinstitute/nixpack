@@ -49,6 +49,10 @@ rec {
   traceId' = x: deepSeq x (trace x x);
 
   remove = e: filter (x: x != e);
+  nub = l:
+    if l == [] then l else
+    let x = head l; r = nub (tail l); in
+    if elem x r then r else cons x r;
   nubBy = eq: l:
     if l == [] then l else
     let x = head l; in

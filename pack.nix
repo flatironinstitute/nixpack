@@ -155,17 +155,32 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
           pref
         else err);
       resolveDepends = tests: arg: pref: let
+          /* split deps into unneeded (filtered), runtime (right), and build (wrong) */
           types = lib.mapAttrs (name: dep: (if tests then lib.id else lib.remove "test") dep.type or []) arg;
           tdeps = builtins.partition (n: isRDepType types.${n})
             (builtins.filter (n: types.${n} != []) (builtins.attrNames arg));
+          /* merge user prefs with package prefs, cleanup */
           makeDeps = l: builtins.listToAttrs (map (name: { inherit name;
             value = prefsIntersect (builtins.removeAttrs arg.${name} ["type"]) pref.${name} or null; }) l);
           rdeps = makeDeps tdeps.right;
           odeps = makeDeps tdeps.wrong;
+          /* propagate rdep prefs into children */
           deps = builtins.mapAttrs (name: dep: prefsIntersect dep { depends = rdeps; }) rdeps // odeps;
-          /* TODO propagate back up? */
-        /* resolve an actual package */
-        in builtins.mapAttrs getPackage deps;
+          /* make packages */
+          deppkgs = builtins.mapAttrs getPackage deps;
+          /* if children have any common rdeps, use grandchildren instead
+           * (though really should only if they are also rdeps)
+           */
+          updrec = pkgs: dep: 
+            let l = lib.nub (builtins.filter (x: x != null)
+              (map (child: deppkgs.${child}.specs.depends.${dep} or null) tdeps.right));
+            in
+            if l == [] then pkgs else
+            if length l == 1 then pkgs // { "${dep}" = head l; } else
+            /* really we should also cross-propagate child prefs to avoid this */
+            throw "${name}: inconsistent recursive dependencies for ${dep}";
+          rrdeps = builtins.foldl' updrec deppkgs tdeps.right;
+        in rrdeps;
 
       /* resolving a real package */
       package = gen:
