@@ -14,6 +14,7 @@ prefsIntersect = let
         if builtins.isList a && builtins.isList b then lib.union a b
         else err a b);
       type = lib.union;
+      patches = a: b: a ++ b;
     };
   in lib.coalesceWith (lib.mergeWithKeys (k: intersectors.${k} or intersectScalar));
 
@@ -34,6 +35,7 @@ defaultDesc = {
   namespace = "builtin";
   version = [];
   variants = {};
+  patches = [];
   depends = {
     compiler = {
       type = ["build"];
@@ -48,6 +50,8 @@ patchDesc = patch: gen: spec: let desc = gen spec; in
   desc // lib.applyOptional (lib.applyOptional patch spec) desc;
 patchRepo = patch: repo: repo //
   builtins.mapAttrs (name: f: patchDesc f (repo.${name} or (spec: {}))) patch;
+
+repoPatches = patchRepo (import ./patch lib);
 
 packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   label = packPrefs.label or "root";
@@ -186,6 +190,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
       package = gen:
         { version ? uprefs.version or null
         , variants ? {}
+        , patches ? uprefs.patches or []
         , depends ? {}
         , extern ? uprefs.extern or null
         , tests ? uprefs.tests or null
@@ -197,11 +202,13 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
             extern   = lib.coalesce extern desc.extern;
             version  = if spec.extern != null && lib.versionIsConcrete version then version
               else     resolveVersion  desc.version  version;
+            patches  = desc.patches ++ patches;
             variants = resolveVariants desc.variants (variants // uprefs.variants or {});
             depends = if spec.extern != null then {} else
               resolveDepends spec.tests desc.depends (depends // uprefs.depends or {});
           };
         in makePackage spec;
+        /* TODO: remove bdeps from final package spec? */
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
       virtual = providers:
@@ -265,9 +272,7 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   };
 
   /* full metadata repo package descriptions */
-  repo = patchRepo packPrefs.repoPatch
-    (patchRepo (import ./patch.nix lib)
-    (import spackRepo repoLib));
+  repo = patchRepo packPrefs.repoPatch (repoPatches (import spackRepo repoLib));
 
   /* partially applied specs, which take preferences as argument */
   resolvers = builtins.mapAttrs resolvePackage repo // {

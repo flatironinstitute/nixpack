@@ -64,6 +64,7 @@ class NixSpec(spack.spec.Spec):
                 nixspec = json.load(sf)
 
         super().__init__()
+        self.nixspec = nixspec
         self.name = nixspec['name']
         self.namespace = nixspec['namespace']
         version = nixspec['version']
@@ -120,7 +121,12 @@ class NixSpec(spack.spec.Spec):
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
         self.architecture.target.optimization_flags(self.compiler)
-        self.nixspec = nixspec
+
+        if nixspec['patches']:
+            patches = self.package.patches.setdefault(spack.directives.make_when_spec(True), [])
+            for i, p in enumerate(nixspec['patches']):
+                patches.append(spack.patch.FilePatch(self.package, p, 1, '.', ordering_key = ('~nixpack', i)))
+            spack.repo.path.patch_index.update_package(self.fullname)
 
     @property
     def as_compiler(self):
@@ -151,10 +157,8 @@ opts = {
         'tests': spec.tests,
     }
 
-print(spec.variants.get('patches'))
-spack.build_environment.setup_package(pkg, True)
-
 # create and stash some metadata
+spack.build_environment.setup_package(pkg, True)
 os.makedirs(pkg.metadata_dir, exist_ok=True)
 with open(os.path.join(spec.prefix, NixSpec.nixSpecFile), 'w') as sf:
     json.dump(spec.nixspec, sf)

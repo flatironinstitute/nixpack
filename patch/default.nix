@@ -20,6 +20,9 @@ in
       fc = null;
     };
   };
+  openssh = {
+    patches = [./openssh-keysign-setuid.patch];
+  };
 
   /* some things don't use a compiler */
   intel = nocompiler;
