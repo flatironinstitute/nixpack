@@ -128,4 +128,8 @@ rec {
     if isAttrs v then v.${m} else
     if isList v then elem m v else
     v == m) (toList ms);
+
+  /* do the elements of list a all appear in-order in list b? */
+  subsetOrdered = a: b:
+    a == [] || (b != [] && subsetOrdered (tail a) (if head a == head b then tail b else b));
 }

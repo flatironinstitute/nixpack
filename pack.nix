@@ -46,6 +46,44 @@ defaultDesc = {
   extern = null;
 };
 
+variantToString = n: v:
+       if v == true  then "+"+n
+  else if v == false then "~"+n
+  else " ${n}="+
+      (if builtins.isList v then builtins.concatStringsSep "," v
+  else if builtins.isAttrs v then builtins.concatStringsSep "," (map (n: variantToString n v.${n}) (builtins.attrNames v))
+  else builtins.toString v);
+
+/* like spack default format */
+specToString = spec:
+  "${spec.name}@${spec.version}"
+  + builtins.concatStringsSep "" (map (v: variantToString v spec.variants.${v})
+    (builtins.sort (a: b: builtins.typeOf spec.variants.${a} < builtins.typeOf spec.variants.${b}) (builtins.attrNames spec.variants)));
+
+/* check that a given spec conforms to the specified preferences */
+specMatches = spec:
+  { version ? null
+  , variants ? {}
+  , patches ? []
+  , depends ? {}
+  , extern ? spec.extern
+  , ... /* don't care about tests */
+  } @ prefs:
+     lib.versionMatches spec.version version
+  && builtins.all (name: lib.variantMatches (spec.variants.${name} or null) variants.${name}) (builtins.attrNames variants)
+  && lib.subsetOrdered patches spec.patches
+  && builtins.all (name: specMatches spec.depends.${name} depends.${name}) (builtins.attrNames depends)
+  && spec.extern == extern;
+
+getPackageWith = get: arg:
+  if arg == null then
+    pref: null
+  else if builtins.isString arg then
+    builtins.addErrorContext "getting package ${arg}" (get arg)
+  else if arg ? name then
+    pref: getPackageWith get arg.name (prefsIntersect (builtins.removeAttrs arg ["name"]) pref)
+  else throw "invalid package";
+
 patchDesc = patch: gen: spec: let desc = gen spec; in
   desc // lib.applyOptional (lib.applyOptional patch spec) desc;
 patchRepo = patch: repo: repo //
@@ -53,20 +91,32 @@ patchRepo = patch: repo: repo //
 
 repoPatches = patchRepo (import ./patch lib);
 
-packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
-  label = packPrefs.label or "root";
-  prefs = packPrefs;
-  withPrefs = p: packsWithPrefs (lib.recursiveUpdate packPrefs p);
+packsWithPrefs = 
+  { system ? builtins.currentSystem
+  , os ? "unknown"
+  , target ? builtins.head (lib.splitRegex "-" system)
+  , platform ? builtins.elemAt (lib.splitRegex "-" system) 1
+  , label ? "root"
+  , spackGit ? {}
+  , spackConfig ? {}
+  , spackPython ? "/usr/bin/python3"
+  , repoPatch ? {}
+  , global ? {}
+  , package ? {}
+  , compiler ? { name = "gcc"; }
+  , bootstrapCompiler ? compiler // { extern = "/usr"; }
+  , dynamic ? false
+  } @ packPrefs:
+lib.fix (packs: with packs; {
   inherit lib;
-
-  systemSplit = lib.splitRegex "-" packPrefs.system;
-  target = packPrefs.target or (builtins.head systemSplit);
-  platform = builtins.elemAt systemSplit 1;
+  prefs = packPrefs;
+  inherit system os target platform label;
+  withPrefs = p: packsWithPrefs (lib.recursiveUpdate packPrefs p);
 
   spack = builtins.fetchGit ({ url = "git://github.com/spack/spack"; name = "spack"; } //
-    packPrefs.spackGit);
+    spackGit);
 
-  defaultSpackConfig = {
+  spackConfig = import spack/config.nix packs (lib.recursiveUpdate {
     bootstrap = { enable = false; };
     config = {
       locks = false;
@@ -83,24 +133,21 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
         f77 = null;
         fc = null;
       };
-      operating_system = packPrefs.os;
+      operating_system = os;
       target = target;
       modules = [];
-    }; }];
-  };
-  spackConfig = import spack/config.nix packs
-    (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
+    }; }]; } spackConfig);
 
   spackNixLib = derivation {
     name = "nix-spack-py";
-    inherit (packPrefs) system;
+    inherit system;
     builder = spack/install.sh;
     src = spack/nixpack.py;
   };
 
   spackBuilder = {
-    inherit (packPrefs) system os;
-    builder = packPrefs.spackPython;
+    inherit system os;
+    builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
     inherit (packs) spackConfig;
   };
@@ -112,14 +159,10 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
   });
 
   /* look up a package requirement and resolve it with prefs */
-  getPackage = arg:
-    if /* builtins.trace "${label}.${builtins.toJSON arg}" */ arg == null then
-      pref: null
-    else if builtins.isString arg then
-      resolvers.${arg} or (throw "package ${arg} not found")
-    else if arg ? name then
-      pref: getPackage arg.name (prefsIntersect (builtins.removeAttrs arg ["name"]) pref)
-    else throw "invalid package";
+  getPackage = getPackageWith (name: pref:
+    if pref == null || pref == {}
+      then pkgs.${name} /* optimization */
+      else resolvers.${name} pref);
 
   /* resolve a named package descriptor into a concrete spec (concretize) */
   resolvePackage = name:
@@ -127,15 +170,15 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
       uprefs = prefsUpdate packPrefs.global packPrefs.package.${name} or null;
       /* combining preferences with descriptor to get concrete package spec */
       resolveEach = resolver: arg: pref:
-        builtins.mapAttrs (name: resolver name pref.${name} or null) arg;
+        builtins.mapAttrs (n: a: resolver n a pref.${n} or null) arg;
       resolveVersion = arg: pref:
         /* special version matching: a (list of intersected) version constraint */
         let v = builtins.filter (v: lib.versionMatches v pref) arg;
         in if v == []
           then throw "${name}: no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}"
           else builtins.head v;
-      resolveVariants = resolveEach (vname: pref: arg:
-        let err = throw "${name}: invalid variant ${vname}: ${toString pref} (for ${toString arg})"; in
+      resolveVariants = resolveEach (vname: arg: pref:
+        let err = throw "${name} variant ${vname}: invalid ${toString pref} (for ${toString arg})"; in
         if pref == null then
           /* no preference: use default */
           if builtins.isList arg then builtins.head arg else arg
@@ -159,10 +202,13 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
           pref
         else err);
       resolveDepends = tests: arg: pref: let
-          /* split deps into unneeded (filtered), runtime (right), and build (wrong) */
+          /* filter out unneded deps */
           types = lib.mapAttrs (name: dep: (if tests then lib.id else lib.remove "test") dep.type or []) arg;
-          tdeps = builtins.partition (n: isRDepType types.${n})
-            (builtins.filter (n: types.${n} != []) (builtins.attrNames arg));
+          adeps = builtins.filter (n: types.${n} != []) (builtins.attrNames arg);
+
+        /* dynamic */
+          /* split deps into runtime (right) and build (wrong) */
+          tdeps = builtins.partition (n: isRDepType types.${n}) adeps;
           /* merge user prefs with package prefs, cleanup */
           makeDeps = l: builtins.listToAttrs (map (name: { inherit name;
             value = prefsIntersect (builtins.removeAttrs arg.${name} ["type"]) pref.${name} or null; }) l);
@@ -177,14 +223,40 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
            */
           updrec = pkgs: dep: 
             let l = lib.nub (builtins.filter (x: x != null)
-              (map (child: deppkgs.${child}.specs.depends.${dep} or null) tdeps.right));
+              (map (child: deppkgs.${child}.spec.depends.${dep} or null) tdeps.right));
             in
             if l == [] then pkgs else
-            if length l == 1 then pkgs // { "${dep}" = head l; } else
+            if builtins.length l == 1 then pkgs // { "${dep}" = builtins.head l; } else
             /* really we should also cross-propagate child prefs to avoid this */
             throw "${name}: inconsistent recursive dependencies for ${dep}";
           rrdeps = builtins.foldl' updrec deppkgs tdeps.right;
-        in rrdeps;
+
+        /* static */
+          sdeps = builtins.listToAttrs (map (dep:
+            let pkg = getPackage dep (lib.coalesce (pref.${dep} or null) {}); /* see {} optimization there */
+            in if specMatches pkg.spec arg.${dep} then { name = dep; value = pkg; } else
+            throw "${name} dependency ${dep}: package ${specToString pkg.spec} does not match dependency constraints ${builtins.toJSON arg.${dep}}")
+            adeps);
+        in if dynamic then rrdeps else sdeps;
+
+      /* create a package from a spec */
+      makePackage = spec: let
+          name = "${spec.name}-${spec.version}";
+          drv = if spec.extern != null
+            then {
+              inherit name;
+              out = spec.extern;
+            }
+            else builtins.removeAttrs (derivation (spackBuilder // {
+              args = [spack/builder.py];
+              inherit spackCache name;
+              spec = builtins.toJSON spec;
+              passAsFile = ["spec"];
+            })) ["PYTHONPATH" "spackConfig" "spackCache" "passAsFile"];
+        in drv // {
+          inherit spec;
+          #paths = builtins.mapAttrs (a: p: "${drv.out}/${p}") spec.paths;
+        };
 
       /* resolving a real package */
       package = gen:
@@ -224,33 +296,14 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
           choice = builtins.filter check opts;
         in if choice == [] then "no providers for ${name}@${version}" else builtins.head choice;
 
-    in desc:
+    in builtins.addErrorContext "resolving package ${name}" (desc:
       if builtins.isList desc then
         virtual desc
       else if builtins.isFunction desc then
         package desc
       else if builtins.isAttrs desc then
         package (lib.const desc)
-      else throw "${name}: invalid package descriptor ${toString (builtins.typeOf desc)}";
-
-  /* create a package from a spec */
-  makePackage = spec: let
-      name = "${spec.name}-${spec.version}";
-      drv = if spec.extern != null
-        then {
-          inherit name;
-          out = spec.extern;
-        }
-        else builtins.removeAttrs (derivation (spackBuilder // {
-          args = [spack/builder.py];
-          inherit spackCache name;
-          spec = builtins.toJSON spec;
-          passAsFile = ["spec"];
-        })) ["PYTHONPATH" "spackConfig" "spackCache" "passAsFile"];
-    in drv // {
-      inherit spec;
-      #paths = builtins.mapAttrs (a: p: "${drv.out}/${p}") spec.paths;
-    };
+      else throw "${name}: invalid package descriptor ${toString (builtins.typeOf desc)}");
 
   # generate nix package metadata from spack repos
   spackRepo = derivation (spackBuilder // {
@@ -259,20 +312,18 @@ packsWithPrefs = packPrefs: lib.fix (packs: with packs; {
     inherit spackCache;
   });
 
-  repoLib = {
-    /* utilities needed by the repo */
-    inherit (lib) when versionMatches variantMatches;
-    inherit prefsIntersection versionsUnion platform target;
-    inherit (packPrefs) os;
-  };
-
   bootstrapPacks = packs.withPrefs {
-    compiler = packPrefs.bootstrapCompiler;
+    compiler = bootstrapCompiler;
     label = "bootstrap";
+    dynamic = false;
   };
 
   /* full metadata repo package descriptions */
-  repo = patchRepo packPrefs.repoPatch (repoPatches (import spackRepo repoLib));
+  repo = patchRepo repoPatch (repoPatches (import spackRepo {
+      /* utilities needed by the repo */
+      inherit (lib) when versionMatches variantMatches;
+      inherit prefsIntersection versionsUnion platform target os;
+    }));
 
   /* partially applied specs, which take preferences as argument */
   resolvers = builtins.mapAttrs resolvePackage repo // {
