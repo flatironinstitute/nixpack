@@ -15,13 +15,13 @@ This is a terrible, horrible work in progress, and you probably shouldn't touch 
 
 ## Compatibility
 
-nixpack uses an unmodified checkout of spack (as specified in `spackGit`), and should work with other forks as well.
+nixpack uses an unmodified checkout of spack (as specified in `spackSrc`), and should work with other forks as well.
 However, it makes many assumptions about the internals of spack builds, so may not work on different versions.
 
 ## Implementation and terminology
 
 In nixpkgs, there's mainly the concept of package, and arguments that can be overridden.
-In spack, there are packages and specs, and specs are used in many different ways.
+In spack, there are packages and specs, and "spec" is used in many different ways.
 
 ### package descriptor
 
@@ -118,8 +118,12 @@ See `prefs.nix`.
 ### Bootstrapping
 
 The configured `bootstrapCompiler` is used to build the configured `compiler`, which is used to build all other packages.
+To disable bootstrapping, just make `compiler` itself external (i.e., set them the same).
 
 ### `packs`
 
 The world, like `nixpkgs`.
 It contains `repo` with package descriptor generators and `pkgs`.
+
+You can have multiple instances of `packs` with different preferences (for example, to make package sets with different compilers).
+These can be created based on other `packs` using `packs.withPrefs { ... }` to override `prefs.nix`.

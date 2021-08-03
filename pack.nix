@@ -97,7 +97,7 @@ packsWithPrefs =
   , target ? builtins.head (lib.splitRegex "-" system)
   , platform ? builtins.elemAt (lib.splitRegex "-" system) 1
   , label ? "root"
-  , spackGit ? {}
+  , spackSrc ? {}
   , spackConfig ? {}
   , spackPython ? "/usr/bin/python3"
   , repoPatch ? {}
@@ -113,8 +113,8 @@ lib.fix (packs: with packs; {
   inherit system os target platform label;
   withPrefs = p: packsWithPrefs (lib.recursiveUpdate packPrefs p);
 
-  spack = builtins.fetchGit ({ url = "git://github.com/spack/spack"; name = "spack"; } //
-    spackGit);
+  spack = if builtins.isString spackSrc then spackSrc else
+    builtins.fetchGit ({ name = "spack"; url = "git://github.com/spack/spack"; } // spackSrc);
 
   spackConfig = import spack/config.nix packs (lib.recursiveUpdate {
     bootstrap = { enable = false; };
@@ -123,6 +123,7 @@ lib.fix (packs: with packs; {
       install_tree = {
         root = "/rootless-spack";
       };
+      misc_cache = "$tempdir/cache"; /* overridden by spackCache */
     };
     compilers = [{ compiler = {
       /* fake null compiler */
@@ -145,6 +146,7 @@ lib.fix (packs: with packs; {
     src = spack/nixpack.py;
   };
 
+  /* common attributes for running spack */
   spackBuilder = {
     inherit system os;
     builder = spackPython;
@@ -152,11 +154,12 @@ lib.fix (packs: with packs; {
     inherit (packs) spackConfig;
   };
 
-  # pre-generated spack repo index cache
-  spackCache = derivation (spackBuilder // {
-    name = "spack-cache";
-    args = [spack/cache.py];
-  });
+  /* pre-generated spack repo index cache */
+  spackCache = if builtins.isString spackSrc then null else
+    derivation (spackBuilder // {
+      name = "spack-cache";
+      args = [spack/cache.py];
+    });
 
   /* look up a package requirement and resolve it with prefs */
   getPackage = getPackageWith (name: pref:

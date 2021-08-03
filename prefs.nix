@@ -2,8 +2,11 @@
   system = builtins.currentSystem;
   target = "broadwell";
   os = "centos7";
-  /* where to get the spack respository */
-  spackGit = {
+  /* where to get the spack respository. Can also be a path (string) to an
+     existing spack install, however this will eliminate the dependency and
+     break purity, and can cause your repo metadata to get out of sync,
+     so is not recommended for production. */
+  spackSrc = {
     /* default:
     url = "git://github.com/spack/spack";
     */
@@ -77,6 +80,4 @@
        different prefs or dependency prefs may also be different.
    */
   dynamic = false;
-
-  /* any of these can be overridden and additional packs created with packs.withPrefs */
 }
