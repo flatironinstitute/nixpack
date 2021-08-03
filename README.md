@@ -113,7 +113,7 @@ These contain a `spec` metadata attribute.
 ### preferences
 
 Global user preferences.
-See `prefs.nix`.
+See [`prefs.nix`](prefs.nix).
 
 ### Bootstrapping
 

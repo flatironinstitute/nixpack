@@ -205,16 +205,17 @@ lib.fix (packs: with packs; {
           pref
         else err);
       resolveDepends = tests: arg: pref: let
+          deparg = builtins.mapAttrs (name: dep: if builtins.isList dep then prefsIntersection dep else dep) arg;
           /* filter out unneded deps */
-          types = lib.mapAttrs (name: dep: (if tests then lib.id else lib.remove "test") dep.type or []) arg;
-          adeps = builtins.filter (n: types.${n} != []) (builtins.attrNames arg);
+          types = builtins.mapAttrs (name: dep: (if tests then lib.id else lib.remove "test") dep.type or []) deparg;
+          adeps = builtins.filter (n: types.${n} != []) (builtins.attrNames deparg);
 
         /* dynamic */
           /* split deps into runtime (right) and build (wrong) */
           tdeps = builtins.partition (n: isRDepType types.${n}) adeps;
           /* merge user prefs with package prefs, cleanup */
           makeDeps = l: builtins.listToAttrs (map (name: { inherit name;
-            value = prefsIntersect (builtins.removeAttrs arg.${name} ["type"]) pref.${name} or null; }) l);
+            value = prefsIntersect (builtins.removeAttrs deparg.${name} ["type"]) pref.${name} or null; }) l);
           rdeps = makeDeps tdeps.right;
           odeps = makeDeps tdeps.wrong;
           /* propagate rdep prefs into children */
@@ -237,7 +238,7 @@ lib.fix (packs: with packs; {
         /* static */
           sdeps = builtins.listToAttrs (map (dep:
             let pkg = getPackage dep (lib.coalesce (pref.${dep} or null) {}); /* see {} optimization there */
-            in if specMatches pkg.spec arg.${dep} then { name = dep; value = pkg; } else
+            in if specMatches pkg.spec deparg.${dep} then { name = dep; value = pkg; } else
             throw "${name} dependency ${dep}: package ${specToString pkg.spec} does not match dependency constraints ${builtins.toJSON arg.${dep}}")
             adeps);
         in if dynamic then rrdeps else sdeps;
@@ -294,8 +295,10 @@ lib.fix (packs: with packs; {
           provs = lib.toList (lib.coalesce provider providers);
           opts = builtins.map (o: getPackage o (builtins.removeAttrs prefs ["version" "provider"])) provs;
           check = opt:
-            let prov = opt.spec.provides.${name} or null; in 
-            prov != null && lib.versionsOverlap version prov;
+            let
+              provarg = opt.spec.provides.${name} or null;
+              prov = if builtins.isList provarg then versionsUnion provarg else provarg;
+            in prov != null && lib.versionsOverlap version prov;
           choice = builtins.filter check opts;
         in if choice == [] then "no providers for ${name}@${version}" else builtins.head choice;
 
@@ -325,7 +328,7 @@ lib.fix (packs: with packs; {
   repo = patchRepo repoPatch (repoPatches (import spackRepo {
       /* utilities needed by the repo */
       inherit (lib) when versionMatches variantMatches;
-      inherit prefsIntersection versionsUnion platform target os;
+      inherit platform target os;
     }));
 
   /* partially applied specs, which take preferences as argument */

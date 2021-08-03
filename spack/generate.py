@@ -208,13 +208,13 @@ def depend(p, d):
     c = [whenCondition(p, w, depPrefs(s)) for w, s in d.items()]
     if len(c) == 1:
         return c[0]
-    return App('prefsIntersection', List(c))
+    return List(c)
 
 def provide(p, wv):
     c = [whenCondition(p, w, str(v)) for w, v in wv]
     if len(c) == 1:
         return c[0]
-    return App('versionsUnion', List(c))
+    return List(c)
 
 packs = dict()
 virtuals = defaultdict(set)

@@ -1,2 +1,2 @@
-let packs = import ./pack.nix (import ./prefs.nix);
+let packs = import ./packs.nix (import ./prefs.nix);
 in packs
