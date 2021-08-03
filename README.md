@@ -53,7 +53,7 @@ example = {
     virtual = "2:"
   };
   build = {}; # extra build parameters (not usually used)
-  extern = null; # a prefix string for an external installation (overrides depends, build)
+  extern = null; # a prefix string or derivation (e.g., nixpkgs package) for an external installation (overrides depends, build)
   paths = {}; # paths to tools provided by this package (like cc)
 };
 ```

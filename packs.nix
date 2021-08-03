@@ -22,8 +22,10 @@ prefsIntersect = let
 prefsIntersection = builtins.foldl' prefsIntersect null;
 
 versionsUnion = l:
-    let l' = builtins.filter (x: x != null) l;
-  in if l' == [] then null else builtins.concatStringsSep "," l';
+  if builtins.isList l then
+    let l' = lib.remove null l;
+  in lib.when (l' != []) (builtins.concatStringsSep "," l')
+  else l;
 
 isRDepType = t:
   builtins.elem "link" t || builtins.elem "run" t;
@@ -41,6 +43,7 @@ defaultDesc = {
       type = ["build"];
     };
   };
+  conflicts = [];
   provides = {};
   paths = {};
   extern = null;
@@ -100,6 +103,7 @@ packsWithPrefs =
   , spackSrc ? {}
   , spackConfig ? {}
   , spackPython ? "/usr/bin/python3"
+  , spackPath ? "/bin:/usr/bin"
   , repoPatch ? {}
   , global ? {}
   , package ? {}
@@ -151,15 +155,16 @@ lib.fix (packs: with packs; {
     inherit system os;
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
+    PATH = spackPath;
     inherit (packs) spackConfig;
   };
 
   /* pre-generated spack repo index cache */
-  spackCache = if builtins.isString spackSrc then null else
-    derivation (spackBuilder // {
+  spackCache = lib.when (builtins.isAttrs spackSrc)
+    (derivation (spackBuilder // {
       name = "spack-cache";
       args = [spack/cache.py];
-    });
+    }));
 
   /* look up a package requirement and resolve it with prefs */
   getPackage = getPackageWith (name: pref:
@@ -226,7 +231,7 @@ lib.fix (packs: with packs; {
            * (though really should only if they are also rdeps)
            */
           updrec = pkgs: dep: 
-            let l = lib.nub (builtins.filter (x: x != null)
+            let l = lib.nub (lib.remove null
               (map (child: deppkgs.${child}.spec.depends.${dep} or null) tdeps.right));
             in
             if l == [] then pkgs else
@@ -237,7 +242,7 @@ lib.fix (packs: with packs; {
 
         /* static */
           sdeps = builtins.listToAttrs (map (dep:
-            let pkg = getPackage dep (lib.coalesce (pref.${dep} or null) {}); /* see {} optimization there */
+            let pkg = getPackage dep (pref.${dep} or null); /* see {} optimization there */
             in if specMatches pkg.spec deparg.${dep} then { name = dep; value = pkg; } else
             throw "${name} dependency ${dep}: package ${specToString pkg.spec} does not match dependency constraints ${builtins.toJSON arg.${dep}}")
             adeps);
@@ -272,8 +277,9 @@ lib.fix (packs: with packs; {
         , tests ? uprefs.tests or null
         }: let
           desc = lib.recursiveUpdate defaultDesc (gen spec);
-          spec = desc // {
+          spec = {
             inherit name;
+            inherit (desc) namespace paths;
             tests    = lib.coalesce tests false;
             extern   = lib.coalesce extern desc.extern;
             version  = if spec.extern != null && lib.versionIsConcrete version then version
@@ -282,8 +288,11 @@ lib.fix (packs: with packs; {
             variants = resolveVariants desc.variants (variants // uprefs.variants or {});
             depends = if spec.extern != null then {} else
               resolveDepends spec.tests desc.depends (depends // uprefs.depends or {});
+            provides = builtins.mapAttrs (n: versionsUnion) desc.provides;
           };
-        in makePackage spec;
+          conflicts = lib.remove null desc.conflicts;
+        in if spec.extern != null || conflicts == [] then makePackage spec
+        else throw "${name}: has conflicts: ${toString conflicts}";
         /* TODO: remove bdeps from final package spec? */
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
@@ -293,11 +302,12 @@ lib.fix (packs: with packs; {
         , ...
         } @ prefs: let
           provs = lib.toList (lib.coalesce provider providers);
-          opts = builtins.map (o: getPackage o (builtins.removeAttrs prefs ["version" "provider"])) provs;
+          opts = builtins.map (o: getPackage o (lib.when (! fixedDeps)
+            (builtins.removeAttrs prefs ["version" "provider"]))) provs;
           check = opt:
             let
-              provarg = opt.spec.provides.${name} or null;
-              prov = if builtins.isList provarg then versionsUnion provarg else provarg;
+              provtry = builtins.tryEval opt.spec.provides.${name}; /* catch conflicts */
+              prov = lib.when provtry.success provtry.value;
             in prov != null && lib.versionsOverlap version prov;
           choice = builtins.filter check opts;
         in if choice == [] then "no providers for ${name}@${version}" else builtins.head choice;

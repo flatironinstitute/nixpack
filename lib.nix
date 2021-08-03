@@ -34,7 +34,7 @@ rec {
   fix = f: let x = f x; in x;
   when = c: x: if c then x else null;
   coalesce = x: d: if x == null then d else x;
-  coalesces = l: let r = filter (x: x != null) l; in when (r != []) (head r);
+  coalesces = l: let r = remove null l; in when (r != []) (head r);
   coalesceWith = f: a: b: if a == null then b else if b == null then a else f a b;
   mapNullable = f: a: if a == null then a else f a;
 

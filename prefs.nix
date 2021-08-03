@@ -2,6 +2,7 @@
   system = builtins.currentSystem;
   target = "broadwell";
   os = "centos7";
+
   /* where to get the spack respository. Can also be a path (string) to an
      existing spack install, however this will eliminate the dependency and
      break purity, and can cause your repo metadata to get out of sync,
@@ -24,8 +25,19 @@
       build_jobs = 28; /* overridden by NIX_BUILD_CORES */
     };
   };
-  /* which python to run spack with (currently needs to be system, but could be bootstrapped somehow) */
+  /* environment for running spack. spack needs things like python, cp, tar,
+     etc.  these can be string paths to the system or packages/environments
+     from nixpkgs, but regardless need to be external to nixpack. */
   spackPython = "/usr/bin/python3";
+  spackPath = "/bin:/usr/bin";
+
+  repoPatch = {
+    /* updates or additions to the spack repo (see patch/default.nix)
+    package = [spec: [old:]] {
+      new...
+    };
+    */
+  };
   global = {
     /* preferences to apply to every package -- generally not needed */
     tests = false;
@@ -40,7 +52,7 @@
       version = "4.0";
     };
     mpi = {
-      /* providers can be (optional) lists of names or { name; ...prefs } */
+      /* providers can be (optional) lists of names or { name; ...prefs }, and take precedence over inferred providers. */
       provider = [ "openmpi" ];
     };
     mpfr = {
@@ -50,6 +62,7 @@
       variants = { multithread = false; };
     };
   };
+  /* compiler is an implicit virtual dependency for every package */
   compiler = {
     /* preferences for global compiler */
     name = "gcc";
@@ -61,13 +74,7 @@
     version = "4.8.5";
     extern = "/usr";
   };
-  repoPatch = {
-    /* updates or additions to the spack repo (see patch.nix)
-    package = [spec: [old:]] {
-      new...
-    };
-    */
-  };
+
   /* how to resolve dependencies, similar to concretize together or separately.
      fixedDeps = false:  Each package is resolved dynamically based on preferences
        and constraints imposed by its dependers.  This can result in many
@@ -77,7 +84,8 @@
        constraints.  This ensures only one version of each dependent package
        exists within packs.  Different packs with different prefs may have
        different versions.  Top-level packages explicitly resolved with
-       different prefs or dependency prefs may also be different.
+       different prefs or dependency prefs may also be different.  Virtuals are
+       always resolved (to a package name) dynamically.
    */
   fixedDeps = true;
 }

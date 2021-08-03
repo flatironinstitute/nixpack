@@ -20,9 +20,12 @@ class Nix:
         if parens:
             out.write(')')
 
-class Expr(Nix, str):
+class Expr(Nix):
+    def __init__(self, s, prec=0):
+        self.str = s
+        self.prec = prec
     def print(self, indent, out):
-        out.write(self)
+        out.write(self.str)
 
 class List(Nix):
     def __init__(self, items):
@@ -97,6 +100,8 @@ class And(Nix):
             else:
                 out.write(' && ')
             self.paren(a, indent, out)
+        if first:
+            out.write('true')
 
 class Eq(Nix):
     prec = 11
@@ -172,8 +177,7 @@ def depPrefs(d):
         print(f"{d} has unsupported dependency patches", file=sys.stderr)
     return p
 
-def conditions(p, s):
-    c = []
+def conditions(c, p, s):
     def addConditions(a, s):
         if s.versions != spack.spec._any_version:
             c.append(App("versionMatches", Expr(a+'.version'), str(s.versions)))
@@ -186,6 +190,8 @@ def conditions(p, s):
             if s.compiler.versions != spack.spec._any_version:
                 c.append(App("versionMatches", Expr(a+'.depends.compiler.version'), str(s.compiler.versions)))
         for d in s.dependencies():
+            dp = a+'.depends.'+d.name
+            c.append(Expr(a+'.depends ? '+d.name, 4))
             addConditions(a+'.depends.'+d.name+'.spec', d)
         if s.architecture:
             if s.architecture.os:
@@ -196,10 +202,10 @@ def conditions(p, s):
                 # this isn't actually correct due to fancy targets but good enough for this
                 c.append(Eq(Expr('target'), str(s.architecture.target).rstrip(':')))
     addConditions('spec', s)
-    return c
 
 def whenCondition(p, s, a):
-    c = conditions(p, s)
+    c = []
+    conditions(c, p, s)
     if not c:
         return a
     return App('when', And(*c), a)
@@ -216,6 +222,12 @@ def provide(p, wv):
         return c[0]
     return List(c)
 
+def conflict(p, c, w, m):
+    l = []
+    conditions(l, p, spack.spec.Spec(c))
+    conditions(l, p, w)
+    return App('when', And(*l), m or str(c))
+
 packs = dict()
 virtuals = defaultdict(set)
 namespaces = ', '.join(r.namespace for r in spack.repo.path.repos)
@@ -231,6 +243,8 @@ for p in spack.repo.path.all_packages():
         desc['variants'] = {n: variant(p, v) for n, v in p.variants.items()}
     if p.dependencies:
         desc['depends'] = {n: depend(p, d) for n, d in p.dependencies.items()}
+    if p.conflicts:
+        desc['conflicts'] = [conflict(p, c, w, m) for c, wm in p.conflicts.items() for w, m in wm]
     if p.provided:
         provides = defaultdict(list)
         for v, cs in p.provided.items():
