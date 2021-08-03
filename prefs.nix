@@ -69,15 +69,15 @@
     */
   };
   /* how to resolve dependencies, similar to concretize together or separately.
-     dynamic = true:  Each package is resolved dynamically based on preferences
+     fixedDeps = false:  Each package is resolved dynamically based on preferences
        and constraints imposed by its dependers.  This can result in many
        different versions of each package existing in packs.
-     dynamic = false:  Packages are resolved only by user prefs, and an error
+     fixedDeps = true:  Packages are resolved only by user prefs, and an error
        is produced if dependencies don't conform to their dependers
        constraints.  This ensures only one version of each dependent package
        exists within packs.  Different packs with different prefs may have
        different versions.  Top-level packages explicitly resolved with
        different prefs or dependency prefs may also be different.
    */
-  dynamic = false;
+  fixedDeps = true;
 }

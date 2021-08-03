@@ -105,7 +105,7 @@ packsWithPrefs =
   , package ? {}
   , compiler ? { name = "gcc"; }
   , bootstrapCompiler ? compiler // { extern = "/usr"; }
-  , dynamic ? false
+  , fixedDeps ? false
   } @ packPrefs:
 lib.fix (packs: with packs; {
   inherit lib;
@@ -241,7 +241,7 @@ lib.fix (packs: with packs; {
             in if specMatches pkg.spec deparg.${dep} then { name = dep; value = pkg; } else
             throw "${name} dependency ${dep}: package ${specToString pkg.spec} does not match dependency constraints ${builtins.toJSON arg.${dep}}")
             adeps);
-        in if dynamic then rrdeps else sdeps;
+        in if fixedDeps then sdeps else rrdeps;
 
       /* create a package from a spec */
       makePackage = spec: let
@@ -321,7 +321,6 @@ lib.fix (packs: with packs; {
   bootstrapPacks = packs.withPrefs {
     compiler = bootstrapCompiler;
     label = "bootstrap";
-    dynamic = false;
   };
 
   /* full metadata repo package descriptions */
