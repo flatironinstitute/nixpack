@@ -145,7 +145,7 @@ lib.fix (packs: with packs; {
         fc = null;
       };
       operating_system = os;
-      target = target;
+      target = builtins.head (lib.splitRegex "-" system);
       modules = [];
     }; }]; } spackConfig);
 
@@ -158,7 +158,7 @@ lib.fix (packs: with packs; {
 
   /* common attributes for running spack */
   spackBuilder = {
-    inherit system os;
+    inherit system;
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
     PATH = spackPath;
@@ -253,6 +253,7 @@ lib.fix (packs: with packs; {
               out = spec.extern;
             }
             else builtins.removeAttrs (derivation (spackBuilder // {
+              inherit platform target os;
               args = [spack/builder.py];
               inherit spackCache name;
               spec = builtins.toJSON spec;
@@ -278,7 +279,7 @@ lib.fix (packs: with packs; {
             inherit (desc) namespace paths;
             tests    = lib.coalesce tests false;
             extern   = lib.coalesce extern desc.extern;
-            version  = if spec.extern != null && lib.versionIsConcrete version then version
+            version  = if extern != null && lib.versionIsConcrete version then version
               else     resolveVersion  desc.version  version;
             patches  = desc.patches ++ patches;
             variants = resolveVariants desc.variants (variants // uprefs.variants or {});

@@ -46,7 +46,8 @@ def nixLog(j):
         print("@nix", json.dumps(j), file=nixLogFile)
 
 system = os.environ.pop('system')
-(target, platform) = system.split('-', 1)
+target = os.environ.pop('target')
+platform = os.environ.pop('platform')
 archos = os.environ.pop('os')
 
 nullCompiler = spack.spec.CompilerSpec('gcc', '0')
@@ -122,7 +123,6 @@ class NixSpec(spack.spec.Spec):
 
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
-        self.architecture.target.optimization_flags(self.compiler)
 
         if nixspec['patches']:
             patches = self.package.patches.setdefault(spack.directives.make_when_spec(True), [])
@@ -144,9 +144,11 @@ if spec.compiler != nullCompiler:
         'spec': str(spec.compiler),
         'paths': spec.compiler_spec.paths,
         'modules': [],
-        'operating_system': archos,
-        'target': target,
+        'operating_system': spec.compiler_spec.architecture.os,
+        'target': system.split('-', 1)[0],
     }}], 'command_line')
+conc = spack.concretize.Concretizer()
+conc.adjust_target(spec)
 spack.spec.Spec.inject_patches_variant(spec)
 spec._mark_concrete()
 
