@@ -46,7 +46,7 @@ rec {
 
   traceId = x: trace x x;
   traceLabel = s: x: trace ("${s}: ${builtins.toJSON x}") x;
-  traceId' = x: deepSeq x (trace x x);
+  traceId' = x: deepSeq x (traceId x);
 
   remove = e: filter (x: x != e);
   nub = l:

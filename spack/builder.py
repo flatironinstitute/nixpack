@@ -94,6 +94,8 @@ class NixSpec(spack.spec.Spec):
         #    self._hash, nixname = prefix[len(nixStore):].lstrip('/').split('-', 1)
 
         for n, d in list(nixspec['depends'].items()):
+            if not d:
+                continue
             if isinstance(d, str):
                 key = d
             else:

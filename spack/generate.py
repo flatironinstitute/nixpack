@@ -191,8 +191,8 @@ def conditions(c, p, s):
                 c.append(App("versionMatches", Expr(a+'.depends.compiler.version'), str(s.compiler.versions)))
         for d in s.dependencies():
             dp = a+'.depends.'+d.name
-            c.append(Expr(a+'.depends ? '+d.name, 4))
-            addConditions(a+'.depends.'+d.name+'.spec', d)
+            c.append(Expr(dp + " or null != null", 11))
+            addConditions(dp+'.spec', d)
         if s.architecture:
             if s.architecture.os:
                 c.append(Eq(Expr('os'), s.architecture.os))

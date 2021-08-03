@@ -13,6 +13,7 @@ prefsIntersect = let
       variants = lib.mergeWith (a: b: if a == b then a else
         if builtins.isList a && builtins.isList b then lib.union a b
         else err a b);
+      depends = lib.mergeWith prefsIntersect;
       type = lib.union;
       patches = a: b: a ++ b;
     };
@@ -49,19 +50,24 @@ defaultDesc = {
   extern = null;
 };
 
-variantToString = n: v:
-       if v == true  then "+"+n
-  else if v == false then "~"+n
-  else " ${n}="+
-      (if builtins.isList v then builtins.concatStringsSep "," v
-  else if builtins.isAttrs v then builtins.concatStringsSep "," (map (n: variantToString n v.${n}) (builtins.attrNames v))
-  else builtins.toString v);
+/* a very simple version of Spec.format */
+specFormat = fmt: spec: let
+  variantToString = n: v:
+         if v == true  then "+"+n
+    else if v == false then "~"+n
+    else " ${n}="+
+        (if builtins.isList v then builtins.concatStringsSep "," v
+    else if builtins.isAttrs v then builtins.concatStringsSep "," (map (n: variantToString n v.${n}) (builtins.attrNames v))
+    else builtins.toString v);
+  fmts = {
+    inherit (spec) name version;
+    variants = builtins.concatStringsSep "" (map (v: variantToString v spec.variants.${v})
+      (builtins.sort (a: b: builtins.typeOf spec.variants.${a} < builtins.typeOf spec.variants.${b}) (builtins.attrNames spec.variants)));
+  };
+  in builtins.replaceStrings (map (n: "{${n}}") (builtins.attrNames fmts)) (builtins.attrValues fmts) fmt;
 
 /* like spack default format */
-specToString = spec:
-  "${spec.name}@${spec.version}"
-  + builtins.concatStringsSep "" (map (v: variantToString v spec.variants.${v})
-    (builtins.sort (a: b: builtins.typeOf spec.variants.${a} < builtins.typeOf spec.variants.${b}) (builtins.attrNames spec.variants)));
+specToString = specFormat "{name}@{version}{variants}";
 
 /* check that a given spec conforms to the specified preferences */
 specMatches = spec:
@@ -172,6 +178,10 @@ lib.fix (packs: with packs; {
       then pkgs.${name} /* optimization */
       else resolvers.${name} pref);
 
+  /* get the list of packages a given package might depend on (from the repo, makes assumptions about repo structure) */
+  getPossibleDepends = name:
+    (lib.applyOptional repo.${name} (throw "getPossibleDepends ${name}")).depends or {};
+
   /* resolve a named package descriptor into a concrete spec (concretize) */
   resolvePackage = name:
     let
@@ -209,44 +219,30 @@ lib.fix (packs: with packs; {
           /* a simple value: any value of that type */
           pref
         else err);
-      resolveDepends = tests: arg: pref: let
-          deparg = builtins.mapAttrs (name: dep: if builtins.isList dep then prefsIntersection dep else dep) arg;
-          /* filter out unneded deps */
-          types = builtins.mapAttrs (name: dep: (if tests then lib.id else lib.remove "test") dep.type or []) deparg;
-          adeps = builtins.filter (n: types.${n} != []) (builtins.attrNames deparg);
+      /* these need to happen in parallel due to depend conditionals being evaluated recursively */
+      resolveDepends = tests: depends: let
+          depargs = builtins.mapAttrs (n: arg: if builtins.isList arg then prefsIntersection arg else arg) depends;
+        in resolveEach (dname: dep: pref: let
+          type = (if tests then lib.id else lib.remove "test") dep.type or [];
+          clean = d: builtins.removeAttrs d ["type"];
 
-        /* dynamic */
-          /* split deps into runtime (right) and build (wrong) */
-          tdeps = builtins.partition (n: isRDepType types.${n}) adeps;
-          /* merge user prefs with package prefs, cleanup */
-          makeDeps = l: builtins.listToAttrs (map (name: { inherit name;
-            value = prefsIntersect (builtins.removeAttrs deparg.${name} ["type"]) pref.${name} or null; }) l);
-          rdeps = makeDeps tdeps.right;
-          odeps = makeDeps tdeps.wrong;
-          /* propagate rdep prefs into children */
-          deps = builtins.mapAttrs (name: dep: prefsIntersect dep { depends = rdeps; }) rdeps // odeps;
-          /* make packages */
-          deppkgs = builtins.mapAttrs getPackage deps;
-          /* if children have any common rdeps, use grandchildren instead
-           * (though really should only if they are also rdeps)
-           */
-          updrec = pkgs: dep: 
-            let l = lib.nub (lib.remove null
-              (map (child: deppkgs.${child}.spec.depends.${dep} or null) tdeps.right));
-            in
-            if l == [] then pkgs else
-            if builtins.length l == 1 then pkgs // { "${dep}" = builtins.head l; } else
-            /* really we should also cross-propagate child prefs to avoid this */
-            throw "${name}: inconsistent recursive dependencies for ${dep}";
-          rrdeps = builtins.foldl' updrec deppkgs tdeps.right;
+          /* dynamic */
+          isr = builtins.elem "link" type;
+          dpref = prefsIntersect (clean dep) pref;
+          /* for link dependencies with dependencies in common with ours, we propagate our prefs down.
+             this doesn't entirely ensure consistent linking, but helps in many common cases. */
+          pdeps = builtins.intersectAttrs (getPossibleDepends dname) depargs;
+          rdeps = prefsIntersect dpref { depends = builtins.mapAttrs (n: clean) pdeps; };
+          dyn = getPackage dname (if isr then rdeps else dpref);
 
-        /* static */
-          sdeps = builtins.listToAttrs (map (dep:
-            let pkg = getPackage dep (pref.${dep} or null); /* see {} optimization there */
-            in if specMatches pkg.spec deparg.${dep} then { name = dep; value = pkg; } else
-            throw "${name} dependency ${dep}: package ${specToString pkg.spec} does not match dependency constraints ${builtins.toJSON arg.${dep}}")
-            adeps);
-        in if fixedDeps then sdeps else rrdeps;
+          /* static */
+          spkg = getPackage dname pref; /* see optimization in getPackage */
+          static =
+            if specMatches spkg.spec dep then spkg else
+            throw "${name} dependency ${dname}: package ${specToString pkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
+        in lib.when (type != [])
+          (if fixedDeps then static else dyn))
+        depargs;
 
       /* create a package from a spec */
       makePackage = spec: let
@@ -293,7 +289,7 @@ lib.fix (packs: with packs; {
           conflicts = lib.remove null desc.conflicts;
         in if spec.extern != null || conflicts == [] then makePackage spec
         else throw "${name}: has conflicts: ${toString conflicts}";
-        /* TODO: remove bdeps from final package spec? */
+        /* TODO: remove null/bdeps from final package spec? */
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
       virtual = providers:
