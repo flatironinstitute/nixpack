@@ -344,15 +344,19 @@ lib.fix (packs: with packs; {
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: res: res {}) resolvers;
 
-  view = name: pkgs: spackBuilder {
-    spackCache = null;
-    spackConfig = null;
-    PYTHONPATH = null;
-    inherit name;
+  view = 
+    { name
+    , pkgs
+    , ignore ? [".spack" ".nixpack.spec"]
+    , shbang ? ["bin/*"]
+    , wrap ? ["bin/python*"]
+    , copy ? null
+    }: derivation {
+    inherit (packs) system;
+    builder = spackPython;
     args = [./view.py];
+    inherit name ignore shbang wrap copy;
     src = pkgs;
-    shbang = true;
-    ignore = [".spack" ".nixpack.spec"];
   };
 
 });
