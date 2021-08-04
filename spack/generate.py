@@ -42,26 +42,33 @@ class List(Nix):
             self.paren(x, indent, out, True)
         out.write(']')
 
-class Attrs(Nix, dict):
+class Attr(Nix):
+    def __init__(self, key, val):
+        if not isinstance(key, str):
+            raise TypeError(self.key)
+        self.key = key
+        self.val = val
+    def print(self, indent, out):
+        out.write(' '*indent)
+        if self.key.isidentifier(): # close enough
+            out.write(self.key)
+        else:
+            printNix(self.key, indent, out)
+        out.write(' = ')
+        printNix(self.val, indent, out)
+        out.write(';\n')
+
+class AttrSet(Nix, dict):
     def print(self, indent, out):
         out.write('{')
         first = True
-        pad = ' '*indent
-        indent += 2
         for k, v in self.items():
             if first:
-                out.write('\n' + pad)
+                out.write('\n')
                 first = False
-            out.write('  ')
-            if not isinstance(k, str):
-                raise TypeError(k)
-            if k.isidentifier():
-                out.write(k)
-            else:
-                printNix(k, indent, out)
-            out.write(' = ')
-            printNix(v, indent, out)
-            out.write(';\n' + pad)
+            Attr(k, v).print(indent+2, out)
+        if not first:
+            out.write(' '*indent)
         out.write('}')
 
 class Fun(Nix):
@@ -131,7 +138,7 @@ def printNix(x, indent=0, out=sys.stdout):
     elif isinstance(x, (list, tuple, set)):
         List(x).print(indent, out)
     elif isinstance(x, dict):
-        Attrs(x).print(indent, out)
+        AttrSet(x).print(indent, out)
     else:
         raise TypeError(x)
 
@@ -228,10 +235,15 @@ def conflict(p, c, w, m):
     conditions(l, p, w)
     return App('when', And(*l), m or str(c))
 
-packs = dict()
-virtuals = defaultdict(set)
 namespaces = ', '.join(r.namespace for r in spack.repo.path.repos)
 print(f"Generating package repo for {namespaces}...")
+f = open(os.environ['out'], 'w')
+print("spackLib: with spackLib; {", file=f)
+def output(k, v):
+    printNix(Attr(k, v), out=f)
+
+virtuals = defaultdict(set)
+n = 0
 for p in spack.repo.path.all_packages():
     desc = dict()
     desc['namespace'] = p.namespace;
@@ -251,14 +263,11 @@ for p in spack.repo.path.all_packages():
             provides[v.name].extend((c, v.versions) for c in cs)
             virtuals[v.name].add(p.name)
         desc['provides'] = {v: provide(p, c) for v, c in provides.items()}
-    packs[p.name] = Fun('spec', desc)
-n = len(packs)
+    output(p.name, Fun('spec', desc))
+    n += 1
 print(f"Generated {n} packages")
 for v, p in virtuals.items():
-    assert v not in packs
-    packs[v] = List(p)
-print(f"Generated {len(packs)-n} virtuals")
-
-with open(os.environ['out'], 'w') as f:
-    print("spackLib: with spackLib;", file=f)
-    printNix(packs, out=f)
+    output(v, List(p))
+print(f"Generated {len(virtuals)} virtuals")
+print("}", file=f)
+f.close()
