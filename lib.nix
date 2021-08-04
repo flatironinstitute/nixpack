@@ -1,32 +1,5 @@
+with builtins;
 rec {
-
-  inherit (builtins)
-    all
-    any
-    attrNames
-    catAttrs
-    compareVersions
-    concatMap
-    deepSeq
-    elem
-    elemAt
-    filter
-    foldl'
-    hasAttr
-    head
-    isAttrs
-    isFunction
-    isList
-    isString
-    length
-    listToAttrs
-    mapAttrs
-    match
-    split
-    splitVersion
-    tail
-    trace
-    ;
 
   id = x: x;
   const = x: y: x;
@@ -45,7 +18,7 @@ rec {
   fromList = x: if isList x && length x == 1 then head x else x;
 
   traceId = x: trace x x;
-  traceLabel = s: x: trace ("${s}: ${builtins.toJSON x}") x;
+  traceLabel = s: x: trace ("${s}: ${toJSON x}") x;
   traceId' = x: deepSeq x (traceId x);
 
   remove = e: filter (x: x != e);
@@ -63,6 +36,10 @@ rec {
     a == [] || b != [] && head a == head b && listHasPrefix (tail a) (tail b);
 
   union = a: b: a ++ filter (x: ! elem x a) b;
+
+  /* do the elements of list a all appear in-order in list b? */
+  subsetOrdered = a: b:
+    a == [] || (b != [] && subsetOrdered (tail a) (if head a == head b then tail b else b));
 
   mapKeys = f: set:
     listToAttrs (map (a: { name = f a; value = set.${a}; }) (attrNames set));
@@ -129,7 +106,56 @@ rec {
     if isList v then elem m v else
     v == m) (toList ms);
 
-  /* do the elements of list a all appear in-order in list b? */
-  subsetOrdered = a: b:
-    a == [] || (b != [] && subsetOrdered (tail a) (if head a == head b then tail b else b));
+  /* a very simple version of Spec.format */
+  specFormat = fmt: spec: let
+    variantToString = n: v:
+           if v == true  then "+"+n
+      else if v == false then "~"+n
+      else " ${n}="+
+          (if isList v then concatStringsSep "," v
+      else if isAttrs v then concatStringsSep "," (map (n: variantToString n v.${n}) (attrNames v))
+      else toString v);
+    fmts = {
+      inherit (spec) name version;
+      variants = concatStringsSep "" (map (v: variantToString v spec.variants.${v})
+        (sort (a: b: typeOf spec.variants.${a} < typeOf spec.variants.${b}) (attrNames spec.variants)));
+    };
+    in replaceStrings (map (n: "{${n}}") (attrNames fmts)) (attrValues fmts) fmt;
+
+  /* like spack default format */
+  specToString = specFormat "{name}@{version}{variants}";
+
+  /* check that a given spec conforms to the specified preferences */
+  specMatches = spec:
+    { version ? null
+    , variants ? {}
+    , patches ? []
+    , depends ? {}
+    , extern ? spec.extern
+    , ... /* don't care about tests */
+    } @ prefs:
+       versionMatches spec.version version
+    && all (name: variantMatches (spec.variants.${name} or null) variants.${name}) (attrNames variants)
+    && subsetOrdered patches spec.patches
+    && all (name: specMatches spec.depends.${name} depends.${name}) (attrNames depends)
+    && spec.extern == extern;
+
+  /* unify two prefs, making sure they're compatible */
+  prefsIntersect = let
+      err = a: b: throw "incompatible prefs: ${toJSON a} vs ${toJSON b}";
+      intersectScalar = coalesceWith (a: b: if a == b then a else err a b);
+      intersectors = {
+        version = a: b: union (toList a) (toList b);
+        variants = mergeWith (a: b: if a == b then a else
+          if isList a && isList b then union a b
+          else err a b);
+        depends = mergeWith prefsIntersect;
+        type = union;
+        patches = a: b: a ++ b;
+      };
+    in coalesceWith (mergeWithKeys (k: intersectors.${k} or intersectScalar));
+
+  /* unify a list of package prefs, making sure they're compatible */
+  prefsIntersection = foldl' prefsIntersect null;
+
 }
