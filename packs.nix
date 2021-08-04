@@ -157,20 +157,20 @@ lib.fix (packs: with packs; {
   };
 
   /* common attributes for running spack */
-  spackBuilder = {
-    inherit system;
+  spackBuilder = attrs: builtins.removeAttrs (derivation ({
+    inherit (packs) system spackConfig spackCache;
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
     PATH = spackPath;
-    inherit (packs) spackConfig;
-  };
+  } // attrs)) ["PYTHONPATH" "PATH" "spackConfig" "spackCache" "passAsFile"];
 
   /* pre-generated spack repo index cache */
   spackCache = lib.when (builtins.isAttrs spackSrc)
-    (derivation (spackBuilder // {
+    (spackBuilder {
       name = "spack-cache";
       args = [spack/cache.py];
-    }));
+      spackCache = null;
+    });
 
   /* look up a package requirement and resolve it with prefs */
   getPackage = getPackageWith (name: pref:
@@ -252,13 +252,13 @@ lib.fix (packs: with packs; {
               inherit name;
               out = spec.extern;
             }
-            else builtins.removeAttrs (derivation (spackBuilder // {
+            else spackBuilder {
               inherit platform target os;
               args = [spack/builder.py];
-              inherit spackCache name;
+              inherit name;
               spec = builtins.toJSON spec;
               passAsFile = ["spec"];
-            })) ["PYTHONPATH" "spackConfig" "spackCache" "passAsFile"];
+            };
         in drv // {
           inherit spec;
           #paths = builtins.mapAttrs (a: p: "${drv.out}/${p}") spec.paths;
@@ -319,11 +319,10 @@ lib.fix (packs: with packs; {
       else throw "${name}: invalid package descriptor ${toString (builtins.typeOf desc)}");
 
   # generate nix package metadata from spack repos
-  spackRepo = derivation (spackBuilder // {
+  spackRepo = spackBuilder {
     name = "spack-repo.nix";
     args = [spack/generate.py];
-    inherit spackCache;
-  });
+  };
 
   bootstrapPacks = packs.withPrefs {
     compiler = bootstrapCompiler;
@@ -344,6 +343,17 @@ lib.fix (packs: with packs; {
 
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: res: res {}) resolvers;
+
+  view = name: pkgs: spackBuilder {
+    spackCache = null;
+    spackConfig = null;
+    PYTHONPATH = null;
+    inherit name;
+    args = [./view.py];
+    src = pkgs;
+    shbang = true;
+    ignore = [".spack" ".nixpack.spec"];
+  };
 
 });
 
