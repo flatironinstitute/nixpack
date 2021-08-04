@@ -344,21 +344,10 @@ lib.fix (packs: with packs; {
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: res: res {}) resolvers;
 
-  view = 
-    { name
-    , pkgs
-    , ignore ? [".spack" ".nixpack.spec"]
-    , shbang ? ["bin/*"]
-    , wrap ? ["bin/python*"]
-    , copy ? null
-    }: derivation {
-    inherit (packs) system;
-    builder = spackPython;
-    args = [./view.py];
-    inherit name ignore shbang wrap copy;
-    src = pkgs;
-  };
+  /* create a view (or an "env" in nix terms): a merged set of packages */
+  view = import ./view packs;
 
+  testview = view { name = "test"; pkgs = [pkgs.python pkgs.py-pytest]; };
 });
 
 in packsWithPrefs
