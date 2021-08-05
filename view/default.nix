@@ -1,6 +1,6 @@
 packs:
-{ name
-, pkgs /* packages to include */
+{ pkgs /* packages to include */
+, name ? (builtins.head pkgs).name + "-view"
 , exclude ? [] /* globs of files to exclude (all globs rooted at top) */
 , shbang ? [] /* files for which to copy and translate #! paths to new root */
 , wrap ? [] /* files to replace with executable wrapper "exec -a new old" */
@@ -12,5 +12,5 @@ derivation {
   args = [./builder.py];
   inherit name shbang wrap copy;
   exclude = [".spack" ".nixpack.spec"] ++ exclude;
-  src = pkgs;
+  pkgs = pkgs;
 }

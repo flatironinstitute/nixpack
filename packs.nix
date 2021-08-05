@@ -287,17 +287,20 @@ lib.fix (packs: with packs; {
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: res: res {}) resolvers;
 
-  /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in depth-first order) */
+  /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in bredth-first order) */
   findDeps = pred:
     let
-      add = deps: pkg:
-        if pkg == null || ! (pred pkg) || builtins.elem pkg deps then deps
-        else adds (deps ++ [pkg]) (builtins.attrValues pkg.spec.depends);
-      adds = builtins.foldl' add;
-    in pkg: adds [] (lib.toList pkg);
+      adddeps = s: pkgs: add s (builtins.filter
+        (p: p != null && ! (builtins.elem p s) && pred p)
+        (builtins.concatMap (p: builtins.attrValues p.spec.depends) pkgs));
+      add = s: pkgs: if pkgs == [] then s else adddeps (s ++ pkgs) pkgs;
+    in pkg: add [] (lib.toList pkg);
 
   /* create a view (or an "env" in nix terms): a merged set of packages */
   view = import ./view packs;
+
+  /* view with appropriate settings for python environments */
+  pythonView = args: view ({ shbang = ["bin/*"]; wrap = ["bin/python*"]; } // args);
 
 });
 

@@ -11,7 +11,10 @@ import stat
 import errno
 import fnmatch
 
-srcPaths = os.environb[b'src'].split()
+def tostr(s: bytes) -> str:
+    return s.decode('ISO-8859-1')
+
+srcPaths = os.environb[b'pkgs'].split()
 dstPath = os.environb[b'out']
 
 def getOpt(opt: bytes):
@@ -52,7 +55,7 @@ class Path:
         self.fd: Optional[int] = None
 
     def __str__(self) -> str:
-        return self.path.decode('ISO-8859-1')
+        return tostr(self.path)
 
     @property
     def root(self) -> bytes:
@@ -353,9 +356,11 @@ def scan(node, src: int, path: Path):
         cls = File
     return cls(node, src, path)
 
+print(f"Creating view {tostr(dstPath)} from...")
 # scan and merge all source paths
 top = None
 for i, src in enumerate(srcPaths):
+    print(f"    {tostr(src)}")
     top = scan(top, i, Path(src))
 
 # populate the destination with the result
