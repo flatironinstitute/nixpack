@@ -2,9 +2,9 @@ packs:
 { name
 , pkgs /* packages to include */
 , exclude ? [] /* globs of files to exclude (all globs rooted at top) */
-, shbang ? ["bin/*"] /* files for which to copy and translate #! paths to new root */
-, wrap ? ["bin/python*"] /* files to replace with executable wrapper "exec -a new old" */
-, copy ? null /* files to copy as-is (rather than link) */
+, shbang ? [] /* files for which to copy and translate #! paths to new root */
+, wrap ? [] /* files to replace with executable wrapper "exec -a new old" */
+, copy ? [] /* files to copy as-is (rather than link) */
 }:
 derivation {
   inherit (packs) system;

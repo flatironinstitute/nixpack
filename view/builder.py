@@ -16,6 +16,8 @@ dstPath = os.environb[b'out']
 
 def getOpt(opt: bytes):
     v = os.environb[opt]
+    if v == '':
+        return lambda x: False
     if v == '1':
         return lambda x: True
     l = [ fnmatch._compile_pattern(x) for x in v.split() ]

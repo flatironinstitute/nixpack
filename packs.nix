@@ -184,7 +184,7 @@ lib.fix (packs: with packs; {
             if lib.specMatches spkg.spec dep then spkg else
             throw "${name} dependency ${dname}: package ${lib.specToString pkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
         in lib.when (type != [])
-          (if fixedDeps then static else dyn))
+          ((if fixedDeps then static else dyn) // { inherit type; }))
         depargs;
 
       /* create a package from a spec */
@@ -290,7 +290,6 @@ lib.fix (packs: with packs; {
   /* create a view (or an "env" in nix terms): a merged set of packages */
   view = import ./view packs;
 
-  testview = view { name = "test"; pkgs = [pkgs.python pkgs.py-pytest]; };
 });
 
 in packsWithPrefs
