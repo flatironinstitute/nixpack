@@ -18,7 +18,7 @@ defaultDesc = {
   patches = [];
   depends = {
     compiler = {
-      type = ["build"];
+      deptype = ["build"];
     };
   };
   conflicts = [];
@@ -166,11 +166,11 @@ lib.fix (packs: with packs; {
       resolveDepends = tests: depends: let
           depargs = builtins.mapAttrs (n: arg: if builtins.isList arg then lib.prefsIntersection arg else arg) depends;
         in resolveEach (dname: dep: pref: let
-          type = (if tests then lib.id else lib.remove "test") dep.type or [];
-          clean = d: builtins.removeAttrs d ["type"];
+          deptype = (if tests then lib.id else lib.remove "test") dep.deptype or [];
+          clean = d: builtins.removeAttrs d ["deptype"];
 
           /* dynamic */
-          isr = builtins.elem "link" type;
+          isr = builtins.elem "link" deptype;
           dpref = lib.prefsIntersect dep pref;
           /* for link dependencies with dependencies in common with ours, we propagate our prefs down.
              this doesn't entirely ensure consistent linking, but helps in many common cases. */
@@ -183,8 +183,8 @@ lib.fix (packs: with packs; {
           static =
             if lib.specMatches spkg.spec (clean dep) then spkg else
             throw "${name} dependency ${dname}: package ${lib.specToString pkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
-        in lib.when (type != [])
-          ((if fixedDeps then static else dyn) // { inherit type; }))
+        in lib.when (deptype != [])
+          ((if fixedDeps then static else dyn) // { inherit deptype; }))
         depargs;
 
       /* create a package from a spec */
@@ -286,6 +286,13 @@ lib.fix (packs: with packs; {
 
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: res: res {}) resolvers;
+
+  /* traverse all dependencies of a package that satisfy pred recursively and return them as a list (in depth-first order) */
+  findDeps = pred:
+    let add = deps: pkg:
+      if pkg == null || ! (pred pkg) || builtins.elem pkg deps then deps
+      else builtins.foldl' add (deps ++ [pkg]) (builtins.attrValues pkg.spec.depends);
+    in pkg: add [] pkg;
 
   /* create a view (or an "env" in nix terms): a merged set of packages */
   view = import ./view packs;

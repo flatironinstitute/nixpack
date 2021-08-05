@@ -153,7 +153,7 @@ rec {
         depends = mergeWith prefsIntersect;
         extern = intersectScalar;
         tests = intersectScalar;
-        type = union;
+        deptype = union;
       };
     in coalesceWith (mergeWithKeys (k: getAttr k intersectors));
 
