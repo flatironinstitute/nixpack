@@ -171,17 +171,17 @@ lib.fix (packs: with packs; {
 
           /* dynamic */
           isr = builtins.elem "link" type;
-          dpref = lib.prefsIntersect (clean dep) pref;
+          dpref = lib.prefsIntersect dep pref;
           /* for link dependencies with dependencies in common with ours, we propagate our prefs down.
              this doesn't entirely ensure consistent linking, but helps in many common cases. */
           pdeps = builtins.intersectAttrs (getPossibleDepends dname) depargs;
-          rdeps = lib.prefsIntersect dpref { depends = builtins.mapAttrs (n: clean) pdeps; };
-          dyn = getPackage dname (if isr then rdeps else dpref);
+          rdeps = lib.prefsIntersect dpref { depends = pdeps; };
+          dyn = getPackage dname (clean (if isr then rdeps else dpref));
 
           /* static */
           spkg = getPackage dname pref; /* see optimization in getPackage */
           static =
-            if lib.specMatches spkg.spec dep then spkg else
+            if lib.specMatches spkg.spec (clean dep) then spkg else
             throw "${name} dependency ${dname}: package ${lib.specToString pkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
         in lib.when (type != [])
           ((if fixedDeps then static else dyn) // { inherit type; }))

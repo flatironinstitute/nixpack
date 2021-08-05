@@ -132,7 +132,7 @@ rec {
     , patches ? []
     , depends ? {}
     , extern ? spec.extern
-    , ... /* don't care about tests */
+    , tests ? null # ignored
     } @ prefs:
        versionMatches spec.version version
     && all (name: variantMatches (spec.variants.${name} or null) variants.${name}) (attrNames variants)
@@ -149,11 +149,13 @@ rec {
         variants = mergeWith (a: b: if a == b then a else
           if isList a && isList b then union a b
           else err a b);
-        depends = mergeWith prefsIntersect;
-        type = union;
         patches = a: b: a ++ b;
+        depends = mergeWith prefsIntersect;
+        extern = intersectScalar;
+        tests = intersectScalar;
+        type = union;
       };
-    in coalesceWith (mergeWithKeys (k: intersectors.${k} or intersectScalar));
+    in coalesceWith (mergeWithKeys (k: getAttr k intersectors));
 
   /* unify a list of package prefs, making sure they're compatible */
   prefsIntersection = foldl' prefsIntersect null;
