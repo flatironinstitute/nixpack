@@ -287,12 +287,14 @@ lib.fix (packs: with packs; {
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: res: res {}) resolvers;
 
-  /* traverse all dependencies of a package that satisfy pred recursively and return them as a list (in depth-first order) */
+  /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in depth-first order) */
   findDeps = pred:
-    let add = deps: pkg:
-      if pkg == null || ! (pred pkg) || builtins.elem pkg deps then deps
-      else builtins.foldl' add (deps ++ [pkg]) (builtins.attrValues pkg.spec.depends);
-    in pkg: add [] pkg;
+    let
+      add = deps: pkg:
+        if pkg == null || ! (pred pkg) || builtins.elem pkg deps then deps
+        else adds (deps ++ [pkg]) (builtins.attrValues pkg.spec.depends);
+      adds = builtins.foldl' add;
+    in pkg: adds [] (lib.toList pkg);
 
   /* create a view (or an "env" in nix terms): a merged set of packages */
   view = import ./view packs;
