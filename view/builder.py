@@ -11,7 +11,7 @@ import stat
 import errno
 import fnmatch
 
-def tostr(s: bytes) -> str:
+def pathstr(s: bytes) -> str:
     return s.decode('ISO-8859-1')
 
 srcPaths = os.environb[b'pkgs'].split()
@@ -55,7 +55,7 @@ class Path:
         self.fd: Optional[int] = None
 
     def __str__(self) -> str:
-        return tostr(self.path)
+        return pathstr(self.path)
 
     @property
     def root(self) -> bytes:
@@ -222,10 +222,11 @@ def newpath(path: bytes) -> bytes:
 class Conflict(Exception):
     def __init__(self, path: Path, *nodes: Inode):
         self.path = path.relpath
-        self.srcs = [srcPaths[n.src] for n in nodes if n.src is not None]
+        self.nodes = nodes
 
     def __str__(self):
-        return f'Conflict({self.path}, {self.srcs})'
+        srcs = ', '.join(pathstr(srcPaths[n.src]) for n in self.nodes if n.src is not None)
+        return f'Conflicting file {pathstr(self.path)} from {srcs}'
 
 class Inode:
     "An abstract class representing a node of a file tree"
@@ -356,11 +357,11 @@ def scan(node, src: int, path: Path):
         cls = File
     return cls(node, src, path)
 
-print(f"Creating view {tostr(dstPath)} from...")
+print(f"Creating view {pathstr(dstPath)} from...")
 # scan and merge all source paths
 top = None
 for i, src in enumerate(srcPaths):
-    print(f"    {tostr(src)}")
+    print(f"    {pathstr(src)}")
     top = scan(top, i, Path(src))
 
 # populate the destination with the result
