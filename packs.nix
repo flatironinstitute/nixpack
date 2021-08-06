@@ -101,7 +101,7 @@ lib.fix (packs: with packs; {
 
   /* common attributes for running spack */
   spackBuilder = attrs: builtins.removeAttrs (derivation ({
-    inherit (packs) system spackConfig spackCache;
+    inherit (packs) system platform target os spackConfig spackCache;
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
     PATH = spackPath;
@@ -196,7 +196,6 @@ lib.fix (packs: with packs; {
               out = spec.extern;
             }
             else spackBuilder {
-              inherit platform target os;
               args = [spack/builder.py];
               inherit name;
               spec = builtins.toJSON spec;

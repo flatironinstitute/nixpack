@@ -11,12 +11,12 @@
     /* default:
     url = "git://github.com/spack/spack";
     */
+    /*
     ref = "develop";
     rev = "b4c6c11e689b2292a1411e4fc60dcd49c929246d";
-    /*
-    url = "git://github.com/flatironinstitute/spack";
-    ref = "scc";
     */
+    url = "git://github.com/flatironinstitute/spack";
+    ref = "fi";
   };
   /* extra config settings for spack itself */
   spackConfig = {
