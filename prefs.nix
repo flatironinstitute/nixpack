@@ -61,6 +61,9 @@
     zstd = {
       variants = { multithread = false; };
     };
+    cairo = {
+      variants = { pdf = true; };
+    };
   };
   /* compiler is an implicit virtual dependency for every package */
   compiler = {

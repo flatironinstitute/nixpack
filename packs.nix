@@ -182,7 +182,7 @@ lib.fix (packs: with packs; {
           spkg = getPackage dname pref; /* see optimization in getPackage */
           static =
             if lib.specMatches spkg.spec (clean dep) then spkg else
-            throw "${name} dependency ${dname}: package ${lib.specToString pkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
+            throw "${name} dependency ${dname}: package ${lib.specToString spkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
         in lib.when (deptype != [])
           ((if fixedDeps then static else dyn) // { inherit deptype; }))
         depargs;
@@ -228,6 +228,7 @@ lib.fix (packs: with packs; {
             variants = resolveVariants desc.variants (variants // uprefs.variants or {});
             depends = if spec.extern != null then {} else
               resolveDepends spec.tests desc.depends (depends // uprefs.depends or {});
+            deptypes = builtins.mapAttrs (n: d: if d == null then null else d.deptype) spec.depends;
             provides = builtins.mapAttrs (n: versionsUnion) desc.provides;
           };
           conflicts = lib.remove null desc.conflicts;

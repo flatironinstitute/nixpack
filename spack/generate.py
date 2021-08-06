@@ -2,10 +2,17 @@
 
 import os
 import sys
+import re
 from collections import defaultdict
 
 import nixpack
 import spack
+
+identPat = re.compile("[a-zA-Z_][a-zA-Z0-9'_-]*")
+reserved = {'if','then','else','derivation','let','rec','in','inherit','import','with'}
+
+def isident(s: str):
+    return identPat.fullmatch(s) and s not in reserved
 
 class Nix:
     prec = 0
@@ -50,7 +57,7 @@ class Attr(Nix):
         self.val = val
     def print(self, indent, out):
         out.write(' '*indent)
-        if self.key.isidentifier(): # close enough
+        if isident(self.key):
             out.write(self.key)
         else:
             printNix(self.key, indent, out)

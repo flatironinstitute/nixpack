@@ -1,13 +1,8 @@
 #!/bin/env python3
-from typing import Tuple
-
 import os
 import functools
 import shutil
 import json
-
-#from pprint import pprint
-#pprint(dict(os.environ))
 
 import nixpack
 import spack
@@ -75,7 +70,7 @@ class NixSpec(spack.spec.Spec):
         self.external_path = nixspec['extern']
 
         variants = nixspec['variants']
-        assert variants.keys() == self.package.variants.keys()
+        assert variants.keys() == self.package.variants.keys(), f"{self.name} has mismatching variants {variants.keys()} vs. {self.packages.variants.keys()}"
         for n, s in variants.items():
             if isinstance(s, bool):
                 v = spack.variant.BoolValuedVariant(n, s)
@@ -84,7 +79,7 @@ class NixSpec(spack.spec.Spec):
             elif isinstance(s, dict):
                 v = spack.variant.MultiValuedVariant(n, [k for k,v in s.items() if v])
             else:
-                v = spack.variant.AbstractVariant(n, s)
+                v = spack.variant.SingleValuedVariant(n, s)
             self.variants[n] = v
         self.tests = nixspec['tests']
         self.paths = {n: os.path.join(prefix, p) for n, p in nixspec['paths'].items()}
@@ -110,16 +105,15 @@ class NixSpec(spack.spec.Spec):
                 else:
                     spec = NixSpec(d['spec'], d['out'])
                 self.specCache[key] = spec
+            dtype = nixspec['deptypes'][n]
             if n == 'compiler':
                 self.compiler_spec = spec
                 self.compiler = spec.as_compiler
             else:
-                dspec = self._evaluate_dependency_conditions(n)
-                dspec.spec = spec
-                self._add_dependency(dspec.spec, dspec.type)
-                if not ('link' in dspec.type or 'run' in dspec.type):
-                    # trim build dep references
-                    del nixspec['depends'][n]
+                self._add_dependency(spec, tuple(dtype))
+            if not ('link' in dtype or 'run' in dtype):
+                # trim build dep references
+                del nixspec['depends'][n]
 
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
