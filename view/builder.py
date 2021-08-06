@@ -195,7 +195,7 @@ class Path:
 
     def copyfile(self, src):
         "write the contents of this open file from the open src file"
-        z = self.stat().st_size
+        z = src.stat().st_size
         while os.sendfile(self.fd, src.fd, None, z) > 0:
             pass
 
@@ -317,7 +317,7 @@ class File(Inode):
                     dst.copyfile(src)
         elif self.wrap:
             with dst.create(src):
-                dst.write(b'#!/bin/sh\nexec -a '+dst.path+b' '+src.path+b' "$@"\n')
+                dst.write(b'#!/bin/sh\nexec -a "$0" '+src.path+b' "$@"\n')
         elif self.copy:
             with src.open():
                 with dst.create(src):

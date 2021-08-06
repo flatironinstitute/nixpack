@@ -293,7 +293,7 @@ lib.fix (packs: with packs; {
     let
       adddeps = s: pkgs: add s (builtins.filter
         (p: p != null && ! (builtins.elem p s) && pred p)
-        (builtins.concatMap (p: builtins.attrValues p.spec.depends) pkgs));
+        (lib.nub (builtins.concatMap (p: builtins.attrValues p.spec.depends) pkgs)));
       add = s: pkgs: if pkgs == [] then s else adddeps (s ++ pkgs) pkgs;
     in pkg: add [] (lib.toList pkg);
 
