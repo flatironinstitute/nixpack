@@ -1,6 +1,6 @@
 let
 
-packs = import ./packs.nix (import ./prefs.nix);
+packs = import ./packs (import ./prefs.nix);
 
 in
 

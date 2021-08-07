@@ -2,7 +2,7 @@ let
 
 cuda_arch = ["35" "60" "70" "80"];
 
-packs = import ./packs.nix {
+packs = import ./packs {
   system = builtins.currentSystem;
   target = "broadwell";
   os = "centos7";

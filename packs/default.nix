@@ -53,7 +53,7 @@ patchDesc = patch: gen: spec: let desc = gen spec; in
 patchRepo = patch: repo: repo //
   builtins.mapAttrs (name: f: patchDesc f (repo.${name} or (spec: {}))) patch;
 
-repoPatches = patchRepo (import ./patch lib);
+repoPatches = patchRepo (import ../patch lib);
 
 packsWithPrefs = 
   { system ? builtins.currentSystem
@@ -81,15 +81,15 @@ lib.fix (packs: with packs; {
   spack = if builtins.isString spackSrc then spackSrc else
     builtins.fetchGit ({ name = "spack"; url = "git://github.com/spack/spack"; } // spackSrc);
 
-  makeSpackConfig = import spack/config.nix packs;
+  makeSpackConfig = import ../spack/config.nix packs;
 
   spackConfig = makeSpackConfig (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
 
   spackNixLib = derivation {
     name = "nix-spack-py";
     inherit system;
-    builder = spack/install.sh;
-    src = spack/nixpack.py;
+    builder = ../spack/install.sh;
+    src = ../spack/nixpack.py;
   };
 
   /* common attributes for running spack */
@@ -104,7 +104,7 @@ lib.fix (packs: with packs; {
   spackCache = lib.when (builtins.isAttrs spackSrc)
     (spackBuilder {
       name = "spack-cache";
-      args = [spack/cache.py];
+      args = [../spack/cache.py];
       spackCache = null;
     });
 
@@ -189,7 +189,7 @@ lib.fix (packs: with packs; {
               out = spec.extern;
             }
             else spackBuilder {
-              args = [spack/builder.py];
+              args = [../spack/builder.py];
               inherit name;
               spec = builtins.toJSON spec;
               passAsFile = ["spec"];
@@ -257,7 +257,7 @@ lib.fix (packs: with packs; {
   # generate nix package metadata from spack repos
   spackRepo = spackBuilder {
     name = "spack-repo.nix";
-    args = [spack/generate.py];
+    args = [../spack/generate.py];
   };
 
   bootstrapPacks = packs.withPrefs {
@@ -290,12 +290,12 @@ lib.fix (packs: with packs; {
     in pkg: add [] (lib.toList pkg);
 
   /* create a view (or an "env" in nix terms): a merged set of packages */
-  view = import ./view packs;
+  view = import ../view packs;
 
   /* view with appropriate settings for python environments */
   pythonView = args: view ({ shbang = ["bin/*"]; wrap = ["bin/python*"]; } // args);
 
-  modules = import spack/modules.nix packs;
+  modules = import ../spack/modules.nix packs;
 
 });
 
