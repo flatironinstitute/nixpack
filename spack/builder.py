@@ -25,6 +25,7 @@ opts = {
         'tests': spec.tests,
     }
 
+origenv = os.environ.copy()
 # create and stash some metadata
 spack.build_environment.setup_package(pkg, True, context='build')
 os.makedirs(pkg.metadata_dir, exist_ok=True)
@@ -47,4 +48,6 @@ spack.installer.build_process(pkg, opts)
 #shutil.rmtree(pkg.metadata_dir)
 
 # we do this even if not testing as it may create more things (e.g., perl "extensions")
+os.environ.clear()
+os.environ.update(origenv)
 spack.build_environment.setup_package(pkg, True, context='test')
