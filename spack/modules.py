@@ -22,14 +22,15 @@ cls = spack.modules.module_types[modtype]
 
 with open(os.environ['pkgsPath'], 'r') as pf:
     pkgs = json.load(pf)
+writers = [cls(nixpack.NixSpec(p['prefix'], p, concrete=True), name) for p in pkgs]
 
-print("specs")
-specs = [nixpack.NixSpec(p['prefix'], p, concrete=True) for p in pkgs]
-print("writers")
-writers = [cls(s, name) for s in specs]
-
-print("index")
+print(f"Generating {len(writers)} {modtype} modules in {root}...")
 spack.modules.common.generate_module_index(root, writers)
-for x in writers:
-    print(x.layout.filename)
-    x.write()
+paths = set()
+for w in writers:
+    sn = w.spec.cformat(spack.spec.default_format + ' {/hash}')
+    fn = w.layout.filename
+    print(f"    {os.path.relpath(fn, root)}: {sn}")
+    assert fn not in paths, f"Duplicate path: {fn}"
+    w.write()
+    paths.add(fn)

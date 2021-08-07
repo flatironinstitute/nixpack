@@ -222,6 +222,5 @@ in
 packs // {
   testdeps = map (x: x.name) testdeps;
   inherit testview;
-  testmod = modules { pkgs = testdeps; };
-  testmod0 = modules { pkgs = [packs.bootstrapPacks.pkgs.m4]; };
+  testmod = modules { pkgs = [testview]; };
 }

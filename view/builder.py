@@ -16,15 +16,21 @@ def pathstr(s: bytes) -> str:
 
 srcPaths = os.environb[b'pkgs'].split()
 dstPath = os.environb[b'out']
+forceSrcs = [srcPaths.index(p) if p else None for p in os.environb[b'forcePkgs'].split(b' ')]
 
 def getOpt(opt: bytes):
     v = os.environb[opt]
-    if v == '':
-        return lambda x: False
-    if v == '1':
+    if v == b'':
+        return lambda x: None
+    if v == b'1':
         return lambda x: True
-    l = [ fnmatch._compile_pattern(x) for x in v.split() ]
-    return lambda x: any(m(x) is not None for m in l)
+    l = [ fnmatch._compile_pattern(x) for x in v.split(b' ') ]
+    def check(x: bytes):
+        for i, m in enumerate(l):
+            if m(x):
+                return i
+        return None
+    return check
 
 # path handling options
 opts = {o: getOpt(o) for o in 
@@ -33,6 +39,7 @@ opts = {o: getOpt(o) for o in
         , b'shbang' # paths to translate #!
         , b'wrap' # paths to wrap executables
         , b'copy' # paths to copy
+        , b'force' # paths to process only from corresponding forcePkgs
         ] }
 
 maxSrcLen = max(len(p) for p in srcPaths)
@@ -88,9 +95,13 @@ class Path:
         else:
             return fun(self.path, *args, **kwargs)
 
+    def optsrc(self, opt: bytes) -> Optional[int]:
+        "Check whether this path matches the given option and return the index"
+        return opts[opt](self.relpath)
+
     def opt(self, opt: bytes) -> bool:
         "Check whether this path matches the given option"
-        return opts[opt](self.relpath)
+        return self.optsrc(opt) is not None
 
     def _dostat(self):
         if self.fd is not None:
@@ -349,6 +360,9 @@ class Dir(Inode):
 def scan(node, src: int, path: Path):
     if path.opt(b'exclude'):
         return node
+    force = path.optsrc(b'force')
+    if force is not None and force != src:
+        return node
     if path.isdir():
         cls: Type[Inode] = Dir
     elif path.islnk():
@@ -365,4 +379,5 @@ for i, src in enumerate(srcPaths):
     top = scan(top, i, Path(src))
 
 # populate the destination with the result
+assert top, "No paths found"
 top.create(Path(dstPath))
