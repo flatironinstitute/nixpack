@@ -122,6 +122,9 @@ rec {
     };
     in replaceStrings (map (n: "{${n}}") (attrNames fmts)) (attrValues fmts) fmt;
 
+  /* simple name@version */
+  specName = specFormat "{name}@{version}";
+
   /* like spack default format */
   specToString = specFormat "{name}@{version}{variants}";
 

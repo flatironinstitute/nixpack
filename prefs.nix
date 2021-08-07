@@ -1,5 +1,6 @@
 {
   system = builtins.currentSystem;
+  /* spack architecture targets */
   target = "broadwell";
   os = "centos7";
 
@@ -9,20 +10,15 @@
      so is not recommended for production. */
   spackSrc = {
     /* default:
-    url = "git://github.com/spack/spack";
-    */
-    /*
+    #url = "git://github.com/spack/spack"; */
     ref = "develop";
-    rev = "b4c6c11e689b2292a1411e4fc60dcd49c929246d";
-    */
-    url = "git://github.com/flatironinstitute/spack";
-    ref = "fi";
+    #rev = "b4c6c11e689b2292a1411e4fc60dcd49c929246d";
   };
   /* extra config settings for spack itself */
   spackConfig = {
     config = {
-      source_cache = "/mnt/home/spack/cache";
-      build_jobs = 28; /* overridden by NIX_BUILD_CORES */
+      #source_cache = "/mnt/home/spack/cache";
+      #build_jobs = 28; /* overridden by NIX_BUILD_CORES */
     };
   };
   /* environment for running spack. spack needs things like python, cp, tar,
@@ -44,32 +40,41 @@
   };
   package = {
     /* preferences for individual packages or virtuals */
+    /* get cpio from system:
     cpio = {
       extern = "/usr";
       version = "2.11";
-    };
-    openmpi = {
-      version = "4.0";
-    };
+    }; */
+    /* specify virtual providers:
+       can be (optional) lists of names or { name; ...prefs }, and take precedence over inferred providers.
     mpi = {
-      /* providers can be (optional) lists of names or { name; ...prefs }, and take precedence over inferred providers. */
       provider = [ "openmpi" ];
-    };
-    mpfr = {
-      version = "3.1.6";
-    };
-    zstd = {
-      variants = { multithread = false; };
-    };
+    }; */
+    /* use gcc 7.x:
+    gcc = {
+      version = "7";
+    }; */
+    /* enable cairo+pdf:
     cairo = {
-      variants = { pdf = true; };
-    };
+      variants = {
+        pdf = true;
+      };
+    }; */
+    /* use an external slurm:
+    slurm = {
+      extern = "/cm/shared/apps/slurm/current";
+      version = "20.02.5";
+      variants = {
+        sysconfdir = "/cm/shared/apps/slurm/var/etc/slurm";
+        pmix = true;
+        hwloc = true;
+      };
+    }; */
   };
   /* compiler is an implicit virtual dependency for every package */
   compiler = {
     /* preferences for global compiler */
     name = "gcc";
-    version = "7.5.0";
   };
   /* must be set to an external compiler capable of building compiler (above) */
   bootstrapCompiler = {
@@ -90,5 +95,5 @@
        different prefs or dependency prefs may also be different.  Virtuals are
        always resolved (to a package name) dynamically.
    */
-  fixedDeps = true;
+  fixedDeps = false;
 }

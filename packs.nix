@@ -10,6 +10,18 @@ versionsUnion = l:
   in lib.when (l' != []) (builtins.concatStringsSep "," l')
   else l;
 
+defaultSpackConfig = {
+  bootstrap = { enable = false; };
+  config = {
+    locks = false;
+    install_tree = {
+      root = "/rootless-spack";
+    };
+    misc_cache = "$tempdir/cache"; /* overridden by spackCache */
+  };
+  compilers = [];
+};
+
 /* default package descriptor */
 defaultDesc = {
   namespace = "builtin";
@@ -69,28 +81,9 @@ lib.fix (packs: with packs; {
   spack = if builtins.isString spackSrc then spackSrc else
     builtins.fetchGit ({ name = "spack"; url = "git://github.com/spack/spack"; } // spackSrc);
 
-  spackConfig = import spack/config.nix packs (lib.recursiveUpdate {
-    bootstrap = { enable = false; };
-    config = {
-      locks = false;
-      install_tree = {
-        root = "/rootless-spack";
-      };
-      misc_cache = "$tempdir/cache"; /* overridden by spackCache */
-    };
-    compilers = [{ compiler = {
-      /* fake null compiler */
-      spec = "gcc@0";
-      paths = {
-        cc = null;
-        cxx = null;
-        f77 = null;
-        fc = null;
-      };
-      operating_system = os;
-      target = builtins.head (lib.splitRegex "-" system);
-      modules = [];
-    }; }]; } spackConfig);
+  makeSpackConfig = import spack/config.nix packs;
+
+  spackConfig = makeSpackConfig (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
 
   spackNixLib = derivation {
     name = "nix-spack-py";
@@ -301,6 +294,8 @@ lib.fix (packs: with packs; {
 
   /* view with appropriate settings for python environments */
   pythonView = args: view ({ shbang = ["bin/*"]; wrap = ["bin/python*"]; } // args);
+
+  modules = import spack/modules.nix packs;
 
 });
 
