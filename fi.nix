@@ -22,8 +22,17 @@ packs = import ./packs {
 
   repoPatch = {
   };
+
   global = {
     tests = false;
+  };
+  bootstrapCompiler = {
+    name = "gcc";
+    version = "4.8.5";
+    extern = "/usr";
+  };
+  compiler = {
+    name = "gcc";
   };
   package = {
     cpio = {
@@ -42,6 +51,12 @@ packs = import ./packs {
     };
     mpfr = {
       version = "3.1.6";
+    };
+    binutils = {
+      variants = {
+        gold = true;
+        ld = true;
+      };
     };
     zstd = {
       variants = { multithread = false; };
@@ -72,6 +87,7 @@ packs = import ./packs {
       };
     };
     intel-mpi = {
+      # not available anymore...
       extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
       version = "2017.4.196";
     };
@@ -103,7 +119,7 @@ packs = import ./packs {
       };
     };
     llvm = {
-      version = "11";
+      version = "10";
     };
     openblas = {
       version = "0.3.15";
@@ -180,19 +196,101 @@ packs = import ./packs {
       };
     };
   };
-  compiler = {
-    name = "gcc";
-  };
-  bootstrapCompiler = {
-    name = "gcc";
-    version = "4.8.5";
-    extern = "/usr";
-  };
 
   fixedDeps = true;
 };
 
-in with packs;
+compilers = [
+  { name = "gcc"; version = "7"; }
+  { name = "gcc"; version = "10.2"; }
+  # intel?
+];
+
+compilerPacks = map (compiler: packs.withPrefs {
+  inherit compiler;
+  # todo: bootstrap with main compiler?
+});
+
+mpis = [
+  { name = "openmpi"; version = "4.0"; }
+  { name = "openmpi"; version = "2.1"; variants = {
+    # openmpi 2 on ib reports: "unknown link width 0x10" and is a bit slow
+    fabrics = ["ofi" "psm" "psm2" "verbs"];
+  }; }
+  { name = "openmpi"; version = "1.10"; variants = {
+    # without the explicit fabrics ucx is lost in dependencies
+    fabrics = ["ofi" "psm" "psm2" "verbs"];
+  }; }
+  { name = "intel-oneapi-mpi"; }
+  { name = "intel-mpi"; }
+];
+
+pythons = [
+  { name = "python"; verison = "3.8"; }
+  { name = "python"; verison = "3.9"; }
+];
+
+modules = (map packs.getPackage compilers) ++ (with packs.pkgs; [
+    (llvm.withPrefs { version = "10"; })
+    (llvm.withPrefs { version = "11"; })
+    (llvm.withPrefs { version = "12"; })
+    cmake
+    curl
+    distcc
+    (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
+    fio
+    gdal
+    #gdb # needs python+debug
+    ghostscript
+    git
+    git-lfs
+    go
+    gperftools
+    (gromacs.withPrefs { variants = { mpi = false; }; })
+    hdfview
+    #i3 #needs some xcb things
+    imagemagick
+    julia
+    keepassxc
+    lftp
+    likwid
+    mercurial
+    mplayer
+    mpv
+    mupdf
+    node-js
+    (node-js.withPrefs { version = ":12"; })
+    (octave.withPrefs { variants = { openblas = false; }; })
+    openjdk
+    #pdftk #needs gcc java (gcj)
+    perl
+    (petsc.withPrefs { variants = { mpi = false; }; })
+    postgresql
+    r
+    r-irkernel
+    rclone
+    rust
+    singularity
+    smartmontools
+    subversion
+    swig
+    texlive
+    texstudio
+    tmux
+    udunits
+    unison
+    valgrind
+    (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
+    vtk
+    zsh
+  ]);
+
+in
+
+packs // {
+  modules = packs.modules { pkgs = modules; };
+}
+/*
 let 
   testdeps = findDeps (x: builtins.elem "run" x.deptype) (with pkgs; [
     python
@@ -224,3 +322,4 @@ packs // {
   inherit testview;
   testmod = modules { pkgs = [testview]; };
 }
+*/

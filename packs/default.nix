@@ -109,10 +109,13 @@ lib.fix (packs: with packs; {
     });
 
   /* look up a package requirement and resolve it with prefs */
-  getPackage = getPackageWith (name: pref:
+  getResolver = getPackageWith (name: pref:
     if pref == null || pref == {}
       then pkgs.${name} /* optimization */
       else resolvers.${name} pref);
+
+  /* look up a package with default prefs */
+  getPackage = arg: getResolver arg null;
 
   /* get the list of packages a given package might depend on (from the repo, makes assumptions about repo structure) */
   getPossibleDepends = name:
@@ -169,10 +172,10 @@ lib.fix (packs: with packs; {
              this doesn't entirely ensure consistent linking, but helps in many common cases. */
           pdeps = builtins.intersectAttrs (getPossibleDepends dname) depargs;
           rdeps = lib.prefsIntersect dpref { depends = pdeps; };
-          dyn = getPackage dname (clean (if isr then rdeps else dpref));
+          dyn = getResolver dname (clean (if isr then rdeps else dpref));
 
           /* static */
-          spkg = getPackage dname pref; /* see optimization in getPackage */
+          spkg = getResolver dname pref;
           static =
             if lib.specMatches spkg.spec (clean dep) then spkg else
             throw "${name} dependency ${dname}: package ${lib.specToString spkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
@@ -181,22 +184,22 @@ lib.fix (packs: with packs; {
         depargs;
 
       /* create a package from a spec */
-      makePackage = spec: let
+      makePackage = spec: gen: prefs: let
           name = "${spec.name}-${spec.version}";
-          drv = if spec.extern != null
-            then {
-              inherit name;
-              out = spec.extern;
-            }
-            else spackBuilder {
-              args = [../spack/builder.py];
-              inherit name;
-              spec = builtins.toJSON spec;
-              passAsFile = ["spec"];
-            };
-        in drv // {
+        in if spec.extern != null
+        then {
+          inherit name spec;
+          out = spec.extern;
+          /* externs don't provide withPrefs */
+        }
+        else spackBuilder {
+          args = [../spack/builder.py];
+          inherit name;
+          spec = builtins.toJSON spec;
+          passAsFile = ["spec"];
+        } // {
           inherit spec;
-          #paths = builtins.mapAttrs (a: p: "${drv.out}/${p}") spec.paths;
+          withPrefs = p: resolvePackage name gen (prefsUpdate prefs p);
         };
 
       /* resolving a real package */
@@ -207,7 +210,7 @@ lib.fix (packs: with packs; {
         , depends ? {}
         , extern ? uprefs.extern or null
         , tests ? uprefs.tests or null
-        }: let
+        } @ prefs: let
           desc = lib.recursiveUpdate defaultDesc (gen spec);
           spec = {
             inherit name;
@@ -224,7 +227,7 @@ lib.fix (packs: with packs; {
             provides = builtins.mapAttrs (n: versionsUnion) desc.provides;
           };
           conflicts = lib.remove null desc.conflicts;
-        in if spec.extern != null || conflicts == [] then makePackage spec
+        in if spec.extern != null || conflicts == [] then makePackage spec gen prefs
         else throw "${name}: has conflicts: ${toString conflicts}";
         /* TODO: remove null/bdeps from final package spec? */
 
@@ -235,7 +238,7 @@ lib.fix (packs: with packs; {
         , ...
         } @ prefs: let
           provs = lib.toList (lib.coalesce provider providers);
-          opts = builtins.map (o: getPackage o (lib.when (! fixedDeps)
+          opts = builtins.map (o: getResolver o (lib.when (! fixedDeps)
             (builtins.removeAttrs prefs ["version" "provider"]))) provs;
           check = opt:
             let
@@ -243,7 +246,7 @@ lib.fix (packs: with packs; {
               prov = lib.when provtry.success provtry.value;
             in prov != null && lib.versionsOverlap version prov;
           choice = builtins.filter check opts;
-        in if choice == [] then "no providers for ${name}@${version}" else builtins.head choice;
+        in if choice == [] then throw "no providers for ${name}@${version}" else builtins.head choice;
 
     in builtins.addErrorContext "resolving package ${name}" (desc:
       if builtins.isList desc then
@@ -274,7 +277,7 @@ lib.fix (packs: with packs; {
 
   /* partially applied specs, which take preferences as argument */
   resolvers = builtins.mapAttrs resolvePackage repo // {
-    compiler = bootstrapPacks.getPackage prefs.compiler;
+    compiler = bootstrapPacks.getResolver prefs.compiler;
   };
 
   /* fully applied resolved packages with default preferences */

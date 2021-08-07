@@ -66,6 +66,7 @@ rec {
   versionNewer   = v1: v2: compareVersions v1 v2 > 0;
   versionAtLeast = v1: v2: compareVersions v1 v2 >= 0;
   versionAtMost  = v1: v2: compareVersions v1 v2 <= 0;
+  versionAtMostMatch = v1: v2: versionAtMost v1 v2 || listHasPrefix (splitVersion v2) (splitVersion v1);
 
   versionIsConcrete = v: v != null && match "[:,]" v == null;
 
@@ -82,11 +83,10 @@ rec {
     if match == null then true else
     if isList match then all (versionMatches v) match else
     let
-      vs = splitVersion v;
       versionMatch = m: let
         mr = versionRange m;
         in versionAtLeast v mr.min &&
-           (versionAtMost v mr.max || listHasPrefix (splitVersion mr.max) vs);
+           (versionAtMostMatch v mr.max);
     in any versionMatch (splitRegex "," match);
 
   versionsOverlap = a: b:
@@ -96,8 +96,8 @@ rec {
       vo = a: b: let
         ar = versionRange a;
         br = versionRange b;
-      in versionAtMost ar.max br.min &&
-         versionAtMost br.max ar.min;
+      in versionAtMostMatch ar.max br.min &&
+         versionAtMostMatch br.max ar.min;
     in any (a: any (vo a) bs) as;
 
   /* does concrete variant v match spec m? */
