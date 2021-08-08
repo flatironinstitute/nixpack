@@ -10,6 +10,6 @@ packs.spackBuilder {
   config = builtins.toJSON (packs.lib.recursiveUpdate {
     core_compilers = [(packs.lib.specName packs.pkgs.compiler.spec)];
   } config);
-  pkgs = builtins.toJSON (map (p: p.spec // { prefix = toString p; }) pkgs);
+  pkgs = builtins.toJSON (map (p: p.spec // { prefix = p.out; }) pkgs);
   passAsFile = ["config" "pkgs"];
 }

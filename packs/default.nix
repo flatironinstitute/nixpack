@@ -69,7 +69,7 @@ packsWithPrefs =
   , global ? {}
   , package ? {}
   , compiler ? { name = "gcc"; }
-  , bootstrapPrefs ? {}
+  , bootstrap ? {}
   } @ packPrefs:
 lib.fix (packs: with packs; {
   inherit lib;
@@ -134,7 +134,7 @@ lib.fix (packs: with packs; {
           then throw "${name}: no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}"
           else builtins.head v;
       resolveVariants = resolveEach (vname: arg: pref:
-        let err = throw "${name} variant ${vname}: invalid ${toString pref} (for ${toString arg})"; in
+        let err = throw "${name} variant ${vname}: invalid ${builtins.toJSON pref} (for ${builtins.toJSON arg})"; in
         if pref == null then
           /* no preference: use default */
           if builtins.isList arg then builtins.head arg else arg
@@ -266,7 +266,7 @@ lib.fix (packs: with packs; {
   };
 
   bootstrapPacks = packs.withPrefs ({ label = "${label}-bootstrap"; } //
-    bootstrapPrefs);
+    bootstrap);
 
   /* full metadata repo package descriptions */
   repo = patchRepo repoPatch (repoPatches (import spackRepo {

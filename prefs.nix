@@ -90,13 +90,23 @@
     name = "gcc";
   };
   /* overrides for bootstrapPacks */
-  bootstrapPrefs = {
+  bootstrap = {
     /* must be set to an external compiler capable of building compiler (above) */
     compiler = {
       name = "gcc";
       version = "4.8.5";
       extern = "/usr";
     };
+    package = {
+      /* can speed up bootstrapping by providing more externs
+      zlib = {
+        extern = "/usr";
+        version = "...";
+      }; ... */
+    };
+    /* can also have multiple layers of bootstrapping, where each compiler is built by the next layer's:
+    bootstrap = {};
+    */
   };
 
 }

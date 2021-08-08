@@ -1,6 +1,6 @@
 let
 
-cuda_arch = ["35" "60" "70" "80"];
+cuda_arch = {"35" = true; "60" = true; "70" = true; "80" = true; none = false; };
 
 packs = import ./packs {
   system = builtins.currentSystem;
@@ -27,11 +27,60 @@ packs = import ./packs {
     tests = false;
     fixedDeps = true;
   };
-  bootstrapPrefs = {
+  bootstrap = {
     compiler = {
       name = "gcc";
       version = "4.8.5";
       extern = "/usr";
+    };
+    package = {
+      zlib = {
+        extern = "/usr";
+        version = "1.2.7";
+      };
+      diffutils = {
+        extern = "/usr";
+        version = "3.3";
+      };
+      bzip2 = {
+        extern = "/usr";
+        version = "1.0.6";
+      };
+      perl = {
+        extern = "/usr";
+        version = "5.16.3";
+      };
+      m4 = {
+        extern = "/usr";
+        version = "1.4.16";
+      };
+      libtool = {
+        extern = "/usr";
+        version = "2.4.2";
+      };
+      autoconf = {
+        extern = "/usr";
+        version = "2.69";
+      };
+      automake = {
+        extern = "/usr";
+        version = "1.13.4";
+      };
+      openssl = {
+        extern = "/usr";
+        version = "1.0.2k";
+        variants = {
+          fips = false;
+        };
+      };
+      ncurses = {
+        extern = "/usr";
+        version = "5.9.20130511";
+        variants = {
+          termlib = true;
+          abi = "5";
+        };
+      };
     };
   };
   compiler = {
@@ -103,7 +152,7 @@ packs = import ./packs {
       version = "4.0";
       variants = {
         fabrics = ["ofi" "ucx" "psm" "psm2" "verbs"];
-        schedulers = "slurm";
+        schedulers = ["slurm"];
         pmi = true;
         static = false;
         thread_multiple = true;
@@ -239,6 +288,14 @@ packs = import ./packs {
         mpi = false;
       };
     };
+    gsl = {
+      variants = {
+        external-cblas = true;
+      };
+    };
+    cuda = {
+      version = "11.3";
+    };
   };
 };
 
@@ -251,86 +308,146 @@ compilers = [
 compilerPacks = map (compiler: packs.withPrefs {
   inherit compiler;
   # todo: bootstrap with main compiler?
-});
+}) compilers;
 
 mpis = [
   { name = "openmpi"; version = "4.0"; }
   { name = "openmpi"; version = "2.1"; variants = {
     # openmpi 2 on ib reports: "unknown link width 0x10" and is a bit slow
     fabrics = ["ofi" "psm" "psm2" "verbs"];
+    internal-hwloc = true;
   }; }
   { name = "openmpi"; version = "1.10"; variants = {
     # without the explicit fabrics ucx is lost in dependencies
     fabrics = ["ofi" "psm" "psm2" "verbs"];
+    internal-hwloc = true;
   }; }
   { name = "intel-oneapi-mpi"; }
   { name = "intel-mpi"; }
 ];
 
 pythons = [
-  { name = "python"; verison = "3.8"; }
-  { name = "python"; verison = "3.9"; }
+  { name = "python"; version = "3.8"; }
+  { name = "python"; version = "3.9"; }
 ];
 
-modules = (map packs.getPackage compilers) ++ (with packs.pkgs; [
-    (llvm.withPrefs { version = "10"; })
-    (llvm.withPrefs { version = "11"; })
-    (llvm.withPrefs { version = "12"; })
-    cmake
-    curl
-    distcc
-    (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
-    fio
-    gdal
-    #gdb # needs python+debug
-    ghostscript
-    git
-    git-lfs
-    go
-    gperftools
-    (gromacs.withPrefs { variants = { mpi = false; }; })
-    hdfview
-    #i3 #needs some xcb things
-    imagemagick
-    julia
-    keepassxc
-    lftp
-    likwid
-    mercurial
-    mplayer
-    mpv
-    mupdf
-    node-js
-    (node-js.withPrefs { version = ":12"; })
-    (octave.withPrefs { variants = { openblas = false; }; })
-    openjdk
-    #pdftk #needs gcc java (gcj)
-    perl
-    (petsc.withPrefs { variants = { mpi = false; hdf5 = false; hypre = false; superlu-dist = false; }; })
-    postgresql
-    r
-    r-irkernel
-    rclone
-    rust
-    singularity
-    smartmontools
-    subversion
-    swig
-    (texlive.withPrefs { fixedDeps = false; })
-    (texstudio.withPrefs { fixedDeps = false; })
-    tmux
-    udunits
-    unison
-    valgrind
-    (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
-    vtk
-    zsh
-  ]);
+mods = (map packs.getPackage compilers) ++ (with packs.pkgs; [
+  (llvm.withPrefs { version = "10"; })
+  (llvm.withPrefs { version = "11"; })
+  (llvm.withPrefs { version = "12"; })
+  cmake
+  curl
+  distcc
+  (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
+  fio
+  gdal
+  #gdb # needs python+debug
+  ghostscript
+  git
+  git-lfs
+  go
+  gperftools
+  (gromacs.withPrefs { variants = { mpi = false; }; })
+  hdfview
+  #i3 #needs some xcb things
+  imagemagick
+  intel-mkl
+  intel-oneapi-mkl
+  julia
+  keepassxc
+  lftp
+  likwid
+  mercurial
+  mplayer
+  mpv
+  mupdf
+  node-js
+  (node-js.withPrefs { version = ":12"; })
+  nvhpc
+  octave
+  openjdk
+  #pdftk #needs gcc java (gcj)
+  perl
+  (petsc.withPrefs { variants = { mpi = false; hdf5 = false; hypre = false; superlu-dist = false; }; })
+  postgresql
+  r
+  r-irkernel
+  rclone
+  rust
+  singularity
+  smartmontools
+  subversion
+  swig
+  (texlive.withPrefs { fixedDeps = false; })
+  (texstudio.withPrefs { fixedDeps = false; })
+  tmux
+  udunits
+  unison
+  valgrind
+  (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
+  vtk
+  zsh
+  # externs:
+  slurm
+] ++ map (v: mathematica.withPrefs
+    { version = v; extern = "/cm/shared/sw/pkg/vender/mathematica/${v}"; })
+  ["11.2" "11.3" "12.1" "12.2"]
+  ++ map (v: matlab.withPrefs
+    { version = v; extern = "/cm/shared/sw/pkg/vender/matlab/${v}"; })
+  ["R2018a" "R2018b" "R2020a" "R2021a"]
+) ++ builtins.concatMap (packs: with packs.pkgs; 
+  map packs.getPackage (mpis ++ pythons) ++ [
+  boost
+  cuda
+  cudnn
+  eigen
+  (fftw.withPrefs { version = ":2"; variants = { precision = ["float" "double"]; }; })
+  fftw
+  (gsl.withPrefs { depends = { openblas = { variants = { threads = "none"; }; }; }; })
+  #gsl ^intel-oneapi-mkl
+  (hdf5.withPrefs { version = ":1.8"; })
+  hdf5
+  magma
+  nfft
+  (openblas.withPrefs { variants = { threads = "none"; }; })
+  (openblas.withPrefs { variants = { threads = "openmp"; }; })
+  (openblas.withPrefs { variants = { threads = "pthreads"; }; })
+  pgplot
+  relion # doesn't work with intel-mpi, so just use default openmpi
+  openmpi-opa # ^openmpi@4.0.6 fabrics=ofi,ucx,psm,psm2,verbs schedulers=slurm +pmi~static+thread_multiple+legacylaunchers
+]) compilerPacks;
+
+modconfig = {
+  hierarchy = ["mpi"];
+  hash_length = 0;
+  #core_compilers = map (p: packs.lib.specName p.spec) compilers;
+  projections = {
+    "boost+clanglibcpp" = "{name}/{version}-libcpp";
+    "gromacs+plumed" = "{name}/{version}-plumed";
+    "gsl^intel-oneapi-mkl" = "{name}/{version}-mkl";
+    "gsl^openblas" = "{name}/{version}-openblas";
+    "openblas threads=none" = "{name}/{version}-single";
+    "openblas threads=openmp" = "{name}/{version}-openmp";
+    "openblas threads=pthreads" = "{name}/{version}-threaded";
+    "openmpi-opa" = "{name}/{^openmpi.version}";
+    "py-*^intel-oneapi-mkl" = "python-packages/{^python.version}/{name}/.{version}-mkl";
+    "py-*^openblas" = "python-packages/{^python.version}/{name}/.{version}-openblas";
+    "python-blas-backend^intel-oneapi-mkl" = "python/{^python.version}-mkl";
+    "slurm" = "{name}/current";
+    "py-*^python" = "python-packages/{^python.version}/{name}/{version}";
+    "modules-traditional" = "{name}";
+  };
+};
 
 in
 
 packs // {
-  modules = packs.modules { pkgs = modules; };
+  inherit compilerPacks;
+  modules = packs.modules {
+    config = modconfig;
+    pkgs = mods;
+  };
+  test = map (p: p.prefs) compilerPacks;
 }
 /*
 let 
