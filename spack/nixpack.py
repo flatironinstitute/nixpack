@@ -95,12 +95,12 @@ class NixSpec(spack.spec.Spec):
         self.versions = spack.version.VersionList([spack.version.Version(version)])
         self._set_architecture(target=target, platform=platform, os=archos)
         self.prefix = prefix
-        extern = nixspec['extern']
-        if extern:
-            assert extern == prefix, f"{self.name} extern {extern} doesn't match prefix {prefix}"
+        self.external_path = nixspec['extern']
+        if self.external_path:
+            assert self.external_path == prefix, f"{self.name} extern {nixspec['extern']} doesn't match prefix {prefix}"
 
         variants = nixspec['variants']
-        if not extern:
+        if not self.external:
             assert variants.keys() == self.package.variants.keys(), f"{self.name} has mismatching variants {variants.keys()} vs. {self.packages.variants.keys()}"
         for n, s in variants.items():
             if isinstance(s, bool):
@@ -115,7 +115,7 @@ class NixSpec(spack.spec.Spec):
         self.tests = nixspec['tests']
         self.paths = {n: p and os.path.join(prefix, p) for n, p in nixspec['paths'].items()}
         self.compiler = nullCompiler
-        if not nixspec['extern'] and prefix.startswith(nixStore):
+        if not self.external and prefix.startswith(nixStore):
             self._nix_hash, nixname = prefix[len(nixStore):].lstrip('/').split('-', 1)
 
         for n, d in list(nixspec['depends'].items()):
