@@ -69,7 +69,7 @@ packsWithPrefs =
   , global ? {}
   , package ? {}
   , compiler ? { name = "gcc"; }
-  , bootstrapCompiler ? compiler // { extern = "/usr"; }
+  , bootstrapPrefs ? {}
   } @ packPrefs:
 lib.fix (packs: with packs; {
   inherit lib;
@@ -265,10 +265,8 @@ lib.fix (packs: with packs; {
     args = [../spack/generate.py];
   };
 
-  bootstrapPacks = packs.withPrefs {
-    compiler = bootstrapCompiler;
-    label = "bootstrap";
-  };
+  bootstrapPacks = packs.withPrefs ({ label = "${label}-bootstrap"; } //
+    bootstrapPrefs);
 
   /* full metadata repo package descriptions */
   repo = patchRepo repoPatch (repoPatches (import spackRepo {

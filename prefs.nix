@@ -89,11 +89,14 @@
     /* preferences for global compiler */
     name = "gcc";
   };
-  /* must be set to an external compiler capable of building compiler (above) */
-  bootstrapCompiler = {
-    name = "gcc";
-    version = "4.8.5";
-    extern = "/usr";
+  /* overrides for bootstrapPacks */
+  bootstrapPrefs = {
+    /* must be set to an external compiler capable of building compiler (above) */
+    compiler = {
+      name = "gcc";
+      version = "4.8.5";
+      extern = "/usr";
+    };
   };
 
 }

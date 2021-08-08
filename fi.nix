@@ -27,10 +27,12 @@ packs = import ./packs {
     tests = false;
     fixedDeps = true;
   };
-  bootstrapCompiler = {
-    name = "gcc";
-    version = "4.8.5";
-    extern = "/usr";
+  bootstrapPrefs = {
+    compiler = {
+      name = "gcc";
+      version = "4.8.5";
+      extern = "/usr";
+    };
   };
   compiler = {
     name = "gcc";
