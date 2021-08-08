@@ -25,6 +25,7 @@ packs = import ./packs {
 
   global = {
     tests = false;
+    fixedDeps = true;
   };
   bootstrapCompiler = {
     name = "gcc";
@@ -70,6 +71,11 @@ packs = import ./packs {
         pdf = true;
         png = true;
         svg = false;
+      };
+    };
+    pango = {
+      variants = {
+        X = true;
       };
     };
     py-setuptools-scm = {
@@ -134,6 +140,7 @@ packs = import ./packs {
         fortran = true;
         cxx = true;
         mpi = false;
+        java = true; # for hdfview
       };
     };
     fftw = {
@@ -172,7 +179,7 @@ packs = import ./packs {
     qt = {
       variants = {
         dbus = true;
-        opengl = true;
+        #opengl = true;
       };
     };
     harfbuzz = {
@@ -195,9 +202,42 @@ packs = import ./packs {
         X = true;
       };
     };
+    /* for gtk-doc */
+    docbook-xml = {
+      version = "4.3";
+    };
+    docbook-xsl = {
+      version = "1.78.1";
+    };
+    libepoxy = {
+      variants = {
+        glx = false;
+      };
+    };
+    /* for hdfview */
+    hdf = {
+      variants = {
+        external-xdr = false;
+        java = true;
+        shared = true;
+      };
+    };
+    /* for unison */
+    ocaml = {
+      variants = {
+        force-safe-string = false;
+      };
+    };
+    /* for vtk */
+    freetype = {
+      version = ":2.10.2";
+    };
+    netcdf-c = {
+      variants = {
+        mpi = false;
+      };
+    };
   };
-
-  fixedDeps = true;
 };
 
 compilers = [
@@ -264,7 +304,7 @@ modules = (map packs.getPackage compilers) ++ (with packs.pkgs; [
     openjdk
     #pdftk #needs gcc java (gcj)
     perl
-    (petsc.withPrefs { variants = { mpi = false; }; })
+    (petsc.withPrefs { variants = { mpi = false; hdf5 = false; hypre = false; superlu-dist = false; }; })
     postgresql
     r
     r-irkernel
@@ -274,8 +314,8 @@ modules = (map packs.getPackage compilers) ++ (with packs.pkgs; [
     smartmontools
     subversion
     swig
-    texlive
-    texstudio
+    (texlive.withPrefs { fixedDeps = false; })
+    (texstudio.withPrefs { fixedDeps = false; })
     tmux
     udunits
     unison

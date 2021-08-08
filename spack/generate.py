@@ -240,7 +240,7 @@ def conflict(p, c, w, m):
     l = []
     conditions(l, p, spack.spec.Spec(c))
     conditions(l, p, w)
-    return App('when', And(*l), m or str(c))
+    return App('when', And(*l), str(c) + (' ' + m if m else ''))
 
 namespaces = ', '.join(r.namespace for r in spack.repo.path.repos)
 print(f"Generating package repo for {namespaces}...")
@@ -273,8 +273,21 @@ for p in spack.repo.path.all_packages():
     output(p.name, Fun('spec', desc))
     n += 1
 print(f"Generated {n} packages")
-for v, p in virtuals.items():
-    output(v, List(p))
+
+# use spack config for provider ordering
+prefs = spack.config.get("packages:all:providers", {})
+for v, providers in virtuals.items():
+    prov = []
+    for p in prefs.get(v, []):
+        n = spack.spec.Spec(p).name
+        try:
+            providers.remove(n)
+        except KeyError:
+            continue
+        prov.append(n)
+    prov.extend(providers)
+    output(v, prov)
 print(f"Generated {len(virtuals)} virtuals")
+
 print("}", file=f)
 f.close()

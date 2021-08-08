@@ -35,8 +35,21 @@
     */
   };
   global = {
-    /* preferences to apply to every package -- generally not needed */
+    /* preferences to apply to every package */
     tests = false;
+    /* how to resolve dependencies, similar to concretize together or separately.
+       fixedDeps = false:  Dependencies are resolved dynamically based on
+         preferences and constraints imposed by each depender.  This can result
+         in many different versions of each package existing in packs.
+       fixedDeps = true:  Dependencies are resolved only by user prefs, and an
+         error is produced if dependencies don't conform to their dependers'
+         constraints.  This ensures only one version of each dependent package
+         exists within packs.  Different packs with different prefs may have
+         different versions.  Top-level packages explicitly resolved with
+         different prefs or dependency prefs may also be different.  Virtuals
+         are always resolved (to a package name) dynamically.
+     */
+    fixedDeps = false;
   };
   package = {
     /* preferences for individual packages or virtuals */
@@ -83,17 +96,4 @@
     extern = "/usr";
   };
 
-  /* how to resolve dependencies, similar to concretize together or separately.
-     fixedDeps = false:  Each package is resolved dynamically based on preferences
-       and constraints imposed by its dependers.  This can result in many
-       different versions of each package existing in packs.
-     fixedDeps = true:  Packages are resolved only by user prefs, and an error
-       is produced if dependencies don't conform to their dependers
-       constraints.  This ensures only one version of each dependent package
-       exists within packs.  Different packs with different prefs may have
-       different versions.  Top-level packages explicitly resolved with
-       different prefs or dependency prefs may also be different.  Virtuals are
-       always resolved (to a package name) dynamically.
-   */
-  fixedDeps = false;
 }

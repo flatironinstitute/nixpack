@@ -2,7 +2,7 @@ let
 
 lib = import ./lib.nix;
 
-prefsUpdate = lib.recursiveUpdate; # TODO
+prefsUpdate = lib.coalesceWith lib.recursiveUpdate; # TODO
 
 versionsUnion = l:
   if builtins.isList l then
@@ -70,7 +70,6 @@ packsWithPrefs =
   , package ? {}
   , compiler ? { name = "gcc"; }
   , bootstrapCompiler ? compiler // { extern = "/usr"; }
-  , fixedDeps ? false
   } @ packPrefs:
 lib.fix (packs: with packs; {
   inherit lib;
@@ -159,7 +158,7 @@ lib.fix (packs: with packs; {
           pref
         else err);
       /* these need to happen in parallel due to depend conditionals being evaluated recursively */
-      resolveDepends = tests: depends: let
+      resolveDepends = fixed: tests: depends: let
           depargs = builtins.mapAttrs (n: arg: if builtins.isList arg then lib.prefsIntersection arg else arg) depends;
         in resolveEach (dname: dep: pref: let
           deptype = (if tests then lib.id else lib.remove "test") dep.deptype or [];
@@ -171,7 +170,7 @@ lib.fix (packs: with packs; {
           /* for link dependencies with dependencies in common with ours, we propagate our prefs down.
              this doesn't entirely ensure consistent linking, but helps in many common cases. */
           pdeps = builtins.intersectAttrs (getPossibleDepends dname) depargs;
-          rdeps = lib.prefsIntersect dpref { depends = pdeps; };
+          rdeps = lib.prefsIntersect dpref { depends = builtins.mapAttrs (n: clean) pdeps; };
           dyn = getResolver dname (clean (if isr then rdeps else dpref));
 
           /* static */
@@ -180,7 +179,7 @@ lib.fix (packs: with packs; {
             if lib.specMatches spkg.spec (clean dep) then spkg else
             throw "${name} dependency ${dname}: package ${lib.specToString spkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
         in lib.when (deptype != [])
-          ((if fixedDeps then static else dyn) // { inherit deptype; }))
+          ((if fixed then static else dyn) // { inherit deptype; }))
         depargs;
 
       /* create a package from a spec */
@@ -210,6 +209,7 @@ lib.fix (packs: with packs; {
         , depends ? {}
         , extern ? uprefs.extern or null
         , tests ? uprefs.tests or null
+        , fixedDeps ? uprefs.fixedDeps or false
         } @ prefs: let
           desc = lib.recursiveUpdate defaultDesc (gen spec);
           spec = {
@@ -222,7 +222,7 @@ lib.fix (packs: with packs; {
             patches  = desc.patches ++ patches;
             variants = resolveVariants desc.variants (variants // uprefs.variants or {});
             depends = if spec.extern != null then {} else
-              resolveDepends spec.tests desc.depends (depends // uprefs.depends or {});
+              resolveDepends fixedDeps spec.tests desc.depends (depends // uprefs.depends or {});
             deptypes = builtins.mapAttrs (n: d: if d == null then null else d.deptype) spec.depends;
             provides = builtins.mapAttrs (n: versionsUnion) desc.provides;
           };
@@ -235,16 +235,18 @@ lib.fix (packs: with packs; {
       virtual = providers:
         { version ? uprefs.version or ":"
         , provider ? uprefs.provider or null
+        , fixedDeps ? uprefs.fixedDeps or false
         , ...
         } @ prefs: let
           provs = lib.toList (lib.coalesce provider providers);
+          /* TODO: really need to resolve multiple versions too (see: java) */
           opts = builtins.map (o: getResolver o (lib.when (! fixedDeps)
             (builtins.removeAttrs prefs ["version" "provider"]))) provs;
           check = opt:
             let
               provtry = builtins.tryEval opt.spec.provides.${name}; /* catch conflicts */
               prov = lib.when provtry.success provtry.value;
-            in prov != null && lib.versionsOverlap version prov;
+            in prov != null && builtins.any (lib.versionsOverlap prov) (lib.toList version);
           choice = builtins.filter check opts;
         in if choice == [] then throw "no providers for ${name}@${version}" else builtins.head choice;
 
