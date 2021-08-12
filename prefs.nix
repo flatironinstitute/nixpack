@@ -67,11 +67,9 @@
       extern = "/usr";
       version = "2.11";
     }; */
-    /* specify virtual providers:
-       can be (optional) lists of names or { name; ...prefs }, and take precedence over inferred providers.
-    mpi = {
-      provider = [ "openmpi" ];
-    }; */
+    /* specify virtual providers: can be (lists of) names or { name; ...prefs }
+    mpi = [ "openmpi" ];
+    java = { name = "openjdk"; version = "10"; }; */
     /* use gcc 7.x:
     gcc = {
       version = "7";

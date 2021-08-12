@@ -233,7 +233,7 @@ lib.fix (packs: with packs; {
           pkg = (if pprefs.fixedDeps then spkg else dpkg) // { inherit deptype; };
         in lib.when (deptype != [])
         (if lib.specMatches pkg.spec dep' then pkg else
-          throw "${pname} dependency ${dname}: package ${lib.specToString spkg.spec} does not match dependency constraints ${builtins.toJSON dep'}"))
+          throw "${pname} dependency ${dname}: package ${builtins.toJSON spkg.spec} does not match dependency constraints ${builtins.toJSON dep'}"))
         depends pprefs.depends;
 
       /* create a package from a spec */

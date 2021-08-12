@@ -96,8 +96,8 @@ rec {
       vo = a: b: let
         ar = versionRange a;
         br = versionRange b;
-      in versionAtMostMatch ar.max br.min &&
-         versionAtMostMatch br.max ar.min;
+      in versionAtMostMatch ar.min br.max &&
+         versionAtMostMatch br.min ar.max;
     in any (a: any (vo a) bs) as;
 
   /* does concrete variant v match spec m? */

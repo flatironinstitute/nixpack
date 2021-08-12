@@ -92,12 +92,10 @@ packs = import ./packs {
       extern = "/usr";
       version = "2.11";
     };
-    mpi = {
-      provider = [ "openmpi" ];
-    };
-    blas      = { provider = "openblas"; };
-    lapack    = { provider = "openblas"; };
-    scalapack = { provider = "openblas"; };
+    mpi = "openmpi";
+    blas      = "openblas";
+    lapack    = "openblas";
+    scalapack = "openblas";
     gcc = {
       version = "7";
     };
@@ -404,8 +402,8 @@ mods = (map packs.getPackage compilers) ++ (with packs.pkgs; [
   eigen
   (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
   fftw
-  (gsl.withPrefs { depends = { blas = { provider = { name = "openblas"; variants = { threads = "none"; }; }; }; }; })
-  (gsl.withPrefs { depends = { blas = { provider = "intel-oneapi-mkl"; }; }; })
+  (gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; })
+  (gsl.withPrefs { depends = { blas = "intel-oneapi-mkl"; }; })
   (hdf5.withPrefs { version = ":1.8"; })
   hdf5
   magma
@@ -417,7 +415,7 @@ mods = (map packs.getPackage compilers) ++ (with packs.pkgs; [
   relion # doesn't work with intel-mpi, so just use default openmpi
   openmpi-opa # ^openmpi@4.0.6 fabrics=ofi,ucx,psm,psm2,verbs schedulers=slurm +pmi~static+thread_multiple+legacylaunchers
 ]) compilerPacks ++ (with packs.pkgs; [
-  (boost.withPrefs { depends = { compiler = { provider = "clang"; }; }; variants = { clanglibcpp = true; }; })
+  (boost.withPrefs { depends = { compiler = { name = "llvm"; variants = { clanglibcpp = true; }; }; }; })
 ]);
 
 modconfig = {
