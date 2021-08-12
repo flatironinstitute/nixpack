@@ -8,7 +8,7 @@ packs.spackBuilder {
   args = [./modules.py];
   inherit name modtype;
   config = builtins.toJSON (packs.lib.recursiveUpdate {
-    core_compilers = [(packs.lib.specName packs.pkgs.compiler.spec)];
+    core_compilers = ["gcc@0" (packs.lib.specName packs.pkgs.compiler.spec)];
   } config);
   pkgs = builtins.toJSON (map (p: p.spec // { prefix = p.out; }) pkgs);
   passAsFile = ["config" "pkgs"];

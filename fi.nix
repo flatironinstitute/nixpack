@@ -23,17 +23,16 @@ packs = import ./packs {
   repoPatch = {
   };
 
-  global = {
-    tests = false;
-    fixedDeps = true;
-  };
+  tests = false;
+  fixedDeps = true;
+
   bootstrap = {
-    compiler = {
-      name = "gcc";
-      version = "4.8.5";
-      extern = "/usr";
-    };
     package = {
+      compiler = {
+        name = "gcc";
+        version = "4.8.5";
+        extern = "/usr";
+      };
       zlib = {
         extern = "/usr";
         version = "1.2.7";
@@ -83,10 +82,11 @@ packs = import ./packs {
       };
     };
   };
-  compiler = {
-    name = "gcc";
-  };
   package = {
+    compiler = {
+      name = "gcc";
+      resolver = "bootstrap";
+    };
     cpio = {
       /* some intel installers need this -- avoid compiler dependency */
       extern = "/usr";
@@ -191,7 +191,6 @@ packs = import ./packs {
         fortran = true;
         cxx = true;
         mpi = false;
-        java = true; # for hdfview
       };
     };
     fftw = {
@@ -265,14 +264,6 @@ packs = import ./packs {
         glx = false;
       };
     };
-    /* for hdfview */
-    hdf = {
-      variants = {
-        external-xdr = false;
-        java = true;
-        shared = true;
-      };
-    };
     /* for unison */
     ocaml = {
       variants = {
@@ -296,6 +287,14 @@ packs = import ./packs {
     cuda = {
       version = "11.3";
     };
+    psm = {
+      depends = {
+        compiler = {
+          name = "gcc";
+          version = ":5.99";
+        };
+      };
+    };
   };
 };
 
@@ -306,8 +305,10 @@ compilers = [
 ];
 
 compilerPacks = map (compiler: packs.withPrefs {
-  inherit compiler;
-  # todo: bootstrap with main compiler?
+  package = {
+    inherit compiler;
+    # todo: bootstrap with main compiler?
+  };
 }) compilers;
 
 mpis = [
@@ -341,14 +342,14 @@ mods = (map packs.getPackage compilers) ++ (with packs.pkgs; [
   (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
   fio
   gdal
-  #gdb # needs python+debug
+  (gdb.withPrefs { fixedDeps = false; })
   ghostscript
   git
   git-lfs
   go
   gperftools
   (gromacs.withPrefs { variants = { mpi = false; }; })
-  hdfview
+  (hdfview.withPrefs { fixedDeps = false; })
   #i3 #needs some xcb things
   imagemagick
   intel-mkl
@@ -401,10 +402,10 @@ mods = (map packs.getPackage compilers) ++ (with packs.pkgs; [
   cuda
   cudnn
   eigen
-  (fftw.withPrefs { version = ":2"; variants = { precision = ["float" "double"]; }; })
+  (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
   fftw
-  (gsl.withPrefs { depends = { openblas = { variants = { threads = "none"; }; }; }; })
-  #gsl ^intel-oneapi-mkl
+  (gsl.withPrefs { depends = { blas = { provider = { name = "openblas"; variants = { threads = "none"; }; }; }; }; })
+  (gsl.withPrefs { depends = { blas = { provider = "intel-oneapi-mkl"; }; }; })
   (hdf5.withPrefs { version = ":1.8"; })
   hdf5
   magma
@@ -415,12 +416,13 @@ mods = (map packs.getPackage compilers) ++ (with packs.pkgs; [
   pgplot
   relion # doesn't work with intel-mpi, so just use default openmpi
   openmpi-opa # ^openmpi@4.0.6 fabrics=ofi,ucx,psm,psm2,verbs schedulers=slurm +pmi~static+thread_multiple+legacylaunchers
-]) compilerPacks;
+]) compilerPacks ++ (with packs.pkgs; [
+  (boost.withPrefs { depends = { compiler = { provider = "clang"; }; }; variants = { clanglibcpp = true; }; })
+]);
 
 modconfig = {
   hierarchy = ["mpi"];
   hash_length = 0;
-  #core_compilers = map (p: packs.lib.specName p.spec) compilers;
   projections = {
     "boost+clanglibcpp" = "{name}/{version}-libcpp";
     "gromacs+plumed" = "{name}/{version}-plumed";
@@ -447,7 +449,6 @@ packs // {
     config = modconfig;
     pkgs = mods;
   };
-  test = map (p: p.prefs) compilerPacks;
 }
 /*
 let 

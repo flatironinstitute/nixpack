@@ -200,9 +200,9 @@ def conditions(c, p, s):
                 c.append(App("variantMatches", Expr(a+'.variants.'+n), unlist(v.value)))
         if s.compiler:
             if s.compiler.name:
-                c.append(Eq(Expr(a+'.depends.compiler.name'), s.compiler.name))
+                c.append(Eq(Expr(a+'.depends.compiler.spec.name'), s.compiler.name))
             if s.compiler.versions != spack.spec._any_version:
-                c.append(App("versionMatches", Expr(a+'.depends.compiler.version'), str(s.compiler.versions)))
+                c.append(App("versionMatches", Expr(a+'.depends.compiler.spec.version'), str(s.compiler.versions)))
         for d in s.dependencies():
             dp = a+'.depends.'+d.name
             c.append(Expr(dp + " or null != null", 11))

@@ -22,36 +22,34 @@ defaultSpackConfig = {
   compilers = [];
 };
 
-/* default package descriptor */
-defaultDesc = {
-  namespace = "builtin";
-  version = [];
-  variants = {};
-  patches = [];
-  depends = {
-    compiler = {
-      deptype = ["build"];
-    };
+/* fill in package descriptor with defaults */
+fillDesc = name: /* simple name of package */
+  { namespace ? "builtin"
+  , version ? [] /* list of available concrete versions */
+  , variants ? {} /* set of variant to (bool, string, or set of opt to bool) */
+  , patches ? [] /* list of patches to apply (after those in spack) */
+  , depends ? {} /* dependencies, set of name to {deptype; Constrants} */
+  , conflicts ? [] /* list of conflict messages (package is not buildable if non-empty) */
+  , provides ? {} /* set of provided virtuals to (version ranges or unioned list thereof) */
+  , paths ? {} /* set of tools to path prefixes */
+  }: {
+    inherit name namespace version variants patches paths;
+    depends = {
+      compiler = {
+        deptype = ["build"];
+      };
+    } // builtins.mapAttrs (n: lib.prefsIntersection) depends;
+    provides = builtins.mapAttrs (n: versionsUnion) provides;
+    conflicts = lib.remove null conflicts;
   };
-  conflicts = [];
-  provides = {};
-  paths = {};
-  extern = null;
-};
 
-getPackageWith = get: arg:
-  if arg == null then
-    pref: null
-  else if builtins.isString arg then
-    builtins.addErrorContext "getting package ${arg}" (get arg)
-  else if arg ? name then
-    pref: getPackageWith get arg.name (lib.prefsIntersect (builtins.removeAttrs arg ["name"]) pref)
-  else throw "invalid package";
-
-patchDesc = patch: gen: spec: let desc = gen spec; in
-  desc // lib.applyOptional (lib.applyOptional patch spec) desc;
+patchDesc = patch: gen:
+  if builtins.isFunction gen then
+    spec: let desc = gen spec; in
+      desc // lib.applyOptional (lib.applyOptional patch spec) desc
+  else lib.applyOptional patch gen;
 patchRepo = patch: repo: repo //
-  builtins.mapAttrs (name: f: patchDesc f (repo.${name} or (spec: {}))) patch;
+  builtins.mapAttrs (name: f: patchDesc f (repo.${name} or null)) patch;
 
 repoPatches = patchRepo (import ../patch lib);
 
@@ -66,9 +64,9 @@ packsWithPrefs =
   , spackPython ? "/usr/bin/python3"
   , spackPath ? "/bin:/usr/bin"
   , repoPatch ? {}
-  , global ? {}
+  , tests ? false
+  , fixedDeps ? false
   , package ? {}
-  , compiler ? { name = "gcc"; }
   , bootstrap ? {}
   } @ packPrefs:
 lib.fix (packs: with packs; {
@@ -107,23 +105,74 @@ lib.fix (packs: with packs; {
       spackCache = null;
     });
 
+  isVirtual = name: builtins.isList repo.${name} or null;
+
   /* look up a package requirement and resolve it with prefs */
-  getResolver = getPackageWith (name: pref:
-    if pref == null || pref == {}
-      then pkgs.${name} /* optimization */
-      else resolvers.${name} pref);
+  getResolver = name: pref: builtins.addErrorContext "getting package ${label}.${name}"
+    (if pref == null || pref == {}
+      then pkgs.${name}
+      else resolvers.${name} (prefsUpdate (getPackagePrefs name) pref));
 
   /* look up a package with default prefs */
-  getPackage = arg: getResolver arg null;
+  getPackage = arg:
+    if arg == null then
+      null
+    else if builtins.isString arg then
+      getResolver arg null
+    else if arg ? name then
+      getResolver arg.name (builtins.removeAttrs arg ["name"])
+    else throw "invalid package";
 
   /* get the list of packages a given package might depend on (from the repo, makes assumptions about repo structure) */
   getPossibleDepends = name:
     (lib.applyOptional repo.${name} (throw "getPossibleDepends ${name}")).depends or {};
 
-  /* resolve a named package descriptor into a concrete spec (concretize) */
-  resolvePackage = name:
+  /* fill in package prefs with defaults */
+  fillPrefs =
+    { version ? null
+    , variants ? {}
+    , patches ? []
+    , depends ? {}
+    , extern ? null
+    , provides ? {}
+    , tests ? packPrefs.tests or false
+    , fixedDeps ? packPrefs.fixedDeps or false
+    , resolver ? packs
+    }: {
+      inherit version variants patches depends extern tests provides fixedDeps;
+      resolver = if builtins.isString resolver then packs.${resolver} else resolver;
+    };
+
+  getPackagePrefs = name: packPrefs.package.${name} or {};
+
+  /* resolve a named package descriptor into a concrete spec (concretize)
+
+     Resolving a (non-virtual) package requires these sources of information:
+     - R = repo.${name}: package desc from repo
+     - G: global user prefs = packPrefs.(package.${name})
+     - P: specific instance prefs = arg
+     We describe this resolution as R(G // P).
+     Resolving each dependency x involves these sources of information:
+     - R': dependency desc from repo
+     - C = R.depends.${x}: constraints from parent desc
+     - G': global user prefs
+     - P' = (G // P).depends.${x}: inherited prefs from parent
+     with fixedDeps = true, we want R'(G' // P'), checked against C.
+     with fixedDeps = false, we want R'((G' // P') intersect C)
+
+     Resolving a virtual dependency is a bit different:
+     - R': provider list from repo
+     - C = R.depends.${x}: virtual version from parent desc
+     - G': global provider prefs = packPrefs.package.${name}
+     - P': inherited provider prefs from parent.
+     If G' // P' is not null or empty, it should be a (list of) specific
+     packages names or { name; desc...}, and these are the candidates.
+     Otherwise, R' are the canditates.
+     with fixedDeps = true, resolve the first candidate and check it against C.
+     with fixedDeps = false, try each candidate until one matches C.
+  */
+  resolvePackage = pname:
     let
-      uprefs = prefsUpdate packPrefs.global packPrefs.package.${name} or null;
       /* combining preferences with descriptor to get concrete package spec */
       resolveEach = resolver: arg: pref:
         builtins.mapAttrs (n: a: resolver n a pref.${n} or null) arg;
@@ -131,10 +180,10 @@ lib.fix (packs: with packs; {
         /* special version matching: a (list of intersected) version constraint */
         let v = builtins.filter (v: lib.versionMatches v pref) arg;
         in if v == []
-          then throw "${name}: no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}"
+          then throw "${pname}: no version matching ${toString pref} from ${builtins.concatStringsSep "," arg}"
           else builtins.head v;
       resolveVariants = resolveEach (vname: arg: pref:
-        let err = throw "${name} variant ${vname}: invalid ${builtins.toJSON pref} (for ${builtins.toJSON arg})"; in
+        let err = throw "${pname} variant ${vname}: invalid ${builtins.toJSON pref} (for ${builtins.toJSON arg})"; in
         if pref == null then
           /* no preference: use default */
           if builtins.isList arg then builtins.head arg else arg
@@ -157,33 +206,38 @@ lib.fix (packs: with packs; {
           /* a simple value: any value of that type */
           pref
         else err);
+
+
       /* these need to happen in parallel due to depend conditionals being evaluated recursively */
-      resolveDepends = fixed: tests: depends: let
-          depargs = builtins.mapAttrs (n: arg: if builtins.isList arg then lib.prefsIntersection arg else arg) depends;
-        in resolveEach (dname: dep: pref: let
-          deptype = (if tests then lib.id else lib.remove "test") dep.deptype or [];
-          clean = d: builtins.removeAttrs d ["deptype"];
+      resolveDepends = depends: pprefs:
+        resolveEach (dname: dep: pref: let
+          deptype = (t: if pprefs.tests then t else lib.remove "test" t) dep.deptype or [];
+          res = pprefs.resolver.getResolver dname;
+          clean = d: if d == null then d else builtins.removeAttrs d ["deptype"];
+          virtualize = { deptype, version ? ":" }:
+            { provides = { "${dname}" = version; }; };
+          dep' = (if isVirtual dname then virtualize else clean) dep;
 
           /* dynamic */
           isr = builtins.elem "link" deptype;
-          dpref = lib.prefsIntersect dep pref;
+          dpref = lib.prefsIntersect dep' pref;
           /* for link dependencies with dependencies in common with ours, we propagate our prefs down.
              this doesn't entirely ensure consistent linking, but helps in many common cases. */
-          pdeps = builtins.intersectAttrs (getPossibleDepends dname) depargs;
+          pdeps = builtins.intersectAttrs (getPossibleDepends dname) pprefs.depends;
           rdeps = lib.prefsIntersect dpref { depends = builtins.mapAttrs (n: clean) pdeps; };
-          dyn = getResolver dname (clean (if isr then rdeps else dpref));
+          dpkg = res (if isr then rdeps else dpref);
 
           /* static */
-          spkg = getResolver dname pref;
-          static =
-            if lib.specMatches spkg.spec (clean dep) then spkg else
-            throw "${name} dependency ${dname}: package ${lib.specToString spkg.spec} does not match dependency constraints ${builtins.toJSON dep}";
+          spkg = res pref;
+
+          pkg = (if pprefs.fixedDeps then spkg else dpkg) // { inherit deptype; };
         in lib.when (deptype != [])
-          ((if fixed then static else dyn) // { inherit deptype; }))
-        depargs;
+        (if lib.specMatches pkg.spec dep' then pkg else
+          throw "${pname} dependency ${dname}: package ${lib.specToString spkg.spec} does not match dependency constraints ${builtins.toJSON dep'}"))
+        depends pprefs.depends;
 
       /* create a package from a spec */
-      makePackage = spec: gen: prefs: let
+      makePackage = spec: gen: pprefs: let
           name = "${spec.name}-${spec.version}";
         in if spec.extern != null
         then {
@@ -198,75 +252,68 @@ lib.fix (packs: with packs; {
           passAsFile = ["spec"];
         } // {
           inherit spec;
-          withPrefs = p: resolvePackage name gen (prefsUpdate prefs p);
+          withPrefs = p: resolvePackage pname gen (prefsUpdate pprefs p);
         };
 
-      /* resolving a real package */
-      package = gen:
-        { version ? uprefs.version or null
-        , variants ? {}
-        , patches ? uprefs.patches or []
-        , depends ? {}
-        , extern ? uprefs.extern or null
-        , tests ? uprefs.tests or null
-        , fixedDeps ? uprefs.fixedDeps or false
-        } @ prefs: let
-          desc = lib.recursiveUpdate defaultDesc (gen spec);
+      /* resolve a real package into a spec */
+      package = gen: pprefs: let
+          desc = fillDesc pname (gen spec);
+          prefs = fillPrefs pprefs;
+          resolver = if builtins.isString resolver then packs.${resolver} else resolver;
           spec = {
-            inherit name;
-            inherit (desc) namespace paths;
-            tests    = lib.coalesce tests false;
-            extern   = lib.coalesce extern desc.extern;
-            version  = if extern != null && lib.versionIsConcrete version then version
-              else     resolveVersion  desc.version  version;
-            patches  = desc.patches ++ patches;
-            variants = resolveVariants desc.variants (variants // uprefs.variants or {});
-            depends = if spec.extern != null then {} else
-              resolveDepends fixedDeps spec.tests desc.depends (depends // uprefs.depends or {});
-            deptypes = builtins.mapAttrs (n: d: if d == null then null else d.deptype) spec.depends;
-            provides = builtins.mapAttrs (n: versionsUnion) desc.provides;
+            inherit (desc) name namespace provides paths;
+            inherit (prefs) extern tests;
+            version = if prefs.extern != null && lib.versionIsConcrete prefs.version then prefs.version
+                    else resolveVersion  desc.version  prefs.version;
+            patches  = desc.patches ++ prefs.patches;
+            variants = resolveVariants desc.variants prefs.variants;
+            depends = if prefs.extern != null then {}
+                  else resolveDepends  desc.depends  prefs;
+            deptypes = builtins.mapAttrs (n: d: d.deptype or null) spec.depends;
           };
-          conflicts = lib.remove null desc.conflicts;
-        in if spec.extern != null || conflicts == [] then makePackage spec gen prefs
-        else throw "${name}: has conflicts: ${toString conflicts}";
-        /* TODO: remove null/bdeps from final package spec? */
+        in if spec.extern != null || desc.conflicts == [] then makePackage spec gen pprefs
+        else throw "${pname}: has conflicts: ${toString desc.conflicts}";
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
-      virtual = providers:
-        { version ? uprefs.version or ":"
-        , provider ? uprefs.provider or null
-        , fixedDeps ? uprefs.fixedDeps or false
-        , ...
-        } @ prefs: let
-          provs = lib.toList (lib.coalesce provider providers);
-          /* TODO: really need to resolve multiple versions too (see: java) */
-          opts = builtins.map (o: getResolver o (lib.when (! fixedDeps)
-            (builtins.removeAttrs prefs ["version" "provider"]))) provs;
+      virtual = providers: prefs: let
+          provs = if builtins.isList prefs || prefs ? name then prefs
+            else providers;
+          version = prefs.provides.${pname} or ":";
+
+          /* TODO: really need to try multiple versions too (see: java) */
+          opts = builtins.map getPackage (lib.toList provs);
           check = opt:
             let
-              provtry = builtins.tryEval opt.spec.provides.${name}; /* catch conflicts */
+              provtry = builtins.tryEval opt.spec.provides.${pname}; /* catch conflicts */
               prov = lib.when provtry.success provtry.value;
-            in prov != null && builtins.any (lib.versionsOverlap prov) (lib.toList version);
-          choice = builtins.filter check opts;
-        in if choice == [] then throw "no providers for ${name}@${version}" else builtins.head choice;
+            in prov != null && lib.versionsOverlap prov version;
+          choice = if prefs.fixedDeps or packPrefs.fixedDeps or false
+            then builtins.filter check opts
+            else opts;
+        in if choice == []
+          then throw "no providers for ${pname}@${version}"
+          else builtins.head choice;
 
-    in builtins.addErrorContext "resolving package ${name}" (desc:
+    in desc: builtins.addErrorContext "resolving package ${pname}" (
       if builtins.isList desc then
         virtual desc
       else if builtins.isFunction desc then
         package desc
       else if builtins.isAttrs desc then
         package (lib.const desc)
-      else throw "${name}: invalid package descriptor ${toString (builtins.typeOf desc)}");
+      else throw "${pname}: invalid package descriptor ${builtins.typeOf desc}");
 
-  # generate nix package metadata from spack repos
+  /* generate nix package metadata from spack repos */
   spackRepo = spackBuilder {
     name = "spack-repo.nix";
     args = [../spack/generate.py];
   };
 
-  bootstrapPacks = packs.withPrefs ({ label = "${label}-bootstrap"; } //
-    bootstrap);
+  /* packs with bootstrap prefs, used for bootstrapping */
+  bootstrap = packs.withPrefs ({ label = "${label}-bootstrap"; } // packPrefs.bootstrap);
+
+  /* use this packs to bootstrap another */
+  bootstrapTo = p: packs.withPrefs ({ bootstrap = packPrefs; } // p);
 
   /* full metadata repo package descriptions */
   repo = patchRepo repoPatch (repoPatches (import spackRepo {
@@ -276,12 +323,10 @@ lib.fix (packs: with packs; {
     }));
 
   /* partially applied specs, which take preferences as argument */
-  resolvers = builtins.mapAttrs resolvePackage repo // {
-    compiler = bootstrapPacks.getResolver prefs.compiler;
-  };
+  resolvers = builtins.mapAttrs resolvePackage repo;
 
   /* fully applied resolved packages with default preferences */
-  pkgs = builtins.mapAttrs (name: res: res {}) resolvers;
+  pkgs = builtins.mapAttrs (name: res: res (getPackagePrefs name)) resolvers;
 
   /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in bredth-first order) */
   findDeps = pred:

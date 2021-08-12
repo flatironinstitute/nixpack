@@ -3,8 +3,14 @@ lib:
 let nocompiler = spec: old: { depends = old.depends or {} // { compiler = null; }; };
 in
 {
-  /* add compiler paths */
-  gcc = spec: {
+  /* compiler pseudo-virtual */
+  compiler = ["gcc" "llvm"];
+
+  /* add compiler paths, providers */
+  gcc = spec: old: {
+    provides = old.provides or {} // {
+      compiler = ":";
+    };
     paths = {
       cc = lib.when spec.variants.languages.c "bin/gcc";
       cxx = lib.when spec.variants.languages."c++" "bin/g++";
@@ -12,7 +18,10 @@ in
       fc = lib.when spec.variants.languages.fortran "bin/gfortran";
     };
   };
-  llvm = {
+  llvm = spec: old: {
+    provides = old.provides or {} // {
+      compiler = ":";
+    };
     paths = {
       cc = "bin/clang";
       cxx = "bin/clang++";
@@ -20,7 +29,9 @@ in
       fc = null;
     };
   };
+
   openssh = {
+    /* disable installing with setuid */
     patches = [./openssh-keysign-setuid.patch];
   };
 

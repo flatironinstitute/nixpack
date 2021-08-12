@@ -134,19 +134,20 @@ rec {
     , variants ? {}
     , patches ? []
     , depends ? {}
+    , provides ? {}
     , extern ? spec.extern
-    , tests ? null # ignored
     } @ prefs:
        versionMatches spec.version version
     && all (name: variantMatches (spec.variants.${name} or null) variants.${name}) (attrNames variants)
     && subsetOrdered patches spec.patches
     && all (name: specMatches spec.depends.${name} depends.${name}) (attrNames depends)
+    && all (name: versionsOverlap spec.provides.${name} provides.${name}) (attrNames provides)
     && spec.extern == extern;
 
   /* unify two prefs, making sure they're compatible */
   prefsIntersect = let
       err = a: b: throw "incompatible prefs: ${toJSON a} vs ${toJSON b}";
-      intersectScalar = coalesceWith (a: b: if a == b then a else err a b);
+      intersectScalar = a: b: if a == b then a else err a b;
       intersectors = {
         version = a: b: union (toList a) (toList b);
         variants = mergeWith (a: b: if a == b then a else
@@ -156,11 +157,13 @@ rec {
         depends = mergeWith prefsIntersect;
         extern = intersectScalar;
         tests = intersectScalar;
+        fixedDeps = intersectScalar;
+        resolver = intersectScalar;
         deptype = union;
       };
     in coalesceWith (mergeWithKeys (k: getAttr k intersectors));
 
   /* unify a list of package prefs, making sure they're compatible */
-  prefsIntersection = foldl' prefsIntersect null;
+  prefsIntersection = l: if builtins.isList l then foldl' prefsIntersect null l else l;
 
 }

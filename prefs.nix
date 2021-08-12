@@ -10,11 +10,14 @@
      so is not recommended for production. */
   spackSrc = {
     /* default:
-    #url = "git://github.com/spack/spack"; */
+    url = "git://github.com/spack/spack"; */
     ref = "develop";
     #rev = "b4c6c11e689b2292a1411e4fc60dcd49c929246d";
   };
-  /* extra config settings for spack itself */
+  /* extra config settings for spack itself.  Can contain any standard spack
+     configuration, but don't put compilers (automatically generated), packages
+     (based on package preferences below), or modules (passed to modules
+     function) here. */
   spackConfig = {
     config = {
       #source_cache = "/mnt/home/spack/cache";
@@ -22,8 +25,8 @@
     };
   };
   /* environment for running spack. spack needs things like python, cp, tar,
-     etc.  these can be string paths to the system or packages/environments
-     from nixpkgs, but regardless need to be external to nixpack. */
+     etc.  These can be string paths to the system or to packages/environments
+     from nixpkgs or similar, but regardless need to be external to nixpacks. */
   spackPython = "/usr/bin/python3";
   spackPath = "/bin:/usr/bin";
 
@@ -34,24 +37,30 @@
     };
     */
   };
-  global = {
-    /* preferences to apply to every package */
-    tests = false;
-    /* how to resolve dependencies, similar to concretize together or separately.
-       fixedDeps = false:  Dependencies are resolved dynamically based on
-         preferences and constraints imposed by each depender.  This can result
-         in many different versions of each package existing in packs.
-       fixedDeps = true:  Dependencies are resolved only by user prefs, and an
-         error is produced if dependencies don't conform to their dependers'
-         constraints.  This ensures only one version of each dependent package
-         exists within packs.  Different packs with different prefs may have
-         different versions.  Top-level packages explicitly resolved with
-         different prefs or dependency prefs may also be different.  Virtuals
-         are always resolved (to a package name) dynamically.
-     */
-    fixedDeps = false;
-  };
+  /* enable tests and test deps (not fully implemented) */
+  tests = false;
+  /* how to resolve dependencies, similar to concretize together or separately.
+     fixedDeps = false:  Dependencies are resolved dynamically based on
+       preferences and constraints imposed by each depender.  This can result
+       in many different versions of each package existing in packs.
+     fixedDeps = true:  Dependencies are resolved only by user prefs, and an
+       error is produced if dependencies don't conform to their dependers'
+       constraints.  This ensures only one version of each dependent package
+       exists within packs.  Different packs with different prefs may have
+       different versions.  Top-level packages explicitly resolved with
+       different prefs or dependency prefs may also be different.  Virtuals
+       are always resolved (to a package name) dynamically.
+     this can be overridden per-package for only that package's dependencies.
+   */
+  fixedDeps = false;
   package = {
+    /* compiler is an implicit virtual dependency for every package */
+    compiler = {
+      /* preferences for global compiler */
+      name = "gcc";
+      /* resolve dependencies using bootstrap layer */
+      resolver = "bootstrap";
+    };
     /* preferences for individual packages or virtuals */
     /* get cpio from system:
     cpio = {
@@ -84,20 +93,15 @@
       };
     }; */
   };
-  /* compiler is an implicit virtual dependency for every package */
-  compiler = {
-    /* preferences for global compiler */
-    name = "gcc";
-  };
-  /* overrides for bootstrapPacks */
+  /* overrides for bootstrap layer */
   bootstrap = {
-    /* must be set to an external compiler capable of building compiler (above) */
-    compiler = {
-      name = "gcc";
-      version = "4.8.5";
-      extern = "/usr";
-    };
     package = {
+      /* must be set to an external compiler capable of building compiler (above) */
+      compiler = {
+        name = "gcc";
+        version = "4.8.5";
+        extern = "/usr";
+      };
       /* can speed up bootstrapping by providing more externs
       zlib = {
         extern = "/usr";
