@@ -35,6 +35,11 @@ in
     patches = [./openssh-keysign-setuid.patch];
   };
 
+  shadow = {
+    /* disable installing with set[ug]id */
+    patches = [./shadow-nosuid.patch];
+  };
+
   /* some things don't use a compiler */
   intel = nocompiler;
   intel-mkl = nocompiler;

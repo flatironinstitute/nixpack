@@ -256,7 +256,7 @@ lib.fix (packs: with packs; {
         };
 
       /* resolve a real package into a spec */
-      package = gen: pprefs: let
+      package = gen: pprefs: builtins.addErrorContext "resolving package ${pname}" (let
           desc = fillDesc pname (gen spec);
           prefs = fillPrefs pprefs;
           resolver = if builtins.isString resolver then packs.${resolver} else resolver;
@@ -272,10 +272,10 @@ lib.fix (packs: with packs; {
             deptypes = builtins.mapAttrs (n: d: d.deptype or null) spec.depends;
           };
         in if spec.extern != null || desc.conflicts == [] then makePackage spec gen pprefs
-        else throw "${pname}: has conflicts: ${toString desc.conflicts}";
+        else throw "${pname}: has conflicts: ${toString desc.conflicts}");
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
-      virtual = providers: prefs: let
+      virtual = providers: prefs: builtins.addErrorContext "resolving virtual ${pname}" (let
           provs = if builtins.isList prefs || prefs ? name then prefs
             else providers;
           version = prefs.provides.${pname} or ":";
@@ -287,21 +287,21 @@ lib.fix (packs: with packs; {
               provtry = builtins.tryEval opt.spec.provides.${pname}; /* catch conflicts */
               prov = lib.when provtry.success provtry.value;
             in prov != null && lib.versionsOverlap prov version;
-          choice = if prefs.fixedDeps or packPrefs.fixedDeps or false
-            then builtins.filter check opts
-            else opts;
+          choice = if prefs.fixedDeps or packPrefs.fixedDeps or false /* what if prefs is a list? */
+            then opts
+            else builtins.filter check opts;
         in if choice == []
           then throw "no providers for ${pname}@${version}"
-          else builtins.head choice;
+          else builtins.head choice);
 
-    in desc: builtins.addErrorContext "resolving package ${pname}" (
+    in desc:
       if builtins.isList desc then
         virtual desc
       else if builtins.isFunction desc then
         package desc
       else if builtins.isAttrs desc then
         package (lib.const desc)
-      else throw "${pname}: invalid package descriptor ${builtins.typeOf desc}");
+      else throw "${pname}: invalid package descriptor ${builtins.typeOf desc}";
 
   /* generate nix package metadata from spack repos */
   spackRepo = spackBuilder {
@@ -314,6 +314,16 @@ lib.fix (packs: with packs; {
 
   /* use this packs to bootstrap another */
   bootstrapTo = p: packs.withPrefs ({ bootstrap = packPrefs; } // p);
+
+  /* special case of bootstrapTo where you only replace the compiler */
+  withCompiler = compiler: packs.bootstrapTo {
+    package = { inherit compiler; };
+  };
+
+  /* special case of withPrefs where you only replace one named package */
+  withPackage = name: pkg: packs.withPrefs {
+    package = { "${name}" = pkg; };
+  };
 
   /* full metadata repo package descriptions */
   repo = patchRepo repoPatch (repoPatches (import spackRepo {
