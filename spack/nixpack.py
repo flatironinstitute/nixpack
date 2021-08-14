@@ -155,9 +155,10 @@ class NixSpec(spack.spec.Spec):
         try:
             return self._as_compiler
         except AttributeError:
-            self._as_compiler = spack.spec.CompilerSpec(self.name, self.versions)
-            name = str(self._as_compiler)
-            assert name not in self.compilers
+            vers = self.format('{version}-{hash}')
+            name = self.format(f'{self.name}@{vers}')
+            self._as_compiler = spack.spec.CompilerSpec(self.name, vers)
+            assert name not in self.compilers, f"Duplicate compiler {name}"
             self.compilers[name] = {'compiler': {
                     'spec': name,
                     'paths': self.paths,
