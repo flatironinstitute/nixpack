@@ -37,22 +37,25 @@
     };
     */
   };
-  /* enable tests and test deps (not fully implemented) */
-  tests = false;
-  /* how to resolve dependencies, similar to concretize together or separately.
-     fixedDeps = false:  Dependencies are resolved dynamically based on
-       preferences and constraints imposed by each depender.  This can result
-       in many different versions of each package existing in packs.
-     fixedDeps = true:  Dependencies are resolved only by user prefs, and an
-       error is produced if dependencies don't conform to their dependers'
-       constraints.  This ensures only one version of each dependent package
-       exists within packs.  Different packs with different prefs may have
-       different versions.  Top-level packages explicitly resolved with
-       different prefs or dependency prefs may also be different.  Virtuals
-       are always resolved (to a package name) dynamically.
-     this can be overridden per-package for only that package's dependencies.
-   */
-  fixedDeps = false;
+  /* global defaults for all packages */
+  global = {
+    /* enable tests and test deps (not fully implemented) */
+    tests = false;
+    /* how to resolve dependencies, similar to concretize together or separately.
+       fixedDeps = false:  Dependencies are resolved dynamically based on
+         preferences and constraints imposed by each depender.  This can result
+         in many different versions of each package existing in packs.
+       fixedDeps = true:  Dependencies are resolved only by user prefs, and an
+         error is produced if dependencies don't conform to their dependers'
+         constraints.  This ensures only one version of each dependent package
+         exists within packs.  Different packs with different prefs may have
+         different versions.  Top-level packages explicitly resolved with
+         different prefs or dependency prefs may also be different.  Virtuals
+         are always resolved (to a package name) dynamically.
+       this can be overridden per-package for only that package's dependencies.
+     */
+    fixedDeps = false;
+  };
   package = {
     /* compiler is an implicit virtual dependency for every package */
     compiler = {

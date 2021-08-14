@@ -16,16 +16,14 @@ rec {
   cons = x: l: [x] ++ l;
   toList = x: if isList x then x else if x == null then [] else [x];
   fromList = x: if isList x && length x == 1 then head x else x;
+  optionals = c: x: if c then x else [];
 
   traceId = x: trace x x;
   traceLabel = s: x: trace ("${s}: ${toJSON x}") x;
   traceId' = x: deepSeq x (traceId x);
 
   remove = e: filter (x: x != e);
-  nub = l:
-    if l == [] then l else
-    let x = head l; r = nub (tail l); in
-    if elem x r then r else cons x r;
+  nub = foldl' (acc: e: if elem e acc then acc else acc ++ [ e ]) [];
   nubBy = eq: l:
     if l == [] then l else
     let x = head l; in
@@ -66,7 +64,28 @@ rec {
   versionNewer   = v1: v2: compareVersions v1 v2 > 0;
   versionAtLeast = v1: v2: compareVersions v1 v2 >= 0;
   versionAtMost  = v1: v2: compareVersions v1 v2 <= 0;
-  versionAtMostMatch = v1: v2: versionAtMost v1 v2 || listHasPrefix (splitVersion v2) (splitVersion v1);
+  versionMax = v1: v2: if versionAtLeast v1 v2 then v1 else v2;
+
+  versionSplitCompare = s1: s2:
+    if s1 == [] then -2 else
+    if s2 == [] then 2 else
+    let c = compareVersions (head s1) (head s2); in
+    if c == 0 then versionSplitCompare (tail s1) (tail s2) else
+    c;
+  /* like compareVersions but -2 if s1 is a prefix of s2, and +2 if s2 is a prefix of s1 */
+  versionCompare = v1: v2: if v1 == v2 then 0 else versionSplitCompare (splitVersion v1) (splitVersion v2);
+
+  /* while 3.4 > 3 by nix (above), we want to treat 3.4 < 3
+     v are concrete versions, s version specs */
+  versionAtMostSpec = v1: s2: versionCompare v1 s2 != 1;
+  /* here 3.4 < 3 */
+  versionMinSpec = s1: s2: {
+      "-2" = s2;
+      "-1" = s1;
+      "0" = s1;
+      "1" = s2;
+      "2" = s1;
+    }.${toString (versionCompare s1 s2)};
 
   versionIsConcrete = v: v != null && match "[:,]" v == null;
 
@@ -78,6 +97,9 @@ rec {
       if l == 2 then { min = head s; max = elemAt s 1; } else
       throw "invalid version range ${v}";
 
+  rangeVersion = a: b:
+    if a == b then a else "${a}:${b}";
+
   /* spack version spec semantics: does concrete version v match spec m? */
   versionMatches = v: match:
     if match == null then true else
@@ -86,7 +108,7 @@ rec {
       versionMatch = m: let
         mr = versionRange m;
         in versionAtLeast v mr.min &&
-           (versionAtMostMatch v mr.max);
+           (versionAtMostSpec v mr.max);
     in any versionMatch (splitRegex "," match);
 
   versionsOverlap = a: b:
@@ -96,9 +118,20 @@ rec {
       vo = a: b: let
         ar = versionRange a;
         br = versionRange b;
-      in versionAtMostMatch ar.min br.max &&
-         versionAtMostMatch br.min ar.max;
+      in versionAtMostSpec ar.min br.max &&
+         versionAtMostSpec br.min ar.max;
     in any (a: any (vo a) bs) as;
+
+  versionsIntersect = a: b:
+    let
+      as = splitRegex "," a;
+      bs = splitRegex "," b;
+      vi = a: b: let
+        ar = versionRange a;
+        br = versionRange b;
+        in rangeVersion (versionMax ar.min br.min) (versionMinSpec ar.max br.max);
+    in
+    concatStringsSep "," (concatMap (a: map (vi a) bs) as);
 
   /* does concrete variant v match spec m? */
   variantMatches = v: ms: all (m:
@@ -149,7 +182,7 @@ rec {
       err = a: b: throw "incompatible prefs: ${toJSON a} vs ${toJSON b}";
       intersectScalar = a: b: if a == b then a else err a b;
       intersectors = {
-        version = a: b: union (toList a) (toList b);
+        version = versionsIntersect;
         variants = mergeWith (a: b: if a == b then a else
           if isList a && isList b then union a b
           else err a b);

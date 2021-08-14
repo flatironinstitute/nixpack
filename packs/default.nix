@@ -64,8 +64,7 @@ packsWithPrefs =
   , spackPython ? "/usr/bin/python3"
   , spackPath ? "/bin:/usr/bin"
   , repoPatch ? {}
-  , tests ? false
-  , fixedDeps ? false
+  , global ? {}
   , package ? {}
   , bootstrap ? {}
   } @ packPrefs:
@@ -135,15 +134,15 @@ lib.fix (packs: with packs; {
     , depends ? {}
     , extern ? null
     , provides ? {}
-    , tests ? packPrefs.tests or false
-    , fixedDeps ? packPrefs.fixedDeps or false
+    , tests ? false
+    , fixedDeps ? false
     , resolver ? packs
     }: {
       inherit version variants patches depends extern tests provides fixedDeps;
       resolver = if builtins.isString resolver then packs.${resolver} else resolver;
     };
 
-  getPackagePrefs = name: packPrefs.package.${name} or {};
+  getPackagePrefs = name: prefsUpdate global packPrefs.package.${name} or {};
 
   /* resolve a named package descriptor into a concrete spec (concretize)
 
@@ -197,7 +196,7 @@ lib.fix (packs: with packs; {
           let r = arg // (
               if builtins.isAttrs pref then pref else
               if builtins.isList pref then
-                builtins.listToAttrs (builtins.map (name: { inherit name; value = true; }) pref)
+                builtins.listToAttrs (map (name: { inherit name; value = true; }) pref)
               else err); in
             if builtins.attrNames r == builtins.attrNames arg && builtins.all builtins.isBool (builtins.attrValues r) then
               r
@@ -259,7 +258,6 @@ lib.fix (packs: with packs; {
       package = gen: pprefs: builtins.addErrorContext "resolving package ${pname}" (let
           desc = fillDesc pname (gen spec);
           prefs = fillPrefs pprefs;
-          resolver = if builtins.isString resolver then packs.${resolver} else resolver;
           spec = {
             inherit (desc) name namespace provides paths;
             inherit (prefs) extern tests;
@@ -281,13 +279,13 @@ lib.fix (packs: with packs; {
           version = prefs.provides.${pname} or ":";
 
           /* TODO: really need to try multiple versions too (see: java) */
-          opts = builtins.map getPackage (lib.toList provs);
+          opts = map getPackage (lib.toList provs);
           check = opt:
             let
               provtry = builtins.tryEval opt.spec.provides.${pname}; /* catch conflicts */
               prov = lib.when provtry.success provtry.value;
             in prov != null && lib.versionsOverlap prov version;
-          choice = if prefs.fixedDeps or packPrefs.fixedDeps or false /* what if prefs is a list? */
+          choice = if prefs.fixedDeps or global.fixedDeps or false /* what if prefs is a list? */
             then opts
             else builtins.filter check opts;
         in if choice == []

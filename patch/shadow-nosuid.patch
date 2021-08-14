@@ -1,0 +1,28 @@
+diff -ru src.orig/src/Makefile.am src/src/Makefile.am
+--- src.orig/src/Makefile.am	2020-01-12 08:19:28.000000000 -0500
++++ src/src/Makefile.am	2021-08-12 21:23:09.870336130 -0400
+@@ -4,8 +4,8 @@
+ 
+ ubindir = ${prefix}/bin
+ usbindir = ${prefix}/sbin
+-suidperms = 4755
+-sgidperms = 2755
++suidperms = 0755
++sgidperms = 0755
+ 
+ AM_CPPFLAGS = \
+ 	-I${top_srcdir}/lib \
+diff -ru src.orig/src/Makefile.in src/src/Makefile.in
+--- src.orig/src/Makefile.in	2020-01-23 15:57:50.000000000 -0500
++++ src/src/Makefile.in	2021-08-12 21:23:15.454370068 -0400
+@@ -557,8 +557,8 @@
+ 
+ ubindir = ${prefix}/bin
+ usbindir = ${prefix}/sbin
+-suidperms = 4755
+-sgidperms = 2755
++suidperms = 0755
++sgidperms = 0755
+ AM_CPPFLAGS = \
+ 	-I${top_srcdir}/lib \
+ 	-I$(top_srcdir)/libmisc \

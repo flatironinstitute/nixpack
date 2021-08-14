@@ -2,7 +2,7 @@ let
 
 cuda_arch = {"35" = true; "60" = true; "70" = true; "80" = true; none = false; };
 
-packs = import ./packs {
+rootPacks = import ./packs {
   system = builtins.currentSystem;
   target = "broadwell";
   os = "centos7";
@@ -23,9 +23,13 @@ packs = import ./packs {
   repoPatch = {
   };
 
-  tests = false;
-  fixedDeps = true;
-
+  global = {
+    tests = false;
+    fixedDeps = true;
+    variants = {
+      mpi = false;
+    };
+  };
   bootstrap = {
     package = {
       compiler = {
@@ -188,7 +192,6 @@ packs = import ./packs {
         hl = true;
         fortran = true;
         cxx = true;
-        mpi = false;
       };
     };
     fftw = {
@@ -201,7 +204,6 @@ packs = import ./packs {
     py-torch = {
       variants = {
         inherit cuda_arch;
-        mpi = false;
         valgrind = false;
       };
     };
@@ -221,28 +223,18 @@ packs = import ./packs {
         mklfft = false;
       };
     };
-    py-bind11 = {
+    py-pybind11 = {
       version = "2.6.2";
     };
     qt = {
       variants = {
         dbus = true;
-        #opengl = true;
+        opengl = true;
       };
     };
     harfbuzz = {
       variants = {
         graphite2 = true;
-      };
-    };
-    valgrind = {
-      variants = {
-        mpi = false;
-      };
-    };
-    vtk = {
-      variants = {
-        mpi = false;
       };
     };
     r = {
@@ -272,11 +264,6 @@ packs = import ./packs {
     freetype = {
       version = ":2.10.2";
     };
-    netcdf-c = {
-      variants = {
-        mpi = false;
-      };
-    };
     gsl = {
       variants = {
         external-cblas = true;
@@ -293,21 +280,36 @@ packs = import ./packs {
         };
       };
     };
+    shadow = {
+      extern = "/usr";
+      version = "4.6";
+    };
+    petsc = {
+      variants = {
+        hdf5 = false;
+        hypre = false;
+        superlu-dist = false;
+      };
+    };
+    py-pyqt5 = {
+      depends = {
+        py-sip = {
+          variants = {
+            module = "PyQt5.sip";
+          };
+        };
+      };
+    };
   };
 };
+
+lib = rootPacks.lib;
 
 compilers = [
   { name = "gcc"; version = "7"; }
   { name = "gcc"; version = "10.2"; }
   # intel?
 ];
-
-compilerPacks = map (compiler: packs.withPrefs {
-  package = {
-    inherit compiler;
-    # todo: bootstrap with main compiler?
-  };
-}) compilers;
 
 mpis = [
   { name = "openmpi"; version = "4.0"; }
@@ -326,97 +328,192 @@ mpis = [
 ];
 
 pythons = [
-  { name = "python"; version = "3.8"; }
-  { name = "python"; version = "3.9"; }
+  { version = "3.8"; }
+  { version = "3.9"; }
 ];
 
-mods = (map packs.getPackage compilers) ++ (with packs.pkgs; [
-  (llvm.withPrefs { version = "10"; })
-  (llvm.withPrefs { version = "11"; })
-  (llvm.withPrefs { version = "12"; })
-  cmake
-  curl
-  distcc
-  (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
-  fio
-  gdal
-  (gdb.withPrefs { fixedDeps = false; })
-  ghostscript
-  git
-  git-lfs
-  go
-  gperftools
-  (gromacs.withPrefs { variants = { mpi = false; }; })
-  (hdfview.withPrefs { fixedDeps = false; })
-  #i3 #needs some xcb things
-  imagemagick
-  intel-mkl
-  intel-oneapi-mkl
-  julia
-  keepassxc
-  lftp
-  likwid
-  mercurial
-  mplayer
-  mpv
-  mupdf
-  node-js
-  (node-js.withPrefs { version = ":12"; })
-  nvhpc
-  octave
-  openjdk
-  #pdftk #needs gcc java (gcj)
-  perl
-  (petsc.withPrefs { variants = { mpi = false; hdf5 = false; hypre = false; superlu-dist = false; }; })
-  postgresql
-  r
-  r-irkernel
-  rclone
-  rust
-  singularity
-  smartmontools
-  subversion
-  swig
-  (texlive.withPrefs { fixedDeps = false; })
-  (texstudio.withPrefs { fixedDeps = false; })
-  tmux
-  udunits
-  unison
-  valgrind
-  (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
-  vtk
-  zsh
-  # externs:
-  slurm
-] ++ map (v: mathematica.withPrefs
+pyView = pl: rootPacks.pythonView { pkgs = rootPacks.findDeps (x: builtins.elem "run" x.deptype) pl; };
+
+mods =
+  # externals
+  (with rootPacks.pkgs; [
+    slurm
+  ]
+  ++
+  map (v: mathematica.withPrefs
     { version = v; extern = "/cm/shared/sw/pkg/vender/mathematica/${v}"; })
-  ["11.2" "11.3" "12.1" "12.2"]
-  ++ map (v: matlab.withPrefs
+    ["11.2" "11.3" "12.1" "12.2"]
+  ++
+  map (v: matlab.withPrefs
     { version = v; extern = "/cm/shared/sw/pkg/vender/matlab/${v}"; })
-  ["R2018a" "R2018b" "R2020a" "R2021a"]
-) ++ builtins.concatMap (packs: with packs.pkgs; 
-  map packs.getPackage (mpis ++ pythons) ++ [
-  boost
-  cuda
-  cudnn
-  eigen
-  (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
-  fftw
-  (gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; })
-  (gsl.withPrefs { depends = { blas = "intel-oneapi-mkl"; }; })
-  (hdf5.withPrefs { version = ":1.8"; })
-  hdf5
-  magma
-  nfft
-  (openblas.withPrefs { variants = { threads = "none"; }; })
-  (openblas.withPrefs { variants = { threads = "openmp"; }; })
-  (openblas.withPrefs { variants = { threads = "pthreads"; }; })
-  pgplot
-  relion # doesn't work with intel-mpi, so just use default openmpi
-  openmpi-opa # ^openmpi@4.0.6 fabrics=ofi,ucx,psm,psm2,verbs schedulers=slurm +pmi~static+thread_multiple+legacylaunchers
-]) compilerPacks ++ (with packs.pkgs; [
-  (boost.withPrefs { depends = { compiler = { name = "llvm"; variants = { clanglibcpp = true; }; }; }; })
-]);
+    ["R2018a" "R2018b" "R2020a" "R2021a"])
+  ++
+  # for each compiler
+  builtins.concatMap (compiler:
+    let compPacks = rootPacks.withCompiler compiler;
+      isCore = compiler == builtins.head compilers;
+      ifCore = lib.optionals isCore;
+    in
+    [ (rootPacks.getPackage compiler) ]
+    ++
+    (with compPacks.pkgs;
+    ifCore [
+      (llvm.withPrefs { version = "10"; })
+      (llvm.withPrefs { version = "11"; })
+      (llvm.withPrefs { version = "12"; })
+      cmake
+      curl
+      distcc
+      (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
+      fio
+      gdal
+      (gdb.withPrefs { fixedDeps = false; })
+      ghostscript
+      git
+      git-lfs
+      go
+      gperftools
+      gromacs
+      (hdfview.withPrefs { fixedDeps = false; })
+      #i3 #needs some xcb things
+      imagemagick
+      intel-mkl
+      intel-oneapi-mkl
+      julia
+      keepassxc
+      lftp
+      likwid
+      mercurial
+      mplayer
+      mpv
+      mupdf
+      node-js
+      (node-js.withPrefs { version = ":12"; })
+      nvhpc
+      octave
+      openjdk
+      #pdftk #needs gcc java (gcj)
+      perl
+      petsc
+      postgresql
+      r
+      r-irkernel
+      rclone
+      rust
+      singularity
+      smartmontools
+      subversion
+      swig
+      (texlive.withPrefs { fixedDeps = false; })
+      (texstudio.withPrefs { fixedDeps = false; })
+      tmux
+      udunits
+      unison
+      valgrind
+      (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
+      vtk
+      zsh
+    ]
+    ++
+    [
+      boost
+      cuda
+      cudnn
+      eigen
+      (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
+      fftw
+      (gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; })
+      (gsl.withPrefs { depends = { blas = "intel-oneapi-mkl"; }; })
+      (hdf5.withPrefs { version = ":1.8"; })
+      hdf5
+      magma
+      nfft
+      (openblas.withPrefs { variants = { threads = "none"; }; })
+      (openblas.withPrefs { variants = { threads = "openmp"; }; })
+      (openblas.withPrefs { variants = { threads = "pthreads"; }; })
+      pgplot
+      relion # doesn't work with intel-mpi, so just use default openmpi
+      openmpi-opa # openmpi 4 only
+    ])
+    ++
+    builtins.concatMap (mpi:
+      let mpiPacks = compPacks.withPrefs {
+        package = {
+          inherit mpi;
+        };
+        global = {
+          variants = {
+            mpi = true;
+          };
+        };
+      };
+      in
+      [ (compPacks.getPackage mpi) ]
+      ++
+      (with mpiPacks.pkgs; [
+        boost
+        (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
+        (fftw.withPrefs { variants = { precision = { quad = false; }; }; })
+        (hdf5.withPrefs { version = ":1.8"; })
+        hdf5
+        osu-micro-benchmarks
+      ] ++
+      ifCore [
+        gromacs
+        ior
+        petsc
+        valgrind
+      ])) mpis
+    ++
+    map (py:
+      let pyPacks = compPacks.withPackage "python" py;
+      in
+      pyView (with pyPacks.pkgs; [
+        python
+        python-blas-backend # python-blas-backend is a custom package that includes scipy/numpy
+        py-cherrypy
+        py-flask
+        py-pip
+        py-ipython
+        py-pyyaml
+        py-pylint
+        py-autopep8
+        py-sqlalchemy
+        py-nose
+        py-mako
+        py-pkgconfig
+        py-virtualenv
+        py-sympy
+        py-pycairo
+        py-sphinx
+        py-pytest
+        py-hypothesis
+        py-cython
+        (py-h5py.withPrefs { version = ":2"; variants = { mpi = false; }; })
+        py-torch
+        py-ipykernel
+        py-pandas
+        py-scikit-learn
+        py-emcee
+        py-astropy
+        py-dask
+        py-seaborn
+        py-matplotlib
+        py-numba
+      ] ++
+      ifCore [
+        py-pyqt5
+      ])) pythons
+    ++
+    ifCore (let
+      clangPacks = compPacks.withCompiler {
+        name = "llvm";
+        variants = { clanglibcpp = true; };
+      };
+    in with clangPacks.pkgs; [
+      boost
+    ])
+  ) compilers;
 
 modconfig = {
   hierarchy = ["mpi"];
@@ -441,43 +538,9 @@ modconfig = {
 
 in
 
-packs // {
-  inherit compilerPacks;
-  modules = packs.modules {
+rootPacks // {
+  modules = rootPacks.modules {
     config = modconfig;
     pkgs = mods;
   };
 }
-/*
-let 
-  testdeps = findDeps (x: builtins.elem "run" x.deptype) (with pkgs; [
-    python
-    py-cherrypy
-    py-flask
-    py-pip
-    py-ipython
-    py-pyyaml
-    py-pylint
-    py-autopep8
-    py-sqlalchemy
-    py-nose
-    py-mako
-    py-pkgconfig
-    py-virtualenv
-    py-sympy
-    py-pycairo
-    py-sphinx
-    py-pytest
-    py-hypothesis
-    py-cython
-    py-ipykernel
-  ]);
-
-  testview = pythonView { pkgs = testdeps; };
-in
-packs // {
-  testdeps = map (x: x.name) testdeps;
-  inherit testview;
-  testmod = modules { pkgs = [testview]; };
-}
-*/
