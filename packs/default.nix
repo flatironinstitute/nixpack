@@ -66,13 +66,15 @@ packsWithPrefs =
   , repoPatch ? {}
   , global ? {}
   , package ? {}
-  , bootstrap ? {}
+  , sets ? {}
+  , parent ? null
   } @ packPrefs:
 lib.fix (packs: with packs; {
   inherit lib;
   prefs = packPrefs;
   inherit system os target platform label;
-  withPrefs = p: packsWithPrefs (lib.recursiveUpdate packPrefs p);
+  withPrefs = p: packsWithPrefs (lib.recursiveUpdate
+    (builtins.removeAttrs packPrefs ["sets"] // { parent = packs; }) p);
 
   spack = if builtins.isString spackSrc then spackSrc else
     builtins.fetchGit ({ name = "spack"; url = "git://github.com/spack/spack"; } // spackSrc);
@@ -139,7 +141,7 @@ lib.fix (packs: with packs; {
     , resolver ? packs
     }: {
       inherit version variants patches depends extern tests provides fixedDeps;
-      resolver = if builtins.isString resolver then packs.${resolver} else resolver;
+      resolver = if builtins.isString resolver then packs.sets.${resolver} else resolver;
     };
 
   getPackagePrefs = name: prefsUpdate global packPrefs.package.${name} or {};
@@ -308,19 +310,6 @@ lib.fix (packs: with packs; {
     args = [../spack/generate.py];
   };
 
-  /* packs with bootstrap prefs, used for bootstrapping */
-  bootstrap = packs.withPrefs ({ label = "${label}-bootstrap"; } // packPrefs.bootstrap);
-
-  /* use this packs to bootstrap another with the specified compiler */
-  withCompiler = compiler: packs.withPrefs {
-    package = { compiler = { resolver = packs; } // compiler; };
-  };
-
-  /* special case of withPrefs where you only replace one named package */
-  withPackage = name: pkg: packs.withPrefs {
-    package = { "${name}" = pkg; };
-  };
-
   /* full metadata repo package descriptions */
   repo = patchRepo repoPatch (repoPatches (import spackRepo {
       /* utilities needed by the repo */
@@ -342,6 +331,21 @@ lib.fix (packs: with packs; {
         (lib.nub (builtins.concatMap (p: builtins.attrValues p.spec.depends) pkgs)));
       add = s: pkgs: if pkgs == [] then s else adddeps (s ++ pkgs) pkgs;
     in pkg: add [] (lib.toList pkg);
+
+  /* child packs sets with different preferences */
+  sets = parent.sets or { root = packs; } //
+    builtins.mapAttrs (name: set: packs.withPrefs
+    ({ label = "${label}.${name}"; } // set)) packPrefs.sets;
+
+  /* use this packs to bootstrap another with the specified compiler */
+  withCompiler = compiler: packs.withPrefs {
+    package = { compiler = { resolver = packs; } // compiler; };
+  };
+
+  /* special case of withPrefs where you only replace one named package */
+  withPackage = name: pkg: packs.withPrefs {
+    package = { "${name}" = pkg; };
+  };
 
   /* create a view (or an "env" in nix terms): a merged set of packages */
   view = import ../view packs;

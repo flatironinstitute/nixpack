@@ -61,7 +61,7 @@
     compiler = {
       /* preferences for global compiler */
       name = "gcc";
-      /* resolve dependencies using bootstrap layer */
+      /* resolve dependencies using bootstrap set */
       resolver = "bootstrap";
     };
     /* preferences for individual packages or virtuals */
@@ -94,24 +94,27 @@
       };
     }; */
   };
-  /* overrides for bootstrap layer */
-  bootstrap = {
-    package = {
-      /* must be set to an external compiler capable of building compiler (above) */
-      compiler = {
-        name = "gcc";
-        version = "4.8.5";
-        extern = "/usr";
+  sets = {
+    /* other packs sets prefs, which can be used by resolvers */
+    /* overrides for bootstrap layer */
+    bootstrap = {
+      package = {
+        /* must be set to an external compiler capable of building compiler (above) */
+        compiler = {
+          name = "gcc";
+          version = "4.8.5";
+          extern = "/usr";
+          /* can also have multiple layers of bootstrapping, where each compiler is built by another:
+          resolver = "bootstrap2";
+          */
+        };
+        /* can speed up bootstrapping by providing more externs
+        zlib = {
+          extern = "/usr";
+          version = "...";
+        }; ... */
       };
-      /* can speed up bootstrapping by providing more externs
-      zlib = {
-        extern = "/usr";
-        version = "...";
-      }; ... */
     };
-    /* can also have multiple layers of bootstrapping, where each compiler is built by the next layer's:
-    bootstrap = {};
-    */
+    /* bootstrap2 = ...; */
   };
-
 }

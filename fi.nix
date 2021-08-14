@@ -30,58 +30,60 @@ rootPacks = import ./packs {
       mpi = false;
     };
   };
-  bootstrap = {
-    package = {
-      compiler = {
-        name = "gcc";
-        version = "4.8.5";
-        extern = "/usr";
-      };
-      zlib = {
-        extern = "/usr";
-        version = "1.2.7";
-      };
-      diffutils = {
-        extern = "/usr";
-        version = "3.3";
-      };
-      bzip2 = {
-        extern = "/usr";
-        version = "1.0.6";
-      };
-      perl = {
-        extern = "/usr";
-        version = "5.16.3";
-      };
-      m4 = {
-        extern = "/usr";
-        version = "1.4.16";
-      };
-      libtool = {
-        extern = "/usr";
-        version = "2.4.2";
-      };
-      autoconf = {
-        extern = "/usr";
-        version = "2.69";
-      };
-      automake = {
-        extern = "/usr";
-        version = "1.13.4";
-      };
-      openssl = {
-        extern = "/usr";
-        version = "1.0.2k";
-        variants = {
-          fips = false;
+  sets = {
+    bootstrap = {
+      package = {
+        compiler = {
+          name = "gcc";
+          version = "4.8.5";
+          extern = "/usr";
         };
-      };
-      ncurses = {
-        extern = "/usr";
-        version = "5.9.20130511";
-        variants = {
-          termlib = true;
-          abi = "5";
+        zlib = {
+          extern = "/usr";
+          version = "1.2.7";
+        };
+        diffutils = {
+          extern = "/usr";
+          version = "3.3";
+        };
+        bzip2 = {
+          extern = "/usr";
+          version = "1.0.6";
+        };
+        perl = {
+          extern = "/usr";
+          version = "5.16.3";
+        };
+        m4 = {
+          extern = "/usr";
+          version = "1.4.16";
+        };
+        libtool = {
+          extern = "/usr";
+          version = "2.4.2";
+        };
+        autoconf = {
+          extern = "/usr";
+          version = "2.69";
+        };
+        automake = {
+          extern = "/usr";
+          version = "1.13.4";
+        };
+        openssl = {
+          extern = "/usr";
+          version = "1.0.2k";
+          variants = {
+            fips = false;
+          };
+        };
+        ncurses = {
+          extern = "/usr";
+          version = "5.9.20130511";
+          variants = {
+            termlib = true;
+            abi = "5";
+          };
         };
       };
     };
