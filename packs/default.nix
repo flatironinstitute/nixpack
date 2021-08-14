@@ -2,7 +2,7 @@ let
 
 lib = import ./lib.nix;
 
-prefsUpdate = lib.coalesceWith lib.recursiveUpdate; # TODO
+prefsUpdate = lib.recursiveUpdate; # TODO
 
 versionsUnion = l:
   if builtins.isList l then
@@ -108,7 +108,7 @@ lib.fix (packs: with packs; {
 
   /* look up a package requirement and resolve it with prefs */
   getResolver = name: pref: builtins.addErrorContext "getting package ${label}.${name}"
-    (if pref == null || pref == {}
+    (if pref == {}
       then pkgs.${name}
       else resolvers.${name} (prefsUpdate (getPackagePrefs name) pref));
 
@@ -117,7 +117,7 @@ lib.fix (packs: with packs; {
     if arg == null then
       null
     else if builtins.isString arg then
-      getResolver arg null
+      getResolver arg {}
     else if arg ? name then
       getResolver arg.name (builtins.removeAttrs arg ["name"])
     else throw "invalid package";
@@ -227,7 +227,7 @@ lib.fix (packs: with packs; {
           dpkg = res (if isr then rdeps else dpref);
 
           /* static */
-          spkg = res pref;
+          spkg = res (lib.coalesce pref {});
 
           pkg = (if pprefs.fixedDeps then spkg else dpkg) // { inherit deptype; };
         in lib.when (deptype != [])
@@ -269,7 +269,8 @@ lib.fix (packs: with packs; {
                   else resolveDepends  desc.depends  prefs;
             deptypes = builtins.mapAttrs (n: d: d.deptype or null) spec.depends;
           };
-        in if spec.extern != null || desc.conflicts == [] then makePackage spec gen pprefs
+        in
+        if spec.extern != null || desc.conflicts == [] then makePackage spec gen pprefs
         else throw "${pname}: has conflicts: ${toString desc.conflicts}");
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
@@ -310,12 +311,9 @@ lib.fix (packs: with packs; {
   /* packs with bootstrap prefs, used for bootstrapping */
   bootstrap = packs.withPrefs ({ label = "${label}-bootstrap"; } // packPrefs.bootstrap);
 
-  /* use this packs to bootstrap another */
-  bootstrapTo = p: packs.withPrefs ({ bootstrap = packPrefs; } // p);
-
-  /* special case of bootstrapTo where you only replace the compiler */
-  withCompiler = compiler: packs.bootstrapTo {
-    package = { inherit compiler; };
+  /* use this packs to bootstrap another with the specified compiler */
+  withCompiler = compiler: packs.withPrefs {
+    package = { compiler = { resolver = packs; } // compiler; };
   };
 
   /* special case of withPrefs where you only replace one named package */

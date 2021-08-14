@@ -276,7 +276,7 @@ rootPacks = import ./packs {
       depends = {
         compiler = {
           name = "gcc";
-          version = ":5.99";
+          version = ":5";
         };
       };
     };
