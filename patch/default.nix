@@ -47,4 +47,6 @@ in
   intel-oneapi-mkl = nocompiler;
   intel-oneapi-mpi = nocompiler;
   intel-oneapi-tbb = nocompiler;
+  cuda = nocompiler;
+  cudnn = nocompiler;
 }

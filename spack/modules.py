@@ -24,46 +24,94 @@ config = { name : {
 print(config)
 spack.config.set(f'modules', config, 'command_line')
 
-specs = [nixpack.NixSpec.get(p) for p in nixpack.getJson('pkgs')]
 cls = spack.modules.module_types[modtype]
-writers = []
-for spec in specs:
-    # do this as a second pass to avoid premature compiler caching
-    spec.concretize()
-    writers.append(cls(spec, name))
 
-print(f"Generating {len(writers)} {modtype} modules in {root}...")
-spack.modules.common.generate_module_index(root, writers)
+class ModSpec:
+    default = False
+    static = None
+
+    @classmethod
+    @property
+    def nullWriter(self):
+        try:
+            return self._nullWriter
+        except AttributeError:
+            self._nullWriter = cls(nixpack.nullCompilerSpec, name)
+            return self._nullWriter
+
+    @classmethod
+    @property
+    def template(self):
+        try:
+            return self._template
+        except AttributeError:
+            env = spack.tengine.make_environment()
+            self._template = env.get_template(self.nullWriter.default_template)
+
+    def __init__(self, p):
+        if isinstance(p, dict):
+            self.default = p.get('default', False)
+            self.static = p.get('static', None)
+            if self.static:
+                self.name = p['name']
+            self.pkg = p.get('pkg', p)
+        else:
+            self.pkg = p
+        if not self.static:
+            self.spec = nixpack.NixSpec.get(self.pkg)
+
+    @property
+    def writer(self):
+        try:
+            return self._writer
+        except AttributeError:
+            self.spec.concretize()
+            self._writer = cls(self.spec, name)
+            return self._writer
+
+    @property
+    def filename(self):
+        if self.static:
+            layout = self.nullWriter.layout
+            base, name = os.path.split(self.name)
+            return os.path.join(layout.arch_dirname, base or 'Core', name) + "." + layout.extension
+        else:
+            return self.writer.layout.filename
+
+    def format(self):
+        if self.static:
+            return self.name
+        else:
+            return self.spec.cformat(spack.spec.default_format + ' {/hash} {prefix}')
+
+    def write(self, fn):
+        dn = os.path.dirname(fn)
+        if self.static:
+            os.makedirs(dn, exist_ok=True)
+            content = self.static
+            if isinstance(content, dict):
+                content.setdefault('spec', content)
+                content['spec'].setdefault('target', nixpack.basetarget)
+                content['spec'].setdefault('name', name)
+                content['spec'].setdefault('short_spec', 'static module via nixpack')
+                content.setdefault('timestamp', datetime.datetime.now())
+                content = self.template.render(content)
+            with open(fn, 'x') as f:
+                f.write(content)
+        else:
+            self.writer.write()
+        if self.default:
+            bn = os.path.basename(fn)
+            os.symlink(bn, os.path.join(dn, "default"))
+
+specs = [ModSpec(p) for p in nixpack.getJson('pkgs')]
+
+print(f"Generating {len(specs)} {modtype} modules in {root}...")
 paths = set()
-for w in writers:
+for s in specs:
     sn = w.spec.cformat(spack.spec.default_format + ' {/hash}')
-    fn = w.layout.filename
-    print(f"    {os.path.relpath(fn, root)}: {sn} {w.spec.prefix}")
+    fn = s.filename
+    print(f"    {os.path.relpath(fn, root)}: {s.format}")
     assert fn not in paths, f"Duplicate path: {fn}"
-    w.write()
+    s.write(fn)
     paths.add(fn)
-
-static = nixpack.getJson('static')
-if static:
-    print(f"Adding {len(static)} static modules...")
-    writer = cls(nixpack.nullCompilerSpec, name)
-    layout = writer.layout
-    env = spack.tengine.make_environment()
-    template = env.get_template(writer.default_template)
-    for name, content in static.items():
-        base, name = os.path.split(name)
-        if not base: base = 'Core'
-        fn = os.path.join(layout.arch_dirname, base, name) + "." + layout.extension
-        print(f"    {os.path.relpath(fn, root)}")
-        assert fn not in paths, f"Duplicate path: {fn}"
-        os.makedirs(os.path.dirname(fn), exist_ok=True)
-        if isinstance(content, dict):
-            content.setdefault('spec', content)
-            content['spec'].setdefault('target', nixpack.basetarget)
-            content['spec'].setdefault('name', name)
-            content['spec'].setdefault('short_spec', 'static module via nixpack')
-            content.setdefault('timestamp', datetime.datetime.now())
-            content = template.render(content)
-        with open(fn, 'x') as f:
-            f.write(content)
-        paths.add(fn)

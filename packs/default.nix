@@ -96,7 +96,8 @@ lib.fix (packs: with packs; {
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
     PATH = spackPath;
-  } // attrs)) ["PYTHONPATH" "PATH" "spackConfig" "spackCache" "passAsFile"];
+    LC_ALL = "en_US.UTF-8"; # work around spack bugs processing log files
+  } // attrs)) ["PYTHONPATH" "PATH" "LC_ALL" "spackConfig" "spackCache" "passAsFile"];
 
   /* pre-generated spack repo index cache */
   spackCache = lib.when (builtins.isAttrs spackSrc)

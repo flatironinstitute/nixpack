@@ -34,6 +34,8 @@ class NixLayout():
         return os.path.join(self.metadata_path(spec), 'repos')
 class NixStore():
     layout = NixLayout()
+    # this is used to find bin/sbang:
+    unpadded_root = spack.paths.prefix
 spack.store.store = NixStore()
 
 spack.config.command_line_scopes = getVar('spackConfig').split()

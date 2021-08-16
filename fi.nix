@@ -1,8 +1,6 @@
 let
 
-cuda_arch = {"35" = true; "60" = true; "70" = true; "80" = true; none = false; };
-
-coreGcc = { version = "7"; };
+lib = rootPacks.lib;
 
 rootPacks = import ./packs {
   system = builtins.currentSystem;
@@ -91,10 +89,7 @@ rootPacks = import ./packs {
     };
   };
   package = {
-    compiler = {
-      name = "gcc";
-      resolver = "bootstrap";
-    };
+    compiler = coreCompiler;
     gcc = {
       version = "7";
     };
@@ -110,7 +105,14 @@ rootPacks = import ./packs {
     openmpi = {
       version = "4.0";
       variants = {
-        fabrics = { none = false; ofi = true; ucx = true; psm = true; psm2 = true; verbs = true; };
+        fabrics = {
+          none = false;
+          ofi = true;
+          ucx = true;
+          psm = true;
+          psm2 = true;
+          verbs = true;
+        };
         schedulers = { none = false; slurm = true; };
         pmi = true;
         static = false;
@@ -307,10 +309,13 @@ rootPacks = import ./packs {
   };
 };
 
-lib = rootPacks.lib;
+coreCompiler = {
+  name = "gcc";
+  resolver = "bootstrap";
+};
 
 compilers = [
-  { name = "gcc"; }
+  coreCompiler
   { name = "gcc"; version = "10.2"; }
   # intel?
 ];
@@ -338,6 +343,8 @@ pythons = [
 
 pyView = pl: rootPacks.pythonView { pkgs = rootPacks.findDeps (x: builtins.elem "run" x.deptype) pl; };
 
+cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
+
 mods =
   # externals
   (with rootPacks.pkgs; [
@@ -355,7 +362,7 @@ mods =
   # for each compiler
   builtins.concatMap (compiler:
     let
-      isCore = compiler == builtins.head compilers;
+      isCore = compiler == coreCompiler;
       ifCore = lib.optionals isCore;
       compPacks = if isCore then rootPacks else rootPacks.withCompiler compiler;
     in
@@ -519,7 +526,24 @@ mods =
     in with clangPacks.pkgs; [
       boost
     ])
-  ) compilers;
+  ) compilers
+  ++
+  [
+    /*
+    { name = "openmpi-opa"; static = {
+      short_description = "Load openmpi4 for Omnipath fabric";
+      environment_modifications = [
+        [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
+      ];
+      # prereq: openmpi/4?
+    }; }
+    */
+    { name = "modules-traditional"; static = {
+      short_description = "Make old modules available";
+      has_modulepath_modifications = true;
+      unlocked_paths = ["/cm/shared/sw/modules"];
+    }; }
+  ];
 
 in
 
@@ -605,22 +629,5 @@ rootPacks.modules {
 
   pkgs = mods;
 
-  static = {
-    /*
-    openmpi-opa = {
-      short_description = "Load openmpi4 for Omnipath fabric";
-      environment_modifications = [
-        [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
-      ];
-      # prereq: openmpi/4?
-    };
-    */
-
-    modules-traditional = {
-      short_description = "Make old modules available";
-      has_modulepath_modifications = true;
-      unlocked_paths = ["/cm/shared/sw/modules"]; 
-    };
-  };
 };
 }

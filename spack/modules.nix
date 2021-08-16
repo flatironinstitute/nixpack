@@ -2,14 +2,17 @@ packs:
 { name ? "modules"
 , modtype ? "lmod" /* lmod or tcl */
 , config ? {}
-, pkgs /* packages to include */
+, pkgs /* packages to include, list of:
+   pkg (derivation)
+   { pkg = pkg; default = true; } (for default module)
+   { static = "content"; name = "name"; }
+   { static = { template variables }; name = "name"; }
+   */
 , coreCompilers ? [packs.pkgs.compiler]
-, defaults ? []
-, static ? {}
 }:
 let
 jsons = {
-  inherit config pkgs coreCompilers defaults static;
+  inherit config pkgs coreCompilers;
 };
 in
 packs.spackBuilder ({
