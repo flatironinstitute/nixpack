@@ -52,9 +52,9 @@ example = {
   provides = {
     virtual = "2:"
   };
-  build = {}; # extra build parameters (not usually used)
-  extern = null; # a prefix string or derivation (e.g., nixpkgs package) for an external installation (overrides depends, build)
   paths = {}; # paths to tools provided by this package (like cc)
+  patches = []; # patchs to extra patches to apply
+  conflicts = []; # any conflicts (non-empty means invalid)
 };
 ```
 
@@ -70,7 +70,6 @@ They look similar to package descriptors and can be used to override or constrai
 
 ```
 example = {
-  namespace = "builtin";
   version = "1.3:1.5";
   variants = {
     flag = true;
@@ -89,15 +88,16 @@ example = {
       version = ...
     };
     virtualdep = {
-      version = "virtual version";
-      provider = [{ # list optional
-        name = "package";
-        version = "package version";
-        ...
-      }];
+      name = "package";
+      version = "package version";
+      ...
     };
   };
-  extern = "/opt/local/mypackage";
+  patches = []; # patchs to extra patches to apply
+  extern = "/opt/local/mypackage"; # a prefix string or derivation (e.g., nixpkgs package) for an external installation (overrides depends)
+  fixedDeps = false; # only use user preferences to resolve dependencies (see prefs.nix)
+  resolver = "set"; # name of set to use to resolve dependencies
+  buildResolver = "set"; # name of set to use to resolve build/test-only dependencies
 };
 ```
 

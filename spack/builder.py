@@ -26,6 +26,10 @@ opts = {
         'tests': spec.tests,
     }
 
+setup = nixpack.getVar('setup', None)
+if setup:
+    exec(setup)
+
 origenv = os.environ.copy()
 # create and stash some metadata
 spack.build_environment.setup_package(pkg, True, context='build')

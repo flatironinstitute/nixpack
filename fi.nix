@@ -322,16 +322,26 @@ compilers = [
 
 mpis = [
   { name = "openmpi"; }
-  { name = "openmpi"; version = "2.1"; variants = {
-    # openmpi 2 on ib reports: "unknown link width 0x10" and is a bit slow
-    fabrics = ["ofi" "psm" "psm2" "verbs"];
-    internal-hwloc = true;
-  }; }
-  { name = "openmpi"; version = "1.10"; variants = {
-    # without the explicit fabrics ucx is lost in dependencies
-    fabrics = ["ofi" "psm" "psm2" "verbs"];
-    internal-hwloc = true;
-  }; }
+  { name = "openmpi";
+    version = "2.1";
+    variants = {
+      # openmpi 2 on ib reports: "unknown link width 0x10" and is a bit slow
+      fabrics = {
+        ucx = false;
+      };
+      internal-hwloc = true;
+    };
+  }
+  { name = "openmpi";
+    version = "1.10";
+    variants = {
+      # without the explicit fabrics ucx is lost in dependencies
+      fabrics = {
+        ucx = false;
+      };
+      internal-hwloc = true;
+    };
+  }
   { name = "intel-oneapi-mpi"; }
   { name = "intel-mpi"; }
 ];
@@ -364,7 +374,8 @@ mods =
     let
       isCore = compiler == coreCompiler;
       ifCore = lib.optionals isCore;
-      compPacks = if isCore then rootPacks else rootPacks.withCompiler compiler;
+      compPacks = if isCore then rootPacks else
+        rootPacks.withCompiler compiler;
     in
     [ (rootPacks.getPackage compiler) ]
     ++
@@ -472,7 +483,7 @@ mods =
         osu-micro-benchmarks
       ] ++
       ifCore [
-        gromacs
+        #gromacs # broken with intel-oneapi-mpi?
         ior
         petsc
         valgrind
@@ -530,19 +541,23 @@ mods =
   ++
   [
     /*
-    { name = "openmpi-opa"; static = {
-      short_description = "Load openmpi4 for Omnipath fabric";
-      environment_modifications = [
-        [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
-      ];
-      # prereq: openmpi/4?
-    }; }
+    { name = "openmpi-opa";
+      static = {
+        short_description = "Load openmpi4 for Omnipath fabric";
+        environment_modifications = [
+          [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
+        ];
+        # prereq: openmpi/4?
+      };
+    }
     */
-    { name = "modules-traditional"; static = {
-      short_description = "Make old modules available";
-      has_modulepath_modifications = true;
-      unlocked_paths = ["/cm/shared/sw/modules"];
-    }; }
+    { name = "modules-traditional";
+      static = {
+        short_description = "Make old modules available";
+        has_modulepath_modifications = true;
+        unlocked_paths = ["/cm/shared/sw/modules"];
+      };
+    }
   ];
 
 in

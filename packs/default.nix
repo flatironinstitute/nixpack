@@ -32,8 +32,9 @@ fillDesc = name: /* simple name of package */
   , conflicts ? [] /* list of conflict messages (package is not buildable if non-empty) */
   , provides ? {} /* set of provided virtuals to (version ranges or unioned list thereof) */
   , paths ? {} /* set of tools to path prefixes */
+  , build ? {} /* extra build variables to set */
   }: {
-    inherit name namespace version variants patches paths;
+    inherit name namespace version variants patches paths build;
     depends = {
       compiler = {
         deptype = ["build"];
@@ -140,9 +141,12 @@ lib.fix (packs: with packs; {
     , tests ? false
     , fixedDeps ? false
     , resolver ? packs
-    }: {
+    , buildResolver ? resolver
+    }: let getres = res: if builtins.isString res then packs.sets.${res} else res; in
+    {
       inherit version variants patches depends extern tests provides fixedDeps;
-      resolver = if builtins.isString resolver then packs.sets.${resolver} else resolver;
+      resolver = getres resolver;
+      buildResolver = getres buildResolver;
     };
 
   getPackagePrefs = name: prefsUpdate global packPrefs.package.${name} or {};
@@ -214,7 +218,8 @@ lib.fix (packs: with packs; {
       resolveDepends = depends: pprefs:
         resolveEach (dname: dep: pref: let
           deptype = (t: if pprefs.tests then t else lib.remove "test" t) dep.deptype or [];
-          res = pprefs.resolver.getResolver dname;
+          res = (if builtins.elem "link" deptype || builtins.elem "run" deptype then
+            pprefs.resolver else pprefs.buildResolver).getResolver dname;
           clean = d: if d == null then d else builtins.removeAttrs d ["deptype"];
           virtualize = { deptype, version ? ":" }:
             { provides = { "${dname}" = version; }; };
@@ -239,7 +244,7 @@ lib.fix (packs: with packs; {
         depends pprefs.depends;
 
       /* create a package from a spec */
-      makePackage = spec: gen: pprefs: let
+      makePackage = gen: desc: spec: pprefs: let
           name = "${spec.name}-${spec.version}";
         in if spec.extern != null
         then {
@@ -247,12 +252,12 @@ lib.fix (packs: with packs; {
           out = spec.extern;
           /* externs don't provide withPrefs */
         }
-        else spackBuilder {
+        else spackBuilder ({
           args = [../spack/builder.py];
           inherit name;
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
-        } // {
+        } // desc.build) // {
           inherit spec;
           withPrefs = p: resolvePackage pname gen (prefsUpdate pprefs p);
         };
@@ -273,7 +278,7 @@ lib.fix (packs: with packs; {
             deptypes = builtins.mapAttrs (n: d: d.deptype or null) spec.depends;
           };
         in
-        if spec.extern != null || desc.conflicts == [] then makePackage spec gen pprefs
+        if spec.extern != null || desc.conflicts == [] then makePackage gen desc spec pprefs
         else throw "${pname}: has conflicts: ${toString desc.conflicts}");
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
@@ -336,7 +341,8 @@ lib.fix (packs: with packs; {
   /* child packs sets with different preferences */
   sets = parent.sets or { root = packs; } //
     builtins.mapAttrs (name: set: packs.withPrefs
-    ({ label = "${label}.${name}"; } // set)) packPrefs.sets or {};
+    ({ label = "${label}.${name}"; } // set)) packPrefs.sets or {}
+    // { self = packs; };
 
   /* use this packs to bootstrap another with the specified compiler */
   withCompiler = compiler: packs.withPrefs {

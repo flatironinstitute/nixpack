@@ -155,7 +155,12 @@ class NixSpec(spack.spec.Spec):
         for n, d in depends.items():
             dtype = nixspec['deptypes'][n] or ()
             if d:
-                self._add_dependency(self.get(d, top=False), tuple(dtype))
+                dep = self.get(d, top=False)
+                try:
+                    assert self._dependencies[dep.name].spec == dep, f"{self.name}.{n}: conflicting dependencies on {dep.name}"
+                    self._dependencies[dep.name].update_deptypes(tuple(dtype))
+                except KeyError:
+                    self._add_dependency(dep, tuple(dtype))
             if not ('link' in dtype or 'run' in dtype):
                 # trim build dep references
                 del nixspec['depends'][n]

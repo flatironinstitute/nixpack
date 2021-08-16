@@ -40,6 +40,15 @@ in
     patches = [./shadow-nosuid.patch];
   };
 
+  git-lfs = {
+    build = {
+      # don't use home for GOCACHE
+      setup = ''
+        os.environ['GOCACHE'] = os.path.join(os.environ['TMPDIR'], 'go-cache')
+      '';
+    };
+  };
+
   /* some things don't use a compiler */
   intel = nocompiler;
   intel-mkl = nocompiler;
