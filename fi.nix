@@ -2,6 +2,8 @@ let
 
 cuda_arch = {"35" = true; "60" = true; "70" = true; "80" = true; none = false; };
 
+coreGcc = { version = "7"; };
+
 rootPacks = import ./packs {
   system = builtins.currentSystem;
   target = "broadwell";
@@ -9,7 +11,7 @@ rootPacks = import ./packs {
 
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
-    ref = "fi";
+    ref = "fi-nixpack";
   };
   spackConfig = {
     config = {
@@ -93,20 +95,37 @@ rootPacks = import ./packs {
       name = "gcc";
       resolver = "bootstrap";
     };
+    gcc = {
+      version = "7";
+    };
+    mpfr = {
+      version = "3.1.6";
+    };
     cpio = {
       /* some intel installers need this -- avoid compiler dependency */
       extern = "/usr";
       version = "2.11";
     };
     mpi = "openmpi";
+    openmpi = {
+      version = "4.0";
+      variants = {
+        fabrics = { none = false; ofi = true; ucx = true; psm = true; psm2 = true; verbs = true; };
+        schedulers = { none = false; slurm = true; };
+        pmi = true;
+        static = false;
+        thread_multiple = true;
+        legacylaunchers = true;
+      };
+    };
     blas      = "openblas";
     lapack    = "openblas";
     scalapack = "openblas";
-    gcc = {
-      version = "7";
-    };
-    mpfr = {
-      version = "3.1.6";
+    openblas = {
+      version = "0.3.15";
+      variants = {
+        threads = "pthreads";
+      };
     };
     binutils = {
       variants = {
@@ -152,17 +171,6 @@ rootPacks = import ./packs {
       extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
       version = "2017.4.196";
     };
-    openmpi = {
-      version = "4.0";
-      variants = {
-        fabrics = ["ofi" "ucx" "psm" "psm2" "verbs"];
-        schedulers = ["slurm"];
-        pmi = true;
-        static = false;
-        thread_multiple = true;
-        legacylaunchers = true;
-      };
-    };
     ucx = {
       variants = {
         thread_multiple = true;
@@ -181,12 +189,6 @@ rootPacks = import ./packs {
     };
     llvm = {
       version = "10";
-    };
-    openblas = {
-      version = "0.3.15";
-      variants = {
-        threads = "pthreads";
-      };
     };
     hdf5 = {
       version = "1.10";
@@ -308,13 +310,13 @@ rootPacks = import ./packs {
 lib = rootPacks.lib;
 
 compilers = [
-  { name = "gcc"; version = "7"; }
+  { name = "gcc"; }
   { name = "gcc"; version = "10.2"; }
   # intel?
 ];
 
 mpis = [
-  { name = "openmpi"; version = "4.0"; }
+  { name = "openmpi"; }
   { name = "openmpi"; version = "2.1"; variants = {
     # openmpi 2 on ib reports: "unknown link width 0x10" and is a bit slow
     fabrics = ["ofi" "psm" "psm2" "verbs"];
@@ -343,18 +345,19 @@ mods =
   ]
   ++
   map (v: mathematica.withPrefs
-    { version = v; extern = "/cm/shared/sw/pkg/vender/mathematica/${v}"; })
+    { version = v; extern = "/cm/shared/sw/pkg/vendor/mathematica/${v}"; })
     ["11.2" "11.3" "12.1" "12.2"]
   ++
   map (v: matlab.withPrefs
-    { version = v; extern = "/cm/shared/sw/pkg/vender/matlab/${v}"; })
+    { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; })
     ["R2018a" "R2018b" "R2020a" "R2021a"])
   ++
   # for each compiler
   builtins.concatMap (compiler:
-    let compPacks = rootPacks.withCompiler compiler;
+    let
       isCore = compiler == builtins.head compilers;
       ifCore = lib.optionals isCore;
+      compPacks = if isCore then rootPacks else rootPacks.withCompiler compiler;
     in
     [ (rootPacks.getPackage compiler) ]
     ++
@@ -365,6 +368,7 @@ mods =
       (llvm.withPrefs { version = "12"; })
       cmake
       curl
+      disBatch
       distcc
       (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
       fio
@@ -435,7 +439,7 @@ mods =
       (openblas.withPrefs { variants = { threads = "pthreads"; }; })
       pgplot
       relion # doesn't work with intel-mpi, so just use default openmpi
-      openmpi-opa # openmpi 4 only
+      openmpi-opa # (default) openmpi/4 only
     ])
     ++
     builtins.concatMap (mpi:
@@ -517,32 +521,106 @@ mods =
     ])
   ) compilers;
 
-modconfig = {
-  hierarchy = ["mpi"];
-  hash_length = 0;
-  projections = {
-    "boost+clanglibcpp" = "{name}/{version}-libcpp";
-    "gromacs+plumed" = "{name}/{version}-plumed";
-    "gsl^intel-oneapi-mkl" = "{name}/{version}-mkl";
-    "gsl^openblas" = "{name}/{version}-openblas";
-    "openblas threads=none" = "{name}/{version}-single";
-    "openblas threads=openmp" = "{name}/{version}-openmp";
-    "openblas threads=pthreads" = "{name}/{version}-threaded";
-    "openmpi-opa" = "{name}/{^openmpi.version}";
-    "py-*^intel-oneapi-mkl" = "python-packages/{^python.version}/{name}/.{version}-mkl";
-    "py-*^openblas" = "python-packages/{^python.version}/{name}/.{version}-openblas";
-    "python-blas-backend^intel-oneapi-mkl" = "python/{^python.version}-mkl";
-    "slurm" = "{name}/current";
-    "py-*^python" = "python-packages/{^python.version}/{name}/{version}";
-    "modules-traditional" = "{name}";
-  };
-};
-
 in
 
-rootPacks // {
-  modules = rootPacks.modules {
-    config = modconfig;
-    pkgs = mods;
+rootPacks // { mods =
+rootPacks.modules {
+  config = {
+    hierarchy = ["mpi"];
+    hash_length = 0;
+    projections = {
+      "boost+clanglibcpp" = "{name}/{version}-libcpp";
+      "gromacs+plumed" = "{name}/{version}-plumed";
+      "gsl^intel-oneapi-mkl" = "{name}/{version}-mkl";
+      "gsl^openblas" = "{name}/{version}-openblas";
+      "openblas threads=none" = "{name}/{version}-single";
+      "openblas threads=openmp" = "{name}/{version}-openmp";
+      "openblas threads=pthreads" = "{name}/{version}-threaded";
+      "openmpi-opa" = "{name}/{^openmpi.version}";
+      "py-*^intel-oneapi-mkl" = "python-packages/{^python.version}/{name}/.{version}-mkl";
+      "py-*^openblas" = "python-packages/{^python.version}/{name}/.{version}-openblas";
+      "python-blas-backend^intel-oneapi-mkl" = "python/{^python.version}-mkl";
+      "slurm" = "{name}/current";
+      "py-*^python" = "python-packages/{^python.version}/{name}/{version}";
+    };
+    all = {
+      autoload = "none";
+      prerequisites = "direct";
+      environment = {
+        set = {
+          "{name}_BASE" = "{prefix}";
+        };
+      };
+      suffixes = {
+        "^mpi" = "mpi";
+      };
+      filter = {
+        environment_blacklist = ["CC" "FC" "CXX" "F77"];
+      };
+    };
+    openmpi = {
+      environment = {
+        set = {
+          OPENMPI_VERSION = "{version}";
+        };
+      };
+    };
+    openmpi-opa = {
+      environment = {
+        set = {
+          OMPI_MCA_pml = "cm";
+        };
+      };
+    };
+    matlab = {
+      environment = {
+        set = {
+          MLM_LICENSE_FILE = "/cm/shared/sw/pkg/vendor/matlab/src/network.lic";
+        };
+      };
+    };
+    slurm = {
+      environment = {
+        set = {
+          CMD_WLM_CLUSTER_NAME = "slurm";
+          SLURM_CONF = "/cm/shared/apps/slurm/var/etc/slurm/slurm.conf";
+        };
+      };
+    };
+    hdf5 = {
+      environment = {
+        set = {
+          HDF5_ROOT = "{prefix}";
+        };
+      };
+    };
+    boost = {
+      environment = {
+        set = {
+          BOOST_ROOT = "{prefix}";
+        };
+      };
+    };
   };
+
+  pkgs = mods;
+
+  static = {
+    /*
+    openmpi-opa = {
+      short_description = "Load openmpi4 for Omnipath fabric";
+      environment_modifications = [
+        [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
+      ];
+      # prereq: openmpi/4?
+    };
+    */
+
+    modules-traditional = {
+      short_description = "Make old modules available";
+      has_modulepath_modifications = true;
+      unlocked_paths = ["/cm/shared/sw/modules"]; 
+    };
+  };
+};
 }

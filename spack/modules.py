@@ -1,6 +1,7 @@
 #!/bin/env python3
 import os
 import json
+import datetime
 
 import nixpack
 import spack
@@ -60,6 +61,8 @@ if static:
             content.setdefault('spec', content)
             content['spec'].setdefault('target', nixpack.basetarget)
             content['spec'].setdefault('name', name)
+            content['spec'].setdefault('short_spec', 'static module via nixpack')
+            content.setdefault('timestamp', datetime.datetime.now())
             content = template.render(content)
         with open(fn, 'x') as f:
             f.write(content)

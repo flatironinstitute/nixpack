@@ -4,18 +4,17 @@ packs:
 , config ? {}
 , pkgs /* packages to include */
 , coreCompilers ? [packs.pkgs.compiler]
+, defaults ? []
 , static ? {}
 }:
 let
-pkgSpec = p: p.spec // { prefix = p.out; };
-renderPkgs = pkgs: builtins.toJSON (map pkgSpec pkgs);
+jsons = {
+  inherit config pkgs coreCompilers defaults static;
+};
 in
-packs.spackBuilder {
+packs.spackBuilder ({
   args = [./modules.py];
   inherit name modtype;
-  config = builtins.toJSON config;
-  pkgs = renderPkgs pkgs;
-  coreCompilers = renderPkgs coreCompilers;
-  static = builtins.toJSON static;
-  passAsFile = ["config" "pkgs" "coreCompilers" "static"];
-}
+} // builtins.mapAttrs (name: builtins.toJSON) jsons // {
+  passAsFile = builtins.attrNames jsons;
+})

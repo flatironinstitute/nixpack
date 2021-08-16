@@ -335,7 +335,7 @@ lib.fix (packs: with packs; {
   /* child packs sets with different preferences */
   sets = parent.sets or { root = packs; } //
     builtins.mapAttrs (name: set: packs.withPrefs
-    ({ label = "${label}.${name}"; } // set)) packPrefs.sets;
+    ({ label = "${label}.${name}"; } // set)) packPrefs.sets or {};
 
   /* use this packs to bootstrap another with the specified compiler */
   withCompiler = compiler: packs.withPrefs {
