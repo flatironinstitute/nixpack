@@ -1,9 +1,24 @@
 import os
 import sys
 import json
+import base64
+
+# translate from nix to spack because...
+b32trans = bytes.maketrans(b"0123456789abcdfghijklmnpqrsvwxyz", base64._b32alphabet.lower())
+
+getVar = os.environ.pop
+
+passAsFile = set(getVar('passAsFile', '').split())
+
+def getJson(var: str):
+    if var in passAsFile:
+        with open(getVar(var+'Path'), 'r') as f:
+            return json.load(f)
+    else:
+        return json.loads(getVar(var))
 
 if not sys.executable: # why not?
-    sys.executable = os.environ.pop('builder')
+    sys.executable = getVar('builder')
 
 os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
 
@@ -21,17 +36,17 @@ class NixStore():
     layout = NixLayout()
 spack.store.store = NixStore()
 
-spack.config.command_line_scopes = os.environ.pop('spackConfig').split()
-cache = os.environ.pop('spackCache', None)
+spack.config.command_line_scopes = getVar('spackConfig').split()
+cache = getVar('spackCache', None)
 if cache:
     spack.config.set('config:misc_cache', cache, 'command_line')
 
-spack.config.set('config:build_stage', [os.environ.pop('NIX_BUILD_TOP')], 'command_line')
-cores = int(os.environ.pop('NIX_BUILD_CORES', 0))
+spack.config.set('config:build_stage', [getVar('NIX_BUILD_TOP')], 'command_line')
+cores = int(getVar('NIX_BUILD_CORES', 0))
 if cores > 0:
     spack.config.set('config:build_jobs', cores, 'command_line')
 
-nixLogFd = int(os.environ.pop('NIX_LOG_FD', -1))
+nixLogFd = int(getVar('NIX_LOG_FD', -1))
 nixLogFile = None
 if nixLogFd >= 0:
     nixLogFile = os.fdopen(nixLogFd, 'w')
@@ -40,12 +55,13 @@ def nixLog(j):
     if nixLogFile:
         print("@nix", json.dumps(j), file=nixLogFile)
 
-nixStore = os.environ.pop('NIX_STORE')
+nixStore = getVar('NIX_STORE')
 
-system = os.environ.pop('system')
-target = os.environ.pop('target')
-platform = os.environ.pop('platform')
-archos = os.environ.pop('os')
+system = getVar('system')
+basetarget, baseplatform = system.split('-', 1)
+target = getVar('target')
+platform = getVar('platform')
+archos = getVar('os')
 
 nullCompiler = None
 
@@ -56,36 +72,44 @@ class NixSpec(spack.spec.Spec):
     compilers = dict()
 
     @staticmethod
-    def cacheKey(d):
-        if isinstance(d, str):
+    def cacheKey(nixspec, prefix: str):
+        if isinstance(prefix, str) and prefix.startswith(nixStore):
             # in nix store
-            return d
+            return prefix[len(nixStore):].lstrip('/')
         else:
             # extern: name + prefix should be enough
-            return f"{d['name']}:{d['out']}"
+            return nixspec['name'] + "-" + nixspec['version'] + ":" + prefix
 
-    def get(self, ref):
+    @classmethod
+    def get(self, arg, prefix: str=None, top: bool=True):
+        if isinstance(arg, str):
+            # path to existing nix store (containing nixSpecFile)
+            nixspec = os.path.join(arg, self.nixSpecFile)
+            if prefix is None:
+                prefix = arg
+        else:
+            if 'spec' in arg:
+                # inline dependency spec, containing spec and out
+                nixspec = arg['spec']
+                if prefix is None:
+                    prefix = arg.get('out')
+            else:
+                # actual spec object
+                nixspec = arg
+            if prefix is None:
+                prefix = nixspec['prefix']
+
         try:
-            return self.specCache[self.cacheKey(ref)]
+            return self.specCache[self.cacheKey(nixspec, prefix)]
         except KeyError:
-            return NixSpec(ref)
+            if isinstance(nixspec, str):
+                with open(nixspec, 'r') as sf:
+                    nixspec = json.load(sf)
+            return NixSpec(nixspec, prefix, top)
 
-    def __init__(self, ref, nixspec=None, concrete=False):
-        self.specCache[self.cacheKey(ref)] = self
-
-        if isinstance(ref, str):
-            prefix = ref
-            if nixspec is None:
-                nixspec = os.path.join(prefix, self.nixSpecFile)
-        else:
-            prefix = ref['out']
-            if nixspec is None:
-                nixspec = ref['spec']
-        if isinstance(nixspec, str):
-            with open(nixspec, 'r') as sf:
-                nixspec = json.load(sf)
-        else:
-            self._top = True
+    def __init__(self, nixspec, prefix: str, top: bool):
+        key = self.cacheKey(nixspec, prefix)
+        self.specCache[key] = self
 
         super().__init__()
         self.nixspec = nixspec
@@ -98,6 +122,8 @@ class NixSpec(spack.spec.Spec):
         self.external_path = nixspec['extern']
         if self.external_path:
             assert self.external_path == prefix, f"{self.name} extern {nixspec['extern']} doesn't match prefix {prefix}"
+        if top:
+            self._top = True
 
         variants = nixspec['variants']
         if not self.external:
@@ -114,22 +140,23 @@ class NixSpec(spack.spec.Spec):
             self.variants[n] = v
         self.tests = nixspec['tests']
         self.paths = {n: p and os.path.join(prefix, p) for n, p in nixspec['paths'].items()}
-        self.compiler = nullCompiler
-        if not self.external and prefix.startswith(nixStore):
-            self._nix_hash, nixname = prefix[len(nixStore):].lstrip('/').split('-', 1)
+        if self.external:
+            # not really unique but shouldn't matter
+            self._hash = spack.util.hash.b32_hash(self.external_path)
+        else:
+            self._nix_hash, nixname = key.split('-', 1)
 
-        for n, d in list(nixspec['depends'].items()):
-            if not d:
-                continue
-            spec = self.get(d)
-            dtype = nixspec['deptypes'][n]
-            if n == 'compiler':
-                self.compiler = spec.as_compiler
-            else:
-                self._add_dependency(spec, tuple(dtype))
-                if not ('link' in dtype or 'run' in dtype):
-                    # trim build dep references
-                    del nixspec['depends'][n]
+        depends = nixspec['depends'].copy()
+        compiler = depends.pop('compiler', None)
+        self.compiler = self.get(compiler, top=False).as_compiler if compiler else nullCompiler
+
+        for n, d in depends.items():
+            dtype = nixspec['deptypes'][n] or ()
+            if d:
+                self._add_dependency(self.get(d, top=False), tuple(dtype))
+            if not ('link' in dtype or 'run' in dtype):
+                # trim build dep references
+                del nixspec['depends'][n]
 
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
@@ -140,11 +167,11 @@ class NixSpec(spack.spec.Spec):
                 patches.append(spack.patch.FilePatch(self.package, p, 1, '.', ordering_key = ('~nixpack', i)))
             spack.repo.path.patch_index.update_package(self.fullname)
 
-        if concrete:
-            conc = spack.concretize.Concretizer()
-            conc.adjust_target(self)
-            spack.spec.Spec.inject_patches_variant(self)
-            self._mark_concrete()
+    def concretize(self):
+        conc = spack.concretize.Concretizer()
+        conc.adjust_target(self)
+        spack.spec.Spec.inject_patches_variant(self)
+        self._mark_concrete()
 
     def copy(self, deps=True, **kwargs):
         # no!
@@ -155,34 +182,40 @@ class NixSpec(spack.spec.Spec):
         try:
             return self._as_compiler
         except AttributeError:
-            vers = self.format('{version}-{hash}')
-            name = self.format(f'{self.name}@{vers}')
-            self._as_compiler = spack.spec.CompilerSpec(self.name, vers)
-            assert name not in self.compilers, f"Duplicate compiler {name}"
-            self.compilers[name] = {'compiler': {
-                    'spec': name,
-                    'paths': self.paths,
-                    'modules': [],
-                    'operating_system': self.architecture.os,
-                    'target': system.split('-', 1)[0],
-                }}
-            spack.config.set('compilers', list(self.compilers.values()), 'command_line')
+            self._as_compiler = spack.spec.CompilerSpec(self.name, self.versions)
+            name = str(self._as_compiler)
+            if name not in self.compilers:
+                # we may have duplicate specs, but we only keep the first (topmost)
+                # as there is no way to have two compilers with the same spec
+                # (and adding something to version messes up modules)
+                self.compilers[name] = {'compiler': {
+                        'spec': name,
+                        'paths': self.paths,
+                        'modules': [],
+                        'operating_system': self.architecture.os,
+                        'target': basetarget,
+                    }}
+                spack.config.set('compilers', list(self.compilers.values()), 'command_line')
             return self._as_compiler
 
     def dag_hash(self, length=None):
-        h = getattr(self, '_nix_hash', None)
-        if h:
-            return h[:length]
-        return super().dag_hash(length)
+        try:
+            return self._nix_hash[:length]
+        except AttributeError:
+            return super().dag_hash(length)
 
     def dag_hash_bit_prefix(self, bits):
-        # nix and python use different base32 alphabets, so bypass nix for this one
-        return spack.util.hash.base32_prefix_bits(super().dag_hash(), bits)
+        try:
+            # nix and python use different base32 alphabets...
+            h = self._nix_hash.translate(b32trans)
+        except AttributeError:
+            h = super().dag_hash()
+        return spack.util.hash.base32_prefix_bits(h, bits)
 
     def _installed_explicitly(self):
         return getattr(self, '_top', False)
 
-nullCompiler = NixSpec('/null-compiler', {
+nullCompilerSpec = NixSpec({
         'name': 'gcc',
         'namespace': 'builtin',
         'version': '0',
@@ -197,4 +230,5 @@ nullCompiler = NixSpec('/null-compiler', {
         },
         'depends': {},
         'patches': []
-    }).as_compiler
+    }, '/null-compiler', top=False)
+nullCompiler = nullCompilerSpec.as_compiler

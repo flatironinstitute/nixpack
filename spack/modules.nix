@@ -3,13 +3,19 @@ packs:
 , modtype ? "lmod" /* lmod or tcl */
 , config ? {}
 , pkgs /* packages to include */
+, coreCompilers ? [packs.pkgs.compiler]
+, static ? {}
 }:
+let
+pkgSpec = p: p.spec // { prefix = p.out; };
+renderPkgs = pkgs: builtins.toJSON (map pkgSpec pkgs);
+in
 packs.spackBuilder {
   args = [./modules.py];
   inherit name modtype;
-  config = builtins.toJSON (packs.lib.recursiveUpdate {
-    core_compilers = ["gcc@0" (packs.lib.specName packs.pkgs.compiler.spec)];
-  } config);
-  pkgs = builtins.toJSON (map (p: p.spec // { prefix = p.out; }) pkgs);
-  passAsFile = ["config" "pkgs"];
+  config = builtins.toJSON config;
+  pkgs = renderPkgs pkgs;
+  coreCompilers = renderPkgs coreCompilers;
+  static = builtins.toJSON static;
+  passAsFile = ["config" "pkgs" "coreCompilers" "static"];
 }

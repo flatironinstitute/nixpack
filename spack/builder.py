@@ -12,9 +12,10 @@ def post_install(spec):
     pass
 spack.hooks.post_install = post_install
 
-os.environ.pop('name')
-nixspec = os.environ.pop('specPath')
-spec = nixpack.NixSpec(os.environ.pop('out'), nixspec, concrete=True)
+nixpack.getVar('name')
+nixspec = nixpack.getJson('spec')
+spec = nixpack.NixSpec.get(nixspec, nixpack.getVar('out'))
+spec.concretize()
 
 pkg = spec.package
 print(spec.tree(cover='edges', format=spack.spec.default_format + ' {/hash}'))
