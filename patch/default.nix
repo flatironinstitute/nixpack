@@ -1,6 +1,12 @@
 /* patches/additions for the repo */
 lib:
-let nocompiler = spec: old: { depends = old.depends or {} // { compiler = null; }; };
+let
+  nocompiler = spec: old: { depends = old.depends or {} // { compiler = null; }; };
+  noccache = {
+    build = {
+      CCACHE_DISABLE = true;
+    };
+  };
 in
 {
   /* compiler pseudo-virtual */
@@ -40,14 +46,7 @@ in
     patches = [./shadow-nosuid.patch];
   };
 
-  git-lfs = {
-    build = {
-      # don't use home for GOCACHE
-      setup = ''
-        os.environ['GOCACHE'] = os.path.join(os.environ['TMPDIR'], 'go-cache')
-      '';
-    };
-  };
+  jsoncpp = noccache;
 
   /* some things don't use a compiler */
   intel = nocompiler;

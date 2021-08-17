@@ -22,6 +22,9 @@ rec {
   traceLabel = s: x: trace ("${s}: ${toJSON x}") x;
   traceId' = x: deepSeq x (traceId x);
 
+  hasPrefix = pref: str: substring 0 (stringLength pref) str == pref;
+  takePrefix = pref: str: if hasPrefix pref str then substring (stringLength pref) (-1) str else str;
+
   remove = e: filter (x: x != e);
   nub = foldl' (acc: e: if elem e acc then acc else acc ++ [ e ]) [];
   nubBy = eq: l:
@@ -199,4 +202,16 @@ rec {
   /* unify a list of package prefs, making sure they're compatible */
   prefsIntersection = l: if builtins.isList l then foldl' prefsIntersect null l else l;
 
+  /* debugging to trace full package dependencies (and return count of packages) */
+  traceSpecTree = let
+    sst = seen: ind: dname: pkg: if pkg == null then seen else
+      trace (ind
+        + (if dname != null && dname != pkg.spec.name then "${dname}=" else "")
+        + specToString pkg.spec + " "
+        + takePrefix storeDir pkg.out)
+      (if elem pkg seen then seen else
+      foldl' (seen: d: sst seen (ind + "  ") d pkg.spec.depends.${d})
+        (seen ++ [pkg])
+        (attrNames pkg.spec.depends));
+    in pkg: length (sst [] "" null pkg);
 }

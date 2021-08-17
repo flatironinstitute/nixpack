@@ -220,7 +220,7 @@ lib.fix (packs: with packs; {
           deptype = (t: if pprefs.tests then t else lib.remove "test" t) dep.deptype or [];
           res = (if builtins.elem "link" deptype || builtins.elem "run" deptype then
             pprefs.resolver else pprefs.buildResolver).getResolver dname;
-          clean = d: if d == null then d else builtins.removeAttrs d ["deptype"];
+          clean = lib.mapNullable (d: builtins.removeAttrs d ["deptype"]);
           virtualize = { deptype, version ? ":" }:
             { provides = { "${dname}" = version; }; };
           dep' = (if isVirtual dname then virtualize else clean) dep;

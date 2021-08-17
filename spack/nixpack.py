@@ -66,6 +66,10 @@ platform = getVar('platform')
 archos = getVar('os')
 
 nullCompiler = None
+compilerNameMap = {
+        'llvm': 'clang',
+        'intel-oneapi-compiler': 'oneapi'
+    }
 
 class NixSpec(spack.spec.Spec):
     # to re-use identical specs so id is reasonable
@@ -189,7 +193,8 @@ class NixSpec(spack.spec.Spec):
         try:
             return self._as_compiler
         except AttributeError:
-            self._as_compiler = spack.spec.CompilerSpec(self.name, self.versions)
+            name = compilerNameMap.get(self.name, self.name)
+            self._as_compiler = spack.spec.CompilerSpec(name, self.versions)
             name = str(self._as_compiler)
             if name not in self.compilers:
                 # we may have duplicate specs, but we only keep the first (topmost)

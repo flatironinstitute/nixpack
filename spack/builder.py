@@ -26,6 +26,11 @@ opts = {
         'tests': spec.tests,
     }
 
+# package-specific fixes
+if 'go' in spec._dependencies:
+    # move go cache to tmp
+    os.environ['GOCACHE'] = os.path.join(os.environ['TMPDIR'], 'go-cache')
+
 setup = nixpack.getVar('setup', None)
 if setup:
     exec(setup)

@@ -191,6 +191,16 @@ rootPacks = import ./packs {
     };
     llvm = {
       version = "10";
+      buildResolver = rootPacks;
+    };
+    meson = {
+      buildResolver = rootPacks;
+    };
+    ninja = {
+      buildResolver = rootPacks;
+    };
+    z3 = {
+      buildResolver = rootPacks;
     };
     hdf5 = {
       version = "1.10";
@@ -359,6 +369,62 @@ mods =
   # externals
   (with rootPacks.pkgs; [
     slurm
+    (llvm.withPrefs { version = "10"; })
+    (llvm.withPrefs { version = "11"; })
+    (llvm.withPrefs { version = "12"; })
+    cmake
+    curl
+    disBatch
+    distcc
+    (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
+    fio
+    gdal
+    (gdb.withPrefs { fixedDeps = false; })
+    ghostscript
+    git
+    git-lfs
+    go
+    gperftools
+    gromacs
+    (hdfview.withPrefs { fixedDeps = false; })
+    #i3 #needs some xcb things
+    imagemagick
+    intel-mkl
+    intel-oneapi-mkl
+    julia
+    keepassxc
+    lftp
+    likwid
+    mercurial
+    mplayer
+    mpv
+    mupdf
+    node-js
+    (node-js.withPrefs { version = ":12"; })
+    nvhpc
+    octave
+    openjdk
+    #pdftk #needs gcc java (gcj)
+    perl
+    petsc
+    postgresql
+    r
+    r-irkernel
+    rclone
+    rust
+    singularity
+    smartmontools
+    subversion
+    swig
+    (texlive.withPrefs { fixedDeps = false; })
+    (texstudio.withPrefs { fixedDeps = false; })
+    tmux
+    udunits
+    unison
+    valgrind
+    (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
+    vtk
+    zsh
   ]
   ++
   map (v: mathematica.withPrefs
@@ -369,7 +435,7 @@ mods =
     { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; })
     ["R2018a" "R2018b" "R2020a" "R2021a"])
   ++
-  # for each compiler
+  ### COMPILERS ###
   builtins.concatMap (compiler:
     let
       isCore = compiler == coreCompiler;
@@ -379,67 +445,7 @@ mods =
     in
     [ (rootPacks.getPackage compiler) ]
     ++
-    (with compPacks.pkgs;
-    ifCore [
-      (llvm.withPrefs { version = "10"; })
-      (llvm.withPrefs { version = "11"; })
-      (llvm.withPrefs { version = "12"; })
-      cmake
-      curl
-      disBatch
-      distcc
-      (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
-      fio
-      gdal
-      (gdb.withPrefs { fixedDeps = false; })
-      ghostscript
-      git
-      git-lfs
-      go
-      gperftools
-      gromacs
-      (hdfview.withPrefs { fixedDeps = false; })
-      #i3 #needs some xcb things
-      imagemagick
-      intel-mkl
-      intel-oneapi-mkl
-      julia
-      keepassxc
-      lftp
-      likwid
-      mercurial
-      mplayer
-      mpv
-      mupdf
-      node-js
-      (node-js.withPrefs { version = ":12"; })
-      nvhpc
-      octave
-      openjdk
-      #pdftk #needs gcc java (gcj)
-      perl
-      petsc
-      postgresql
-      r
-      r-irkernel
-      rclone
-      rust
-      singularity
-      smartmontools
-      subversion
-      swig
-      (texlive.withPrefs { fixedDeps = false; })
-      (texstudio.withPrefs { fixedDeps = false; })
-      tmux
-      udunits
-      unison
-      valgrind
-      (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
-      vtk
-      zsh
-    ]
-    ++
-    [
+    (with compPacks.pkgs; [
       boost
       cuda
       cudnn
@@ -460,6 +466,8 @@ mods =
       openmpi-opa # (default) openmpi/4 only
     ])
     ++
+
+    ### MPIS ###
     builtins.concatMap (mpi:
       let mpiPacks = compPacks.withPrefs {
         package = {
@@ -489,12 +497,14 @@ mods =
         valgrind
       ])) mpis
     ++
+
+    ### PYTHONS ###
     map (py:
       let pyPacks = compPacks.withPackage "python" py;
       in
       pyView (with pyPacks.pkgs; [
         python
-        python-blas-backend # python-blas-backend is a custom package that includes scipy/numpy
+        #python-blas-backend # python-blas-backend is a custom package that includes scipy/numpy
         py-cherrypy
         py-flask
         py-pip
@@ -527,17 +537,23 @@ mods =
       ] ++
       ifCore [
         py-pyqt5
-      ])) pythons
-    ++
-    ifCore (let
-      clangPacks = compPacks.withCompiler {
-        name = "llvm";
-        variants = { clanglibcpp = true; };
-      };
-    in with clangPacks.pkgs; [
-      boost
-    ])
+      ])
+      /*
+      ++
+
+*/
+      ) pythons
   ) compilers
+  ++
+  ### CLANG LIBCPP ###
+  (let
+    clangPacks = rootPacks.withCompiler {
+      name = "llvm";
+      variants = { clanglibcpp = true; };
+    };
+  in with clangPacks.pkgs; [
+    boost
+  ])
   ++
   [
     /*
@@ -645,4 +661,6 @@ rootPacks.modules {
   pkgs = mods;
 
 };
+
+test = lib.traceSpecTree rootPacks.pkgs.llvm;
 }
