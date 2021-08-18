@@ -21,7 +21,6 @@ config = { name : {
         'roots': { modtype: root },
         modtype: modconf
     } }
-print(config)
 spack.config.set(f'modules', config, 'command_line')
 
 cls = spack.modules.module_types[modtype]
@@ -30,23 +29,8 @@ class ModSpec:
     default = False
     static = None
 
-    @classmethod
-    @property
-    def nullWriter(self):
-        try:
-            return self._nullWriter
-        except AttributeError:
-            self._nullWriter = cls(nixpack.nullCompilerSpec, name)
-            return self._nullWriter
-
-    @classmethod
-    @property
-    def template(self):
-        try:
-            return self._template
-        except AttributeError:
-            env = spack.tengine.make_environment()
-            self._template = env.get_template(self.nullWriter.default_template)
+    nullWriter = cls(nixpack.nullCompilerSpec, name)
+    template = spack.tengine.make_environment().get_template(nullWriter.default_template)
 
     def __init__(self, p):
         if isinstance(p, dict):
@@ -78,7 +62,7 @@ class ModSpec:
         else:
             return self.writer.layout.filename
 
-    def format(self):
+    def __str__(self):
         if self.static:
             return self.name
         else:
@@ -109,9 +93,8 @@ specs = [ModSpec(p) for p in nixpack.getJson('pkgs')]
 print(f"Generating {len(specs)} {modtype} modules in {root}...")
 paths = set()
 for s in specs:
-    sn = w.spec.cformat(spack.spec.default_format + ' {/hash}')
     fn = s.filename
-    print(f"    {os.path.relpath(fn, root)}: {s.format}")
+    print(f"    {os.path.relpath(fn, root)}: {s}")
     assert fn not in paths, f"Duplicate path: {fn}"
     s.write(fn)
     paths.add(fn)

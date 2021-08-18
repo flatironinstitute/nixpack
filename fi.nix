@@ -120,9 +120,6 @@ rootPacks = import ./packs {
         legacylaunchers = true;
       };
     };
-    blas      = "openblas";
-    lapack    = "openblas";
-    scalapack = "openblas";
     openblas = {
       version = "0.3.15";
       variants = {
@@ -214,7 +211,6 @@ rootPacks = import ./packs {
     fftw = {
       version = "3.3.9";
       variants = {
-        mpi = false;
         precision = ["float" "double" "quad" "long_double"];
       };
     };
@@ -268,7 +264,7 @@ rootPacks = import ./packs {
     };
     libepoxy = {
       variants = {
-        glx = false;
+        #glx = false; # ~glx breaks gtkplus
       };
     };
     /* for unison */
@@ -317,7 +313,11 @@ rootPacks = import ./packs {
         };
       };
     };
-  };
+    py-protobuf = {
+      version = "3.15.7"; # newer have wrong hash (#25469)
+    };
+  }
+  // blasVirtuals "openblas";
 };
 
 coreCompiler = {
@@ -364,6 +364,12 @@ pythons = [
 
 pyView = pl: rootPacks.pythonView { pkgs = rootPacks.findDeps (x: builtins.elem "run" x.deptype) pl; };
 
+blasVirtuals = blas: {
+  blas      = blas;
+  lapack    = blas;
+  scalapack = blas;
+};
+
 cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
 
 mods =
@@ -374,6 +380,8 @@ mods =
     (llvm.withPrefs { version = "11"; })
     (llvm.withPrefs { version = "12"; })
     cmake
+    cuda
+    cudnn
     curl
     disBatch
     distcc
@@ -391,7 +399,9 @@ mods =
     #i3 #needs some xcb things
     imagemagick
     intel-mkl
+    intel-mpi
     intel-oneapi-mkl
+    intel-oneapi-mpi
     julia
     keepassxc
     lftp
@@ -410,7 +420,7 @@ mods =
     petsc
     postgresql
     r
-    r-irkernel
+    #r-irkernel #r-credentials build broken...
     rclone
     rust
     singularity
@@ -448,13 +458,11 @@ mods =
     ++
     (with compPacks.pkgs; [
       boost
-      cuda
-      cudnn
       eigen
       (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
       fftw
       (gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; })
-      (gsl.withPrefs { depends = { blas = "intel-oneapi-mkl"; }; })
+      #(gsl.withPrefs { depends = blasVirtuals "intel-oneapi-mkl"; })
       (hdf5.withPrefs { version = ":1.8"; })
       hdf5
       magma
@@ -479,14 +487,24 @@ mods =
             mpi = true;
           };
         };
+        package = {
+          fftw = {
+            variants = {
+              precision = {
+                quad = false;
+              };
+            };
+          };
+        };
       };
       in
-      [ (compPacks.getPackage mpi) ]
+      lib.optionals (mpi.name == "openmpi")
+        [ (compPacks.getPackage mpi) ]
       ++
       (with mpiPacks.pkgs; [
         boost
-        (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
-        (fftw.withPrefs { variants = { precision = { quad = false; }; }; })
+        (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; }; }; })
+        fftw
         (hdf5.withPrefs { version = ":1.8"; })
         hdf5
         osu-micro-benchmarks
@@ -500,50 +518,52 @@ mods =
     ++
 
     ### PYTHONS ###
-    map (py:
-      let pyPacks = compPacks.withPackage "python" py;
+    builtins.concatMap (py:
+      let
+        pyPacks = compPacks.withPackage "python" py;
       in
-      pyView (with pyPacks.pkgs; [
-        python
-        #python-blas-backend # python-blas-backend is a custom package that includes scipy/numpy
-        py-cherrypy
-        py-flask
-        py-pip
-        py-ipython
-        py-pyyaml
-        py-pylint
-        py-autopep8
-        py-sqlalchemy
-        py-nose
-        py-mako
-        py-pkgconfig
-        py-virtualenv
-        py-sympy
-        py-pycairo
-        py-sphinx
-        py-pytest
-        py-hypothesis
-        py-cython
-        (py-h5py.withPrefs { version = ":2"; variants = { mpi = false; }; })
-        py-torch
-        py-ipykernel
-        py-pandas
-        py-scikit-learn
-        py-emcee
-        py-astropy
-        py-dask
-        py-seaborn
-        py-matplotlib
-        py-numba
-      ] ++
-      ifCore [
-        py-pyqt5
-      ])
-      /*
-      ++
-
-*/
-      ) pythons
+      [ (with pyPacks.pkgs; pyView [
+          python
+          #python-blas-backend # python-blas-backend is a custom package that includes scipy/numpy
+          py-cherrypy
+          py-flask
+          py-pip
+          py-ipython
+          py-pyyaml
+          py-pylint
+          py-autopep8
+          py-sqlalchemy
+          py-nose
+          py-mako
+          py-pkgconfig
+          py-virtualenv
+          py-sympy
+          py-pycairo
+          py-sphinx
+          py-pytest
+          py-hypothesis
+          py-cython
+          (py-h5py.withPrefs { version = ":2"; variants = { mpi = false; }; })
+          #py-torch
+          py-ipykernel
+          py-pandas
+          py-scikit-learn
+          py-emcee
+          py-astropy
+          py-dask
+          py-seaborn
+          py-matplotlib
+          py-numba
+          #py-pyqt5 #install broken: tries to install plugins/designer to qt
+        ])
+        (let mklPacks = pyPacks.withPrefs
+          { package = blasVirtuals "intel-oneapi-mkl"; };
+        in
+        with mklPacks.pkgs; rootPacks.pythonView { pkgs = [
+          py-numpy
+          py-scipy
+        ]; })
+      ]) pythons
   ) compilers
   ++
   ### CLANG LIBCPP ###

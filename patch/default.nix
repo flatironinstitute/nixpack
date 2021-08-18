@@ -46,7 +46,21 @@ in
     patches = [./shadow-nosuid.patch];
   };
 
+  util-linux = {
+    build = {
+      enable_makeinstall_setuid = "no";
+    };
+  };
+
+  /* tries to install into gdk-pixbuf -- TODO: patch and use GDK_PIXBUF_MODULE_FILE (like nixpkgs) */
+  librsvg = {
+    build = {
+      enable_pixbuf_loader = "no";
+    };
+  };
+
   jsoncpp = noccache;
+  py-torch = noccache;
 
   /* some things don't use a compiler */
   intel = nocompiler;
