@@ -10,8 +10,9 @@ This is a terrible, horrible work in progress, and you probably shouldn't touch 
 ## Usage
 
 - install and configure nix sufficient to build derivations
-- edit `prefs.nix` (`spackConfig` and `bootstrapCompiler` are critical)
+- edit `prefs.nix` (`sets.bootstrap.package.compiler` is critical)
 - run `nix-build -A pkgs.foo` to build the spack package `foo`
+- see `fi.nix` for a complete working example with view and modules: `nix-build -A mods fi.nix`
 
 ## Compatibility
 
@@ -88,8 +89,8 @@ example = {
       version = ...
     };
     virtualdep = {
-      name = "package";
-      version = "package version";
+      name = "provider";
+      version = ...;
       ...
     };
   };
@@ -115,15 +116,32 @@ These contain a `spec` metadata attribute.
 Global user preferences.
 See [`prefs.nix`](prefs.nix).
 
-### Bootstrapping
+### compiler
 
-The configured `bootstrapCompiler` is used to build the configured `compiler`, which is used to build all other packages.
-To disable bootstrapping, just make `compiler` itself external (i.e., set them the same).
+Rather than spack's dedicated `%compiler` concept, we introduce a new virtual "compiler" that all packages depend on and is provided by gcc and llvm (by default).
+By setting the package preference for compiler, you determine which compiler to use.
 
 ### `packs`
 
 The world, like `nixpkgs`.
 It contains `repo` with package descriptor generators and `pkgs`.
 
-You can have multiple instances of `packs` with different preferences (for example, to make package sets with different compilers).
-These can be created based on other `packs` using `packs.withPrefs { ... }` to override `prefs.nix`.
+### sets
+
+In `prefs.nix` is `sets`, which is set of additional named preferences, each of which is used to create another package set under `packs.sets`.
+These preferences override the defaults specified at the top level.
+These can be used to have package sets with different providers or package settings (like a different compiler, mpi version, blas provider, etc.).
+
+When nesting sets, sets inherit all from their parent, along with the implicit sets `self`, `parent`, and `root`.
+You can also dynamically create new sets using `packs.withPrefs { .. }`.
+
+### Bootstrapping
+
+The default compiler specifies `resolver = "bootstrap"` which means that all dependencies for the compiler package will be resolved using `sets.bootstrap` preferences.
+These preferences in turn specify a compiler with `extern` set, i.e., one from the base system.
+This compiler is used to build any other bootstrap packages, which are then used to build the main compiler.
+You could specify more extern packages in bootstrap to speed up bootstrapping.
+
+You could also add additional bootstrap layers by setting the bootstrap compiler `resolver` to a different set.
+It's also possible to specify `resolver` for other packages, or `buildResolver` to resolve only build-time dependencies.
+Each of these can be set to the same of a set, or an already-constructed `packs`.
