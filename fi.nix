@@ -454,7 +454,7 @@ mods =
       compPacks = if isCore then rootPacks else
         rootPacks.withCompiler compiler;
     in
-    [ (rootPacks.getPackage compiler) ]
+    [ { pkg = rootPacks.getPackage compiler; default = isCore; } ]
     ++
     (with compPacks.pkgs; [
       boost
@@ -462,7 +462,7 @@ mods =
       (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
       fftw
       (gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; })
-      #(gsl.withPrefs { depends = blasVirtuals "intel-oneapi-mkl"; })
+      (gsl.withPrefs { depends = blasVirtuals "intel-oneapi-mkl"; })
       (hdf5.withPrefs { version = ":1.8"; })
       hdf5
       magma
@@ -471,34 +471,48 @@ mods =
       (openblas.withPrefs { variants = { threads = "openmp"; }; })
       (openblas.withPrefs { variants = { threads = "pthreads"; }; })
       pgplot
-      relion # doesn't work with intel-mpi, so just use default openmpi
-      openmpi-opa # (default) openmpi/4 only
+
+      openmpi-opa /*
+      { name = "openmpi-opa";
+        # TODO: proper hiearchy pathing
+        static = {
+          short_description = "Load openmpi4 for Omnipath fabric";
+          environment_modifications = [
+            [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
+          ];
+          autoload = "openmpi/4";
+        };
+      }
+      */
     ])
     ++
 
     ### MPIS ###
     builtins.concatMap (mpi:
-      let mpiPacks = compPacks.withPrefs {
-        package = {
-          inherit mpi;
-        };
-        global = {
-          variants = {
-            mpi = true;
+      let
+        mpiPacks = compPacks.withPrefs {
+          package = {
+            inherit mpi;
           };
-        };
-        package = {
-          fftw = {
+          global = {
             variants = {
-              precision = {
-                quad = false;
+              mpi = true;
+            };
+          };
+          package = {
+            fftw = {
+              variants = {
+                precision = {
+                  quad = false;
+                };
               };
             };
           };
         };
-      };
+        isOpenmpi = mpi.name == "openmpi";
+        ifOpenmpi = lib.optionals isOpenmpi;
       in
-      lib.optionals (mpi.name == "openmpi")
+      ifOpenmpi # others are above, compiler-independent
         [ (compPacks.getPackage mpi) ]
       ++
       (with mpiPacks.pkgs; [
@@ -509,8 +523,11 @@ mods =
         hdf5
         osu-micro-benchmarks
       ] ++
-      ifCore [
-        #gromacs # broken with intel-oneapi-mpi?
+      ifCore (ifOpenmpi [
+        # these are broken with intel...
+        gromacs
+        relion
+      ]) ++ [
         ior
         petsc
         valgrind
@@ -522,9 +539,8 @@ mods =
       let
         pyPacks = compPacks.withPackage "python" py;
       in
-      [ (with pyPacks.pkgs; pyView [
+      [ (with pyPacks.pkgs; { default = py == builtins.head pythons; pkg = pyView [
           python
-          #python-blas-backend # python-blas-backend is a custom package that includes scipy/numpy
           py-cherrypy
           py-flask
           py-pip
@@ -555,10 +571,11 @@ mods =
           py-matplotlib
           py-numba
           #py-pyqt5 #install broken: tries to install plugins/designer to qt
-        ])
+        ]; })
         (let mklPacks = pyPacks.withPrefs
-          { package = blasVirtuals "intel-oneapi-mkl"; };
+          { package = blasVirtuals "intel-mkl"; }; # intel-oneapi-mkl not supported
         in
+        # replaces python-blas-backend
         with mklPacks.pkgs; mklPacks.pythonView { pkgs = [
           py-numpy
           py-scipy
@@ -577,17 +594,6 @@ mods =
   ])
   ++
   [
-    /*
-    { name = "openmpi-opa";
-      static = {
-        short_description = "Load openmpi4 for Omnipath fabric";
-        environment_modifications = [
-          [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
-        ];
-        # prereq: openmpi/4?
-      };
-    }
-    */
     { name = "modules-traditional";
       static = {
         short_description = "Make old modules available";
@@ -601,6 +607,7 @@ in
 
 rootPacks // { mods =
 rootPacks.modules {
+  coreCompilers = map (p: p.pkgs.compiler) [rootPacks rootPacks.sets.bootstrap];
   config = {
     hierarchy = ["mpi"];
     hash_length = 0;
@@ -614,11 +621,9 @@ rootPacks.modules {
       "openblas threads=openmp" = "{name}/{version}-openmp";
       "openblas threads=pthreads" = "{name}/{version}-threaded";
       "openmpi-opa" = "{name}/{^openmpi.version}";
-      "py-*^intel-oneapi-mkl" = "python-packages/{^python.version}/{name}/.{version}-mkl";
-      "py-*^openblas" = "python-packages/{^python.version}/{name}/.{version}-openblas";
-      "python-blas-backend^intel-oneapi-mkl" = "python/{^python.version}-mkl";
+      "py-numpy^intel-mkl" = "python-mkl/{^python.version}";
+      "py-setuptools" = "python/{^python.version}"; # autoload redirect
       "slurm" = "{name}/current";
-      "py-*^python" = "python-packages/{^python.version}/{name}/{version}";
     };
     all = {
       autoload = "none";
@@ -678,10 +683,12 @@ rootPacks.modules {
         };
       };
     };
+    py-numpy = {
+      autoload = "direct";
+    };
   };
 
   pkgs = mods;
 
 };
-
 }
