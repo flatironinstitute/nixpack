@@ -538,8 +538,11 @@ mods =
     builtins.concatMap (py:
       let
         pyPacks = compPacks.withPackage "python" py;
+        isCorePy = py == builtins.head pythons;
+        defaulting = pkg: { default = isCorePy; inherit pkg; };
       in
-      [ (with pyPacks.pkgs; { default = py == builtins.head pythons; pkg = pyView [
+      map defaulting
+      [ (with pyPacks.pkgs; pyView [
           python
           py-cherrypy
           py-flask
@@ -560,7 +563,7 @@ mods =
           py-hypothesis
           py-cython
           (py-h5py.withPrefs { version = ":2"; variants = { mpi = false; }; })
-          #py-torch
+          #py-torch # some strange argparse allow_abbrev issue
           py-ipykernel
           py-pandas
           py-scikit-learn
@@ -571,7 +574,7 @@ mods =
           py-matplotlib
           py-numba
           #py-pyqt5 #install broken: tries to install plugins/designer to qt
-        ]; })
+        ])
         (let mklPacks = pyPacks.withPrefs
           { package = blasVirtuals "intel-mkl"; }; # intel-oneapi-mkl not supported
         in

@@ -52,9 +52,9 @@ in
     };
   };
 
-  /* tries to install into gdk-pixbuf -- TODO: patch and use GDK_PIXBUF_MODULE_FILE (like nixpkgs) */
   librsvg = {
     build = {
+      /* tries to install into gdk-pixbuf -- TODO: patch and use GDK_PIXBUF_MODULE_FILE (like nixpkgs) */
       enable_pixbuf_loader = "no";
     };
   };
