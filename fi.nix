@@ -362,7 +362,7 @@ pythons = [
   { version = "3.9"; }
 ];
 
-pyView = pl: rootPacks.pythonView { pkgs = rootPacks.findDeps (x: builtins.elem "run" x.deptype) pl; };
+pyView = pl: rootPacks.pythonView { pkgs = lib.findDeps (x: builtins.elem "run" x.deptype) pl; };
 
 blasVirtuals = blas: {
   blas      = blas;
@@ -559,7 +559,7 @@ mods =
         (let mklPacks = pyPacks.withPrefs
           { package = blasVirtuals "intel-oneapi-mkl"; };
         in
-        with mklPacks.pkgs; rootPacks.pythonView { pkgs = [
+        with mklPacks.pkgs; mklPacks.pythonView { pkgs = [
           py-numpy
           py-scipy
         ]; })
@@ -605,6 +605,7 @@ rootPacks.modules {
     hierarchy = ["mpi"];
     hash_length = 0;
     projections = {
+      # warning: order is lost
       "boost+clanglibcpp" = "{name}/{version}-libcpp";
       "gromacs+plumed" = "{name}/{version}-plumed";
       "gsl^intel-oneapi-mkl" = "{name}/{version}-mkl";

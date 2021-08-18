@@ -202,6 +202,15 @@ rec {
   /* unify a list of package prefs, making sure they're compatible */
   prefsIntersection = l: if builtins.isList l then foldl' prefsIntersect null l else l;
 
+  /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in bredth-first order) */
+  findDeps = pred:
+    let
+      adddeps = s: pkgs: add s (builtins.filter
+        (p: p != null && ! (builtins.elem p s) && pred p)
+        (nub (builtins.concatMap (p: builtins.attrValues p.spec.depends) pkgs)));
+      add = s: pkgs: if pkgs == [] then s else adddeps (s ++ pkgs) pkgs;
+    in pkg: add [] (toList pkg);
+
   /* debugging to trace full package dependencies (and return count of packages) */
   traceSpecTree = let
     sst = seen: ind: dname: pkg: if pkg == null then seen else

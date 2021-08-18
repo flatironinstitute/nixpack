@@ -361,7 +361,7 @@ def scan(node, src: int, path: Path):
     if path.opt(b'exclude'):
         return node
     force = path.optsrc(b'force')
-    if force is not None and force != src:
+    if force is not None and forceSrcs[force] != src:
         return node
     if path.isdir():
         cls: Type[Inode] = Dir

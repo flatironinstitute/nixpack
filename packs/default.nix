@@ -269,8 +269,9 @@ lib.fix (packs: with packs; {
           spec = {
             inherit (desc) name namespace provides paths;
             inherit (prefs) extern tests;
-            version = if prefs.extern != null && lib.versionIsConcrete prefs.version then prefs.version
-                    else resolveVersion  desc.version  prefs.version;
+            version = if prefs.extern != null && lib.versionIsConcrete prefs.version
+                   then prefs.version
+                   else resolveVersion desc.version  prefs.version;
             patches  = desc.patches ++ prefs.patches;
             variants = resolveVariants desc.variants prefs.variants;
             depends = if prefs.extern != null then {}
@@ -283,7 +284,8 @@ lib.fix (packs: with packs; {
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
       virtual = providers: prefs: builtins.addErrorContext "resolving virtual ${pname}" (let
-          provs = if builtins.isList prefs || prefs ? name then prefs
+          provs = if builtins.isList prefs || prefs ? name || builtins.isString prefs
+            then prefs
             else providers;
           version = prefs.provides.${pname} or ":";
 
@@ -330,15 +332,6 @@ lib.fix (packs: with packs; {
 
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: res: res (getPackagePrefs name)) resolvers;
-
-  /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in bredth-first order) */
-  findDeps = pred:
-    let
-      adddeps = s: pkgs: add s (builtins.filter
-        (p: p != null && ! (builtins.elem p s) && pred p)
-        (lib.nub (builtins.concatMap (p: builtins.attrValues p.spec.depends) pkgs)));
-      add = s: pkgs: if pkgs == [] then s else adddeps (s ++ pkgs) pkgs;
-    in pkg: add [] (lib.toList pkg);
 
   /* child packs sets with different preferences */
   sets = parent.sets or { root = packs; } //
