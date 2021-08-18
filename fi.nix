@@ -150,6 +150,7 @@ rootPacks = import ./packs {
       };
     };
     pango = {
+      version = "1.42.0"; # newer builds are broken (meson #25355)
       variants = {
         X = true;
       };
@@ -662,5 +663,4 @@ rootPacks.modules {
 
 };
 
-test = lib.traceSpecTree rootPacks.pkgs.llvm;
 }

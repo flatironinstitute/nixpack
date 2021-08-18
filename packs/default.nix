@@ -320,7 +320,9 @@ lib.fix (packs: with packs; {
   repo = patchRepo repoPatch (repoPatches (import spackRepo {
       /* utilities needed by the repo */
       inherit (lib) when versionMatches variantMatches;
-      inherit platform target os;
+      inherit platform os;
+      /* needs generic target (actually needs all, but only generic is used) */
+      target = builtins.head (lib.splitRegex "-" system);
     }));
 
   /* partially applied specs, which take preferences as argument */
