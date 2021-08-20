@@ -1,15 +1,19 @@
+{ target ? "broadwell"
+}:
+
 let
 
 lib = rootPacks.lib;
 
 rootPacks = import ./packs {
   system = builtins.currentSystem;
-  target = "broadwell";
+  inherit target;
   os = "centos7";
 
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
+    rev = "05340fca17cd9dc2006950456c666d29ad5e4975";
   };
   spackConfig = {
     config = {
@@ -372,7 +376,7 @@ blasVirtuals = blas: {
 
 cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
 
-mods =
+modpkgs =
   # externals
   (with rootPacks.pkgs; [
     slurm
@@ -596,6 +600,10 @@ mods =
     boost
   ])
   ++
+  (with rootPacks.nixpkgs; [
+    { name = builtins.parseDrvName nix.name; prefix = nix; }
+  ])
+  ++
   [
     { name = "modules-traditional";
       static = {
@@ -608,90 +616,91 @@ mods =
 
 in
 
-rootPacks // { mods =
-rootPacks.modules {
-  coreCompilers = map (p: p.pkgs.compiler) [rootPacks rootPacks.sets.bootstrap];
-  config = {
-    hierarchy = ["mpi"];
-    hash_length = 0;
-    projections = {
-      # warning: order is lost
-      "boost+clanglibcpp" = "{name}/{version}-libcpp";
-      "gromacs+plumed" = "{name}/{version}-plumed";
-      "gsl^intel-oneapi-mkl" = "{name}/{version}-mkl";
-      "gsl^openblas" = "{name}/{version}-openblas";
-      "openblas threads=none" = "{name}/{version}-single";
-      "openblas threads=openmp" = "{name}/{version}-openmp";
-      "openblas threads=pthreads" = "{name}/{version}-threaded";
-      "openmpi-opa" = "{name}/{^openmpi.version}";
-      "py-numpy^intel-mkl" = "python-mkl/{^python.version}";
-      "py-setuptools" = "python/{^python.version}"; # autoload redirect
-      "slurm" = "{name}/current";
-    };
-    all = {
-      autoload = "none";
-      prerequisites = "direct";
-      environment = {
-        set = {
-          "{name}_BASE" = "{prefix}";
+rootPacks // {
+  mods = rootPacks.modules {
+    coreCompilers = map (p: p.pkgs.compiler) [rootPacks rootPacks.sets.bootstrap];
+    config = {
+      hierarchy = ["mpi"];
+      hash_length = 0;
+      projections = {
+        # warning: order is lost
+        "boost+clanglibcpp" = "{name}/{version}-libcpp";
+        "gromacs+plumed" = "{name}/{version}-plumed";
+        "gsl^intel-oneapi-mkl" = "{name}/{version}-mkl";
+        "gsl^openblas" = "{name}/{version}-openblas";
+        "openblas threads=none" = "{name}/{version}-single";
+        "openblas threads=openmp" = "{name}/{version}-openmp";
+        "openblas threads=pthreads" = "{name}/{version}-threaded";
+        "openmpi-opa" = "{name}/{^openmpi.version}";
+        "py-numpy^intel-mkl" = "python-mkl/{^python.version}";
+        "py-setuptools" = "python/{^python.version}"; # autoload redirect
+        "slurm" = "{name}/current";
+        "modules-traditional" = "{name}";
+      };
+      all = {
+        autoload = "none";
+        prerequisites = "direct";
+        environment = {
+          set = {
+            "{name}_BASE" = "{prefix}";
+          };
+        };
+        suffixes = {
+          "^mpi" = "mpi";
+        };
+        filter = {
+          environment_blacklist = ["CC" "FC" "CXX" "F77"];
         };
       };
-      suffixes = {
-        "^mpi" = "mpi";
-      };
-      filter = {
-        environment_blacklist = ["CC" "FC" "CXX" "F77"];
-      };
-    };
-    openmpi = {
-      environment = {
-        set = {
-          OPENMPI_VERSION = "{version}";
+      openmpi = {
+        environment = {
+          set = {
+            OPENMPI_VERSION = "{version}";
+          };
         };
       };
-    };
-    openmpi-opa = {
-      environment = {
-        set = {
-          OMPI_MCA_pml = "cm";
+      openmpi-opa = {
+        environment = {
+          set = {
+            OMPI_MCA_pml = "cm";
+          };
         };
       };
-    };
-    matlab = {
-      environment = {
-        set = {
-          MLM_LICENSE_FILE = "/cm/shared/sw/pkg/vendor/matlab/src/network.lic";
+      matlab = {
+        environment = {
+          set = {
+            MLM_LICENSE_FILE = "/cm/shared/sw/pkg/vendor/matlab/src/network.lic";
+          };
         };
       };
-    };
-    slurm = {
-      environment = {
-        set = {
-          CMD_WLM_CLUSTER_NAME = "slurm";
-          SLURM_CONF = "/cm/shared/apps/slurm/var/etc/slurm/slurm.conf";
+      slurm = {
+        environment = {
+          set = {
+            CMD_WLM_CLUSTER_NAME = "slurm";
+            SLURM_CONF = "/cm/shared/apps/slurm/var/etc/slurm/slurm.conf";
+          };
         };
       };
-    };
-    hdf5 = {
-      environment = {
-        set = {
-          HDF5_ROOT = "{prefix}";
+      hdf5 = {
+        environment = {
+          set = {
+            HDF5_ROOT = "{prefix}";
+          };
         };
       };
-    };
-    boost = {
-      environment = {
-        set = {
-          BOOST_ROOT = "{prefix}";
+      boost = {
+        environment = {
+          set = {
+            BOOST_ROOT = "{prefix}";
+          };
         };
       };
+      py-numpy = {
+        autoload = "direct";
+      };
     };
-    py-numpy = {
-      autoload = "direct";
-    };
+
+    pkgs = modpkgs;
+
   };
-
-  pkgs = mods;
-
-};
 }

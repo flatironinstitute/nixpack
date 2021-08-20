@@ -3,7 +3,7 @@ packs:
 , modtype ? "lmod" /* lmod or tcl */
 , config ? {}
 , pkgs /* packages to include, list of:
-   pkg (derivation)
+   pkg (spack derivation)
    { pkg = pkg; default = true; } (for default module)
    { static = "content"; name = "name"; }
    { static = { template variables }; name = "name"; }

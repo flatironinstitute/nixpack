@@ -357,6 +357,7 @@ lib.fix (packs: with packs; {
 
   modules = import ../spack/modules.nix packs;
 
+  nixpkgs = import ../nixpkgs target;
 });
 
 in packsWithPrefs

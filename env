@@ -1,3 +1,4 @@
+# setup FI environment
 dir=$PWD
 nix=/cm/shared/sw/nix
 
