@@ -13,7 +13,7 @@ rootPacks = import ./packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "05340fca17cd9dc2006950456c666d29ad5e4975";
+    rev = "3e5744d33f5188196874f164fb552101f292731e";
   };
   spackConfig = {
     config = {
@@ -33,9 +33,15 @@ rootPacks = import ./packs {
     variants = {
       mpi = false;
     };
+    resolver = deptype:
+      if builtins.elem "link" deptype
+        then null else rootPacks;
   };
   sets = {
     bootstrap = {
+      global = {
+        resolver = null;
+      };
       package = {
         compiler = {
           name = "gcc";
@@ -193,6 +199,7 @@ rootPacks = import ./packs {
     };
     llvm = {
       version = "10";
+      /*
       buildResolver = rootPacks;
     };
     meson = {
@@ -203,6 +210,10 @@ rootPacks = import ./packs {
     };
     z3 = {
       buildResolver = rootPacks;
+    };
+    rdma-core = {
+      buildResolver = rootPacks;
+      */
     };
     hdf5 = {
       version = "1.10";
@@ -320,6 +331,23 @@ rootPacks = import ./packs {
     py-protobuf = {
       version = "3.15.7"; # newer have wrong hash (#25469)
     };
+    py-h5py = {
+      version = ":2";
+    };
+    boost = {
+      variants = {
+        context = true;
+        coroutine = true;
+        cxxstd = "14";
+      };
+    };
+    nix = {
+      variants = {
+        storedir = builtins.getEnv "NIX_STORE_DIR";
+        statedir = builtins.getEnv "NIX_STATE_DIR";
+        sandboxing = false;
+      };
+    };
   }
   // blasVirtuals "openblas";
 };
@@ -350,7 +378,6 @@ mpis = [
   { name = "openmpi";
     version = "1.10";
     variants = {
-      # without the explicit fabrics ucx is lost in dependencies
       fabrics = {
         ucx = false;
       };
@@ -366,6 +393,42 @@ pythons = [
   { version = "3.9"; }
 ];
 
+withPython = packs: py: let
+  /* we can't have multiple python versions in a dep tree because of spack's
+     environment polution, but anything that doesn't need python at runtime 
+     can fall back on default
+    */
+  ifHasPy = p: o: name: prefs:
+    let q = p.getResolver name prefs; in
+    if builtins.any (p: p.spec.name == "python") (lib.findDeps (x: builtins.elem "run" x.deptype || builtins.elem "link" x.deptype) q)
+      then q
+      else o.getResolver name prefs;
+  pyPrefs = resolver: {
+    package = {
+      python = py;
+    };
+    global = {
+      inherit resolver;
+    };
+  };
+  rootRes = ifHasPy rootPyPacks rootPacks;
+  rootPyPacks = rootPacks.withPrefs (pyPrefs (deptype: rootRes));
+  pyPacks = packs.withPrefs (pyPrefs 
+    (deptype: if builtins.elem "link" deptype
+      then ifHasPy pyPacks packs
+      else rootRes));
+  in pyPacks;
+
+forPythons = packs: gen:
+  builtins.concatMap (py:
+    let
+      isCorePy = py == builtins.head pythons;
+      pyPacks = if isCorePy then packs else withPython packs py;
+      defaulting = pkg: { default = isCorePy; inherit pkg; };
+    in
+    map defaulting (gen pyPacks)
+  ) pythons;
+
 pyView = pl: rootPacks.pythonView { pkgs = lib.findDeps (x: builtins.elem "run" x.deptype) pl; };
 
 blasVirtuals = blas: {
@@ -377,7 +440,6 @@ blasVirtuals = blas: {
 cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
 
 modpkgs =
-  # externals
   (with rootPacks.pkgs; [
     slurm
     (llvm.withPrefs { version = "10"; })
@@ -414,6 +476,7 @@ modpkgs =
     mplayer
     mpv
     mupdf
+    #nix #too old/broken
     node-js
     (node-js.withPrefs { version = ":12"; })
     nvhpc
@@ -476,18 +539,15 @@ modpkgs =
       (openblas.withPrefs { variants = { threads = "pthreads"; }; })
       pgplot
 
-      openmpi-opa /*
       { name = "openmpi-opa";
-        # TODO: proper hiearchy pathing
         static = {
           short_description = "Load openmpi4 for Omnipath fabric";
           environment_modifications = [
             [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
           ];
-          autoload = "openmpi/4";
         };
+        depends = { mpi = compPacks.pkgs.openmpi; };
       }
-      */
     ])
     ++
 
@@ -535,17 +595,19 @@ modpkgs =
         ior
         petsc
         valgrind
-      ])) mpis
+      ])
+      ++
+      forPythons mpiPacks (pyPacks:
+        [ (pyPacks.pythonView { pkgs = with pyPacks.pkgs; [
+            py-mpi4py
+            py-h5py
+          ]; })
+        ])
+      ) mpis
     ++
 
     ### PYTHONS ###
-    builtins.concatMap (py:
-      let
-        pyPacks = compPacks.withPackage "python" py;
-        isCorePy = py == builtins.head pythons;
-        defaulting = pkg: { default = isCorePy; inherit pkg; };
-      in
-      map defaulting
+    forPythons compPacks (pyPacks:
       [ (with pyPacks.pkgs; pyView [
           python
           py-cherrypy
@@ -566,7 +628,7 @@ modpkgs =
           py-pytest
           py-hypothesis
           py-cython
-          (py-h5py.withPrefs { version = ":2"; variants = { mpi = false; }; })
+          py-h5py
           #py-torch # some strange argparse allow_abbrev issue
           py-ipykernel
           py-pandas
@@ -579,15 +641,15 @@ modpkgs =
           py-numba
           #py-pyqt5 #install broken: tries to install plugins/designer to qt
         ])
-        (let mklPacks = pyPacks.withPrefs
+        (let mklPacks = pyPacks.withPrefs # XXX updating pyPacks isn't quite right
           { package = blasVirtuals "intel-mkl"; }; # intel-oneapi-mkl not supported
         in
         # replaces python-blas-backend
-        with mklPacks.pkgs; mklPacks.pythonView { pkgs = [
+        mklPacks.pythonView { pkgs = with mklPacks.pkgs; [
           py-numpy
           py-scipy
         ]; })
-      ]) pythons
+      ])
   ) compilers
   ++
   ### CLANG LIBCPP ###
@@ -600,10 +662,13 @@ modpkgs =
     boost
   ])
   ++
-  (with rootPacks.nixpkgs; [
-    { name = builtins.parseDrvName nix.name; prefix = nix; }
+  ### NIXPKGS ###
+  map (p: builtins.parseDrvName p.name // { prefix = p; }) (with rootPacks.nixpkgs; [
+    #nix
+    #vscode
   ])
   ++
+  ### STATIC/META ###
   [
     { name = "modules-traditional";
       static = {
@@ -698,9 +763,14 @@ rootPacks // {
       py-numpy = {
         autoload = "direct";
       };
+      openmpi-opa = {
+        autoload = "direct";
+      };
     };
 
     pkgs = modpkgs;
 
   };
+
+  allSpecs = lib.traceSpecTree (builtins.filter (p: p ? spec) modpkgs);
 }

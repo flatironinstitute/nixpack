@@ -23,6 +23,9 @@ in
       f77 = lib.when spec.variants.languages.fortran "bin/gfortran";
       fc = lib.when spec.variants.languages.fortran "bin/gfortran";
     };
+    depends = old.depends // {
+      compiler = { deptype = ["build"]; };
+    };
   };
   llvm = spec: old: {
     provides = old.provides or {} // {
@@ -33,6 +36,9 @@ in
       cxx = "bin/clang++";
       f77 = null;
       fc = null;
+    };
+    depends = old.depends // {
+      compiler = { deptype = ["build"]; };
     };
   };
 

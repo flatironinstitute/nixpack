@@ -200,14 +200,14 @@ rec {
     in coalesceWith (mergeWithKeys (k: getAttr k intersectors));
 
   /* unify a list of package prefs, making sure they're compatible */
-  prefsIntersection = l: if builtins.isList l then foldl' prefsIntersect null l else l;
+  prefsIntersection = l: if isList l then foldl' prefsIntersect null l else l;
 
   /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in bredth-first order) */
   findDeps = pred:
     let
-      adddeps = s: pkgs: add s (builtins.filter
-        (p: p != null && ! (builtins.elem p s) && pred p)
-        (nub (builtins.concatMap (p: builtins.attrValues p.spec.depends) pkgs)));
+      adddeps = s: pkgs: add s (filter
+        (p: p != null && ! (elem p s) && pred p)
+        (nub (concatMap (p: attrValues p.spec.depends) pkgs)));
       add = s: pkgs: if pkgs == [] then s else adddeps (s ++ pkgs) pkgs;
     in pkg: add [] (toList pkg);
 
@@ -222,5 +222,5 @@ rec {
       foldl' (seen: d: sst seen (ind + "  ") d pkg.spec.depends.${d})
         (seen ++ [pkg])
         (attrNames pkg.spec.depends));
-    in pkg: length (sst [] "" null pkg);
+    in pkgs: length (foldl' (seen: sst seen "" null) [] (toList pkgs));
 }

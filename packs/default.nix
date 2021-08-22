@@ -37,7 +37,7 @@ fillDesc = name: /* simple name of package */
     inherit name namespace version variants patches paths build;
     depends = {
       compiler = {
-        deptype = ["build"];
+        deptype = ["build" "link"];
       };
     } // builtins.mapAttrs (n: lib.prefsIntersection) depends;
     provides = builtins.mapAttrs (n: versionsUnion) provides;
@@ -140,13 +140,15 @@ lib.fix (packs: with packs; {
     , provides ? {}
     , tests ? false
     , fixedDeps ? false
-    , resolver ? packs
-    , buildResolver ? resolver
-    }: let getres = res: if builtins.isString res then packs.sets.${res} else res; in
+    , resolver ? null
+    }:
     {
       inherit version variants patches depends extern tests provides fixedDeps;
-      resolver = getres resolver;
-      buildResolver = getres buildResolver;
+      resolver = deptype: name: let r = lib.applyOptional (lib.applyOptional resolver deptype) name; in
+        if builtins.isFunction r then r
+        else (if r == null then packs
+          else if builtins.isString r then packs.sets.${r}
+          else r).getResolver name;
     };
 
   getPackagePrefs = name: prefsUpdate global packPrefs.package.${name} or {};
@@ -218,8 +220,7 @@ lib.fix (packs: with packs; {
       resolveDepends = depends: pprefs:
         resolveEach (dname: dep: pref: let
           deptype = (t: if pprefs.tests then t else lib.remove "test" t) dep.deptype or [];
-          res = (if builtins.elem "link" deptype || builtins.elem "run" deptype then
-            pprefs.resolver else pprefs.buildResolver).getResolver dname;
+          res = pprefs.resolver deptype dname;
           clean = lib.mapNullable (d: builtins.removeAttrs d ["deptype"]);
           virtualize = { deptype, version ? ":" }:
             { provides = { "${dname}" = version; }; };

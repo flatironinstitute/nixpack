@@ -98,7 +98,6 @@ example = {
   extern = "/opt/local/mypackage"; # a prefix string or derivation (e.g., nixpkgs package) for an external installation (overrides depends)
   fixedDeps = false; # only use user preferences to resolve dependencies (see prefs.nix)
   resolver = "set"; # name of set to use to resolve dependencies
-  buildResolver = "set"; # name of set to use to resolve build/test-only dependencies
 };
 ```
 
@@ -143,5 +142,5 @@ This compiler is used to build any other bootstrap packages, which are then used
 You could specify more extern packages in bootstrap to speed up bootstrapping.
 
 You could also add additional bootstrap layers by setting the bootstrap compiler `resolver` to a different set.
-It's also possible to specify `resolver` for other packages, or `buildResolver` to resolve only build-time dependencies.
-Each of these can be set to the same of a set, or an already-constructed `packs`.
+It's also possible to specify `resolver` for other packages.
+Each of these can be set to the name of a set, an already-constructed `packs`, or a function to resolve packages.

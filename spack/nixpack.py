@@ -157,7 +157,7 @@ class NixSpec(spack.spec.Spec):
         self.compiler = self.get(compiler, top=False).as_compiler if compiler else nullCompiler
 
         for n, d in depends.items():
-            dtype = nixspec['deptypes'][n] or ()
+            dtype = nixspec['deptypes'].get(n) or ()
             if d:
                 dep = self.get(d, top=False)
                 try:

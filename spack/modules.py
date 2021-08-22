@@ -2,6 +2,7 @@
 import os
 import json
 import datetime
+import collections
 
 import nixpack
 import spack
@@ -25,39 +26,38 @@ spack.config.set(f'modules', config, 'command_line')
 
 cls = spack.modules.module_types[modtype]
 
-class FakeSpec(spack.spec.Spec):
-    def __init__(self):
-        super().__init__()
-        self._set_architecture(target=nixpack.target, platform=nixpack.platform, os=nixpack.archos)
-        self.name = 'dummy_static_module'
-        self.compiler = nixpack.nullCompiler
+class FakePackage(spack.package.PackageBase):
+    extendees = ()
+    provided = {}
+
+class FakeSpec(nixpack.NixSpec):
+    def __init__(self, desc):
+        nixspec = {
+            'name': f'static-module-{id(self)}',
+            'namespace': 'dummy',
+            'version': '0',
+            'variants': {},
+            'tests': False,
+            'paths': {},
+            'depends': desc.get('depends', {}),
+            'deptypes': collections.defaultdict(tuple),
+            'patches': []
+        }
+
+        prefix = desc.get('prefix', f"/{nixspec['namespace']}/{nixspec['name']}")
+        nixspec['extern'] = prefix
+
+        super().__init__(nixspec, prefix, True)
+        self._package = FakePackage(self)
 
     def concretize(self):
         self._mark_concrete()
 
-    def _installed_explicitly(self):
-        return True
-
     @property
-    def prefix(self):
-        # may be None
-        return self._prefix
-    
-    @prefix.setter
-    def prefix(self, value):
-        self._prefix = spack.util.prefix.Prefix(value)
-
-    def copy(self, deps=True, **kwargs):
-        # no!
-        return self
+    def package_class(self):
+        return self._package
 
 class ModSpec:
-    default = False
-    static = None
-
-    nullWriter = cls(nixpack.nullCompilerSpec, name)
-    template = spack.tengine.make_environment().get_template(nullWriter.default_template)
-
     def __init__(self, p):
         if isinstance(p, str) or 'extern' in p:
             self.pkg = p
@@ -67,23 +67,15 @@ class ModSpec:
         if self.pkg:
             self.spec = nixpack.NixSpec.get(self.pkg)
         else:
-            self.spec = FakeSpec()
+            self.spec = FakeSpec(p)
 
+        if 'name' in p:
+            self.spec.name = p['name']
+        if 'version' in p:
+            self.spec.versions = spack.version.VersionList([spack.version.Version(p['version'])])
         self.default = p.get('default', False)
         self.static = p.get('static', None)
         self.path = p.get('path', None)
-        name = p.get('name', None)
-        if name:
-            if isinstance(name, str):
-                self.spec.name = name
-            else:
-                self.spec.name = name['name']
-                self.spec.versions = spack.version.VersionList([spack.version.Version(name['version'])])
-
-        prefix = p.get('prefix', None)
-        if prefix:
-            self.spec.prefix = prefix
-            self.spec.external_path = prefix
 
     @property
     def writer(self):
@@ -104,7 +96,7 @@ class ModSpec:
             return layout.filename
 
     def __str__(self):
-        return self.spec.cformat(spack.spec.default_format + ' {/hash} {prefix}')
+        return self.spec.cformat(spack.spec.default_format + ' {prefix}')
 
     def write(self, fn):
         dn = os.path.dirname(fn)
@@ -112,12 +104,13 @@ class ModSpec:
             os.makedirs(dn, exist_ok=True)
             content = self.static
             if isinstance(content, dict):
+                template = spack.tengine.make_environment().get_template(self.writer.default_template)
                 content.setdefault('spec', content)
                 content['spec'].setdefault('target', nixpack.basetarget)
                 content['spec'].setdefault('name', self.spec.name)
                 content['spec'].setdefault('short_spec', 'static module via nixpack')
                 content.setdefault('timestamp', datetime.datetime.now())
-                content = self.template.render(content)
+                content = template.render(content)
             with open(fn, 'x') as f:
                 f.write(content)
         else:

@@ -61,7 +61,13 @@
     compiler = {
       /* preferences for global compiler */
       name = "gcc";
-      /* resolve dependencies using bootstrap set */
+      /* resolve dependencies using bootstrap set.
+         resolver can be:
+         - (optional) function deptype_list -> ...
+         - name of package set (in sets below)
+         - packs object
+         - function package_name -> package_prefs -> package (used as packs.getResolver)
+      */
       resolver = "bootstrap";
     };
     /* preferences for individual packages or virtuals */
@@ -93,6 +99,12 @@
         hwloc = true;
       };
     }; */
+    nix = {
+      variants = {
+        storedir = let v = builtins.getEnv "NIX_STORE_DIR"; in if v == "" then "none" else v;
+        statedir = let v = builtins.getEnv "NIX_STATE_DIR"; in if v == "" then "none" else v;
+      };
+    };
   };
   sets = {
     /* other packs sets prefs, which can be used by resolvers */
