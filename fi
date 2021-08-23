@@ -63,8 +63,8 @@ Commands:
 	       along with the total number of unique packages.
   gc           Cleanup any unreferenced nix stores (nix-store --gc).
   release      Publish a release profile for...
-    modules    (default)
-    nix        
+    modules    nixpack lmod modules (default)
+    nix        nix build environment
 
 EOF
 esac

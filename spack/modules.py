@@ -2,7 +2,6 @@
 import os
 import json
 import datetime
-import collections
 
 import nixpack
 import spack
@@ -40,12 +39,18 @@ class FakeSpec(nixpack.NixSpec):
             'tests': False,
             'paths': {},
             'depends': desc.get('depends', {}),
-            'deptypes': collections.defaultdict(tuple),
+            'deptypes': {},
             'patches': []
         }
 
         prefix = desc.get('prefix', f"/{nixspec['namespace']}/{nixspec['name']}")
         nixspec['extern'] = prefix
+        for n, d in nixspec['depends'].items():
+            try:
+                t = d['deptype']
+            except Exception:
+                t = ('run',)
+            nixspec['deptypes'][n] = t
 
         super().__init__(nixspec, prefix, True)
         self._package = FakePackage(self)
