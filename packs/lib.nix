@@ -142,6 +142,11 @@ rec {
     if isList v then elem m v else
     v == m) (toList ms);
 
+  deptypeChars = dt:
+    concatStringsSep "" (map (t:
+        if elem t dt then substring 0 1 t else " ")
+      [ "build" "link" "run" "test" ]);
+
   /* a very simple version of Spec.format */
   specFormat = fmt: spec: let
     variantToString = n: v:
@@ -155,6 +160,9 @@ rec {
       inherit (spec) name version;
       variants = concatStringsSep "" (map (v: variantToString v spec.variants.${v})
         (sort (a: b: typeOf spec.variants.${a} < typeOf spec.variants.${b}) (attrNames spec.variants)));
+      deptype = if spec ? deptype
+        then " [" + deptypeChars spec.deptype + "]"
+        else "";
     };
     in replaceStrings (map (n: "{${n}}") (attrNames fmts)) (attrValues fmts) fmt;
 
@@ -162,7 +170,7 @@ rec {
   specName = specFormat "{name}@{version}";
 
   /* like spack default format */
-  specToString = specFormat "{name}@{version}{variants}";
+  specToString = specFormat "{name}@{version}{variants}{deptype}";
 
   /* check that a given spec conforms to the specified preferences */
   specMatches = spec:
@@ -213,14 +221,15 @@ rec {
 
   /* debugging to trace full package dependencies (and return count of packages) */
   traceSpecTree = let
-    sst = seen: ind: dname: pkg: if pkg == null then seen else
+    sst = seen: ind: dname: dt: pkg: if pkg == null then seen else
       trace (ind
+        + (if dt != null then "[" + deptypeChars dt + "] " else "")
         + (if dname != null && dname != pkg.spec.name then "${dname}=" else "")
         + specToString pkg.spec + " "
         + takePrefix storeDir pkg.out)
       (if elem pkg seen then seen else
-      foldl' (seen: d: sst seen (ind + "  ") d pkg.spec.depends.${d})
+      foldl' (seen: d: sst seen (ind + "  ") d pkg.spec.deptypes.${d} or null pkg.spec.depends.${d})
         (seen ++ [pkg])
         (attrNames pkg.spec.depends));
-    in pkgs: length (foldl' (seen: sst seen "" null) [] (toList pkgs));
+    in pkgs: length (foldl' (seen: sst seen "" null null) [] (toList pkgs));
 }
