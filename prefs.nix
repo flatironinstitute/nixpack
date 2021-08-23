@@ -30,6 +30,10 @@
   spackPython = "/usr/bin/python3";
   spackPath = "/bin:/usr/bin";
 
+  /* print build logs during spack bulids (to be captured by nix).
+     regardless, spack also keeps logs in .spack */
+  logs = false;
+
   repoPatch = {
     /* updates or additions to the spack repo (see patch/default.nix)
     package = [spec: [old:]] {

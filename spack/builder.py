@@ -18,15 +18,16 @@ spec = nixpack.NixSpec.get(nixspec, nixpack.getVar('out'))
 spec.concretize()
 
 pkg = spec.package
-print(spec.tree(cover='edges', format=spack.spec.default_format + ' {/hash}'))
+print(spec.tree(cover='edges', format=spack.spec.default_format + ' {/hash}', show_types=True))
 
 opts = {
         'install_deps': False,
-        'verbose': False,
+        'verbose': not not nixpack.getVar('verbose'),
         'tests': spec.tests,
     }
 
 # package-specific fixes
+os.environ['CCACHE_DISABLE'] = '1'
 if 'go' in spec._dependencies:
     # move go cache to tmp
     os.environ['GOCACHE'] = os.path.join(os.environ['TMPDIR'], 'go-cache')
@@ -53,9 +54,6 @@ for pn, pa in zip(pkg.phases, pkg._InstallPhase_phases):
 
 # do the actual install
 spack.installer.build_process(pkg, opts)
-
-# cleanup spack logs (to avoid spurious references)
-#shutil.rmtree(pkg.metadata_dir)
 
 # we do this even if not testing as it may create more things (e.g., perl "extensions")
 os.environ.clear()

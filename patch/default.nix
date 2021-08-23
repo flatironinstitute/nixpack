@@ -2,11 +2,6 @@
 lib:
 let
   nocompiler = spec: old: { depends = old.depends or {} // { compiler = null; }; };
-  noccache = {
-    build = {
-      CCACHE_DISABLE = true;
-    };
-  };
 in
 {
   /* compiler pseudo-virtual */
@@ -64,9 +59,6 @@ in
       enable_pixbuf_loader = "no";
     };
   };
-
-  jsoncpp = noccache;
-  py-torch = noccache;
 
   /* some things don't use a compiler */
   intel = nocompiler;

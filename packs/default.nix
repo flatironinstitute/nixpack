@@ -64,6 +64,7 @@ packsWithPrefs =
   , spackConfig ? {}
   , spackPython ? "/usr/bin/python3"
   , spackPath ? "/bin:/usr/bin"
+  , logs ? false
   , repoPatch ? {}
   , global ? {}
   , package ? {}
@@ -256,6 +257,7 @@ lib.fix (packs: with packs; {
         else spackBuilder ({
           args = [../spack/builder.py];
           inherit name;
+          verbose = logs;
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
         } // desc.build) // {
