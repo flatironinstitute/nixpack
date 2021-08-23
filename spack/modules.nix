@@ -20,4 +20,4 @@ packs.spackBuilder ({
   inherit name modtype;
 } // builtins.mapAttrs (name: builtins.toJSON) jsons // {
   passAsFile = builtins.attrNames jsons;
-})
+}) // jsons

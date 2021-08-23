@@ -5,6 +5,10 @@ let
 
 lib = rootPacks.lib;
 
+isLDep = builtins.elem "link";
+isRDep = builtins.elem "run";
+isRLDep = d: isLDep d || isRDep d;
+
 rootPacks = import ./packs {
   system = builtins.currentSystem;
   inherit target;
@@ -34,7 +38,7 @@ rootPacks = import ./packs {
       mpi = false;
     };
     resolver = deptype:
-      if builtins.elem "link" deptype
+      if isRLDep deptype
         then null else rootPacks;
   };
   sets = {
@@ -400,7 +404,7 @@ withPython = packs: py: let
     */
   ifHasPy = p: o: name: prefs:
     let q = p.getResolver name prefs; in
-    if builtins.any (p: p.spec.name == "python") (lib.findDeps (x: builtins.elem "run" x.deptype || builtins.elem "link" x.deptype) q)
+    if builtins.any (p: p.spec.name == "python") (lib.findDeps (x: isRLDep x.deptype) q)
       then q
       else o.getResolver name prefs;
   pyPrefs = resolver: {
@@ -414,7 +418,7 @@ withPython = packs: py: let
   rootRes = ifHasPy rootPyPacks rootPacks;
   rootPyPacks = rootPacks.withPrefs (pyPrefs (deptype: rootRes));
   pyPacks = packs.withPrefs (pyPrefs 
-    (deptype: if builtins.elem "link" deptype
+    (deptype: if isRLDep deptype
       then ifHasPy pyPacks packs
       else rootRes));
   in pyPacks;
@@ -429,7 +433,7 @@ forPythons = packs: gen:
     map defaulting (gen pyPacks)
   ) pythons;
 
-pyView = pl: rootPacks.pythonView { pkgs = lib.findDeps (x: builtins.elem "run" x.deptype) pl; };
+pyView = pl: rootPacks.pythonView { pkgs = lib.findDeps (x: isRDep x.deptype) pl; };
 
 blasVirtuals = blas: {
   blas      = blas;
@@ -654,9 +658,18 @@ modpkgs =
   ++
   ### CLANG LIBCPP ###
   (let
-    clangPacks = rootPacks.withCompiler {
-      name = "llvm";
-      variants = { clanglibcpp = true; };
+    clangPacks = rootPacks.withPrefs {
+      package = {
+        compiler = {
+          name = "llvm";
+          resolver = rootPacks;
+        };
+      };
+      global = {
+        variants = {
+          clanglibcpp = true;
+        };
+      };
     };
   in with clangPacks.pkgs; [
     boost
@@ -772,5 +785,7 @@ rootPacks // {
 
   };
 
-  allSpecs = lib.traceSpecTree (builtins.filter (p: p ? spec) modpkgs);
+  allSpecs = lib.traceSpecTree (builtins.concatMap (p:
+    let q = p.pkg or p; in
+    q.pkgs or (if q ? spec then [q] else [])) modpkgs);
 }
