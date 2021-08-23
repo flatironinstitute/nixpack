@@ -1,0 +1,70 @@
+#!/bin/sh -e
+
+. ./env
+nixfile=fi.nix
+
+traceSpecs() {
+	nix-instantiate --eval -A "$1" $nixfile |& sed 's/^trace: //'
+}
+
+release() {
+	profile=$1 ; shift
+	nix-env -p $NIX_STATE_DIR/profiles/system/$1 -i -f $nixfile "$@"
+}
+
+if [[ $# -eq 0 ]] ; then
+	cmd=help
+else
+	cmd="$1"
+	shift
+fi
+case "$cmd" in
+	(build)
+		exec nix-build --show-trace "$@" -A mods $nixfile
+		;;
+	(spec)
+		if [[ $# -eq 0 ]] ; then
+			traceSpecs traceModSpecs
+		else
+			for p in "$@" ; do
+				traceSpecs "traceSpecs.$p"
+			done
+		fi
+		;;
+	(gc)
+		exec nix-store --gc
+		;;
+	(release)
+		case "$1" in
+			(nix)
+				release nix -A nixpkgs.nix -A pkgs.git
+				;;
+			(|modules|nixpack)
+				release nixpack -A mods
+				;;
+			(*)
+				echo "Unknown release"
+				;;
+		esac
+		;;
+	(*)
+		if [[ $cmd != help ]] ; then
+			echo "Unknown command"
+		fi
+
+		cat <<EOF
+Usage: $0 COMMAND
+
+Commands:
+  
+  build        Build modules into result.  Takes the same arguments as
+               nix-build (-jN, --cores M, -K, ...).
+  spec [PKG]   Print the spec tree for a specific package or all modules,
+	       along with the total number of unique packages.
+  gc           Cleanup any unreferenced nix stores (nix-store --gc).
+  release      Publish a release profile for...
+    modules    (default)
+    nix        
+
+EOF
+esac
