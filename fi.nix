@@ -782,7 +782,7 @@ rootPacks // {
 
   };
 
-  allSpecs = lib.traceSpecTree (builtins.concatMap (p:
+  traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = p.pkg or p; in
     q.pkgs or (if q ? spec then [q] else [])) modpkgs);
 }

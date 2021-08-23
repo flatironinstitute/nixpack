@@ -334,6 +334,9 @@ lib.fix (packs: with packs; {
   /* fully applied resolved packages with default preferences */
   pkgs = builtins.mapAttrs (name: res: res (getPackagePrefs name)) resolvers;
 
+  /* debugging to show package spec */
+  traceSpecs = builtins.mapAttrs (name: lib.traceSpecTree) pkgs;
+
   /* child packs sets with different preferences */
   sets = parent.sets or { root = packs; } //
     builtins.mapAttrs (name: set: packs.withPrefs

@@ -144,3 +144,8 @@ You could specify more extern packages in bootstrap to speed up bootstrapping.
 You could also add additional bootstrap layers by setting the bootstrap compiler `resolver` to a different set.
 It's also possible to specify `resolver` for other packages.
 Each of these can be set to the name of a set, an already-constructed `packs`, or a function to resolve packages.
+
+# Flatiron Specific
+
+The script `fi` can help with common tasks.
+You can source `env` to setup a build environment.
