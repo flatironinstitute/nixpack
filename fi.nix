@@ -3,13 +3,14 @@
 
 let
 
-lib = rootPacks.lib;
+lib = corePacks.lib;
 
 isLDep = builtins.elem "link";
 isRDep = builtins.elem "run";
 isRLDep = d: isLDep d || isRDep d;
 
-rootPacks = import ./packs {
+corePacks = import ./packs {
+  label = "core";
   system = builtins.currentSystem;
   inherit target;
   os = "centos7";
@@ -39,7 +40,7 @@ rootPacks = import ./packs {
     };
     resolver = deptype:
       if isRLDep deptype
-        then null else rootPacks;
+        then null else corePacks;
   };
   sets = {
     bootstrap = {
@@ -115,6 +116,7 @@ rootPacks = import ./packs {
       extern = "/usr";
       version = "2.11";
     };
+    python = builtins.head pythons;
     mpi = "openmpi";
     openmpi = {
       version = "4.0";
@@ -203,21 +205,6 @@ rootPacks = import ./packs {
     };
     llvm = {
       version = "10";
-      /*
-      buildResolver = rootPacks;
-    };
-    meson = {
-      buildResolver = rootPacks;
-    };
-    ninja = {
-      buildResolver = rootPacks;
-    };
-    z3 = {
-      buildResolver = rootPacks;
-    };
-    rdma-core = {
-      buildResolver = rootPacks;
-      */
     };
     hdf5 = {
       version = "1.10";
@@ -367,6 +354,15 @@ compilers = [
   # intel?
 ];
 
+forCompilers = packs: gen:
+  builtins.concatMap (compiler:
+    let
+      isCore = compiler == coreCompiler;
+      compPacks = if isCore then packs else
+        packs.withCompiler compiler;
+    in gen compPacks
+  ) compilers;
+
 mpis = [
   { name = "openmpi"; }
   { name = "openmpi";
@@ -408,6 +404,7 @@ withPython = packs: py: let
       then q
       else o.getResolver name prefs;
   pyPrefs = resolver: {
+    label = "${packs.label}.python";
     package = {
       python = py;
     };
@@ -415,25 +412,25 @@ withPython = packs: py: let
       inherit resolver;
     };
   };
-  rootRes = ifHasPy rootPyPacks rootPacks;
-  rootPyPacks = rootPacks.withPrefs (pyPrefs (deptype: rootRes));
+  coreRes = ifHasPy corePyPacks corePacks;
+  corePyPacks = corePacks.withPrefs (pyPrefs (deptype: coreRes));
   pyPacks = packs.withPrefs (pyPrefs 
     (deptype: if isRLDep deptype
       then ifHasPy pyPacks packs
-      else rootRes));
+      else coreRes));
   in pyPacks;
 
 forPythons = packs: gen:
   builtins.concatMap (py:
     let
       isCorePy = py == builtins.head pythons;
-      pyPacks = if isCorePy then packs else withPython packs py;
+      pyPacks = withPython packs py;
       defaulting = pkg: { default = isCorePy; inherit pkg; };
     in
     map defaulting (gen pyPacks)
   ) pythons;
 
-pyView = pl: rootPacks.pythonView { pkgs = lib.findDeps (x: isRDep x.deptype) pl; };
+pyView = pl: corePacks.pythonView { pkgs = lib.findDeps (x: isRDep x.deptype) pl; };
 
 blasVirtuals = blas: {
   blas      = blas;
@@ -444,7 +441,7 @@ blasVirtuals = blas: {
 cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
 
 modpkgs =
-  (with rootPacks.pkgs; [
+  (with corePacks.pkgs; [
     slurm
     (llvm.withPrefs { version = "10"; })
     (llvm.withPrefs { version = "11"; })
@@ -518,16 +515,9 @@ modpkgs =
     ["R2018a" "R2018b" "R2020a" "R2021a"])
   ++
   ### COMPILERS ###
-  builtins.concatMap (compiler:
-    let
-      isCore = compiler == coreCompiler;
-      ifCore = lib.optionals isCore;
-      compPacks = if isCore then rootPacks else
-        rootPacks.withCompiler compiler;
-    in
-    [ { pkg = rootPacks.getPackage compiler; default = isCore; } ]
-    ++
+  forCompilers corePacks (compPacks:
     (with compPacks.pkgs; [
+      { pkg = compPacks.pkgs.compiler; default = compPacks.label == "core"; }
       boost
       eigen
       (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
@@ -591,11 +581,11 @@ modpkgs =
         hdf5
         osu-micro-benchmarks
       ] ++
-      (ifCore (ifOpenmpi [
+      lib.optionals (compPacks.label == "core") (ifOpenmpi [
         # these are broken with intel...
         gromacs
         relion
-      ]) ++ [
+      ] ++ [
         ior
         petsc
         valgrind
@@ -645,8 +635,9 @@ modpkgs =
           py-numba
           #py-pyqt5 #install broken: tries to install plugins/designer to qt
         ])
-        (let mklPacks = pyPacks.withPrefs # XXX updating pyPacks isn't quite right
-          { package = blasVirtuals "intel-mkl"; }; # intel-oneapi-mkl not supported
+        (let mklPacks = withPython (compPacks.withPrefs # invert py/mkl prefs
+          { package = blasVirtuals "intel-mkl"; }) # intel-oneapi-mkl not supported
+          pyPacks.prefs.package.python;
         in
         # replaces python-blas-backend
         mklPacks.pythonView { pkgs = with mklPacks.pkgs; [
@@ -654,20 +645,20 @@ modpkgs =
           py-scipy
         ]; })
       ])
-  ) compilers
+  )
   ++
   ### CLANG LIBCPP ###
   (let
-    clangPacks = rootPacks.withPrefs {
+    clangPacks = corePacks.withPrefs {
       package = {
         compiler = {
           name = "llvm";
-          resolver = rootPacks;
+          resolver = corePacks;
         };
-      };
-      global = {
-        variants = {
-          clanglibcpp = true;
+        boost = {
+          variants = {
+            clanglibcpp = true;
+          };
         };
       };
     };
@@ -676,7 +667,7 @@ modpkgs =
   ])
   ++
   ### NIXPKGS ###
-  map (p: builtins.parseDrvName p.name // { prefix = p; }) (with rootPacks.nixpkgs; [
+  map (p: builtins.parseDrvName p.name // { prefix = p; }) (with corePacks.nixpkgs; [
     #nix
     #vscode
   ])
@@ -694,9 +685,9 @@ modpkgs =
 
 in
 
-rootPacks // {
-  mods = rootPacks.modules {
-    coreCompilers = map (p: p.pkgs.compiler) [rootPacks rootPacks.sets.bootstrap];
+corePacks // {
+  mods = corePacks.modules {
+    coreCompilers = map (p: p.pkgs.compiler) [corePacks corePacks.sets.bootstrap];
     config = {
       hierarchy = ["mpi"];
       hash_length = 0;

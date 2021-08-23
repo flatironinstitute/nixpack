@@ -59,7 +59,7 @@ packsWithPrefs =
   , os ? "unknown"
   , target ? builtins.head (lib.splitRegex "-" system)
   , platform ? builtins.elemAt (lib.splitRegex "-" system) 1
-  , label ? "root"
+  , label ? "packs"
   , spackSrc ? {}
   , spackConfig ? {}
   , spackPython ? "/usr/bin/python3"
@@ -76,7 +76,10 @@ lib.fix (packs: with packs; {
   prefs = packPrefs;
   inherit system os target platform label;
   withPrefs = p: packsWithPrefs (lib.recursiveUpdate
-    (builtins.removeAttrs packPrefs ["sets"] // { parent = packs; }) p);
+    (builtins.removeAttrs packPrefs ["label" "sets"] // {
+      label = "${label}.withPrefs";
+      parent = packs;
+    }) p);
 
   spack = if builtins.isString spackSrc then spackSrc else
     builtins.fetchGit ({ name = "spack"; url = "git://github.com/spack/spack"; } // spackSrc);
