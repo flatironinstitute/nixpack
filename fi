@@ -39,7 +39,7 @@ case "$cmd" in
 			(nix)
 				release nix -A nixpkgs.nix -A pkgs.git
 				;;
-			(|modules|nixpack)
+			(modules|nixpack|"")
 				release nixpack -A mods
 				;;
 			(*)
