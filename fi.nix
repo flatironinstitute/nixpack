@@ -711,6 +711,7 @@ rootPacks // {
         "openblas threads=pthreads" = "{name}/{version}-threaded";
         "openmpi-opa" = "{name}/{^openmpi.version}";
         "py-numpy^intel-mkl" = "python-mkl/{^python.version}";
+        "py-mpi4py" = "python-mpi/{^python.version}";
         "py-setuptools" = "python/{^python.version}"; # autoload redirect
         "slurm" = "{name}/current";
         "modules-traditional" = "{name}";
@@ -734,13 +735,6 @@ rootPacks // {
         environment = {
           set = {
             OPENMPI_VERSION = "{version}";
-          };
-        };
-      };
-      openmpi-opa = {
-        environment = {
-          set = {
-            OMPI_MCA_pml = "cm";
           };
         };
       };
@@ -774,6 +768,9 @@ rootPacks // {
         };
       };
       py-numpy = {
+        autoload = "direct";
+      };
+      py-mpi4py = {
         autoload = "direct";
       };
       openmpi-opa = {
