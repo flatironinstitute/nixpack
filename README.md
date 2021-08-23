@@ -54,7 +54,7 @@ example = {
     virtual = "2:";
   };
   paths = {}; # paths to tools provided by this package (like cc)
-  patches = []; # patchs to extra patches to apply
+  patches = []; # extra patches to apply (in addition to those in spack)
   conflicts = []; # any conflicts (non-empty means invalid)
 };
 ```
@@ -94,7 +94,7 @@ example = {
       ...
     };
   };
-  patches = []; # patchs to extra patches to apply
+  patches = []; # extra patches to apply (in additon to those in the descriptor)
   extern = "/opt/local/mypackage"; # a prefix string or derivation (e.g., nixpkgs package) for an external installation (overrides depends)
   fixedDeps = false; # only use user preferences to resolve dependencies (see prefs.nix)
   resolver = "set"; # name of set to use to resolve dependencies
@@ -137,7 +137,7 @@ You can also dynamically create new sets using `packs.withPrefs { .. }`.
 ### Bootstrapping
 
 The default compiler specifies `resolver = "bootstrap"` which means that all dependencies for the compiler package will be resolved using `sets.bootstrap` preferences.
-These preferences in turn specify a compiler with `extern` set, i.e., one from the base system.
+These preferences in turn specify a compiler with `extern` set, i.e., one from the host system.
 This compiler is used to build any other bootstrap packages, which are then used to build the main compiler.
 You could specify more extern packages in bootstrap to speed up bootstrapping.
 

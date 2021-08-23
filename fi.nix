@@ -591,7 +591,7 @@ modpkgs =
         hdf5
         osu-micro-benchmarks
       ] ++
-      ifCore (ifOpenmpi [
+      (ifCore (ifOpenmpi [
         # these are broken with intel...
         gromacs
         relion
@@ -599,7 +599,7 @@ modpkgs =
         ior
         petsc
         valgrind
-      ])
+      ]))
       ++
       forPythons mpiPacks (pyPacks:
         [ (pyPacks.pythonView { pkgs = with pyPacks.pkgs; [
