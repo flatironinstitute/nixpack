@@ -366,7 +366,7 @@ lib.fix (packs: with packs; {
 
   modules = import ../spack/modules.nix packs;
 
-  nixpkgs = import ../nixpkgs target;
+  nixpkgs = import ../nixpkgs { inherit system target; };
 });
 
 in packsWithPrefs

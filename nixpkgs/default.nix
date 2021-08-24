@@ -1,4 +1,6 @@
-target:
+{ system ? builtins.currentSystem
+, target ? builtins.head (builtins.split "-" system)
+}:
 
 let
 
@@ -10,7 +12,7 @@ nixpkgs = fetchGit {
 
 args = {
   localSystem = {
-    system = builtins.currentSystem;
+    inherit system;
     gcc = { arch = target; };
   };
   config = {

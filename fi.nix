@@ -460,7 +460,9 @@ mkPythons = base: gen:
     { version = "3.9"; }
   ];
 
-pyView = pl: corePacks.pythonView { pkgs = lib.findDeps (x: isRDep x.deptype) pl; };
+pyView = pl: corePacks.pythonView {
+  pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "py-" x.name) pl;
+};
 
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
@@ -617,7 +619,7 @@ pkgStruct = {
         py-hypothesis
         py-cython
         py-h5py
-        #py-torch # some strange argparse allow_abbrev issue
+        py-torch
         py-ipykernel
         py-pandas
         py-scikit-learn
