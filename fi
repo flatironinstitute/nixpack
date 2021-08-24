@@ -40,6 +40,8 @@ case "$cmd" in
 				release nix -A nixpkgs.nix -A pkgs.git
 				;;
 			(modules|nixpack|"")
+				nix-build -o singularity -A pkgs.singularity fi.nix
+				sudo singularity/bin/spack_perms_fix.sh
 				release nixpack -A mods
 				;;
 			(*)

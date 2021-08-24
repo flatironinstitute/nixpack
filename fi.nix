@@ -535,7 +535,6 @@ pkgStruct = {
   map (v: matlab.withPrefs
     { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; })
     ["R2018a" "R2018b" "R2020a" "R2021a"]
-
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
