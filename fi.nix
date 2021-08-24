@@ -563,7 +563,7 @@ pkgStruct = {
             [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
           ];
         };
-        depends = { mpi = corePacks.pkgs.openmpi; };
+        depends = { mpi = openmpi; };
       }
     ];
 
