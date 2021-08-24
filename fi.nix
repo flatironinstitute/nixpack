@@ -709,6 +709,25 @@ modPkgs = with pkgStruct;
   static
 ;
 
+jupyter-kernels = corePacks.view {
+  name = "jupyter-kernels";
+  pkgs = map (import jupyter/kernel corePacks) (
+    with pkgStruct;
+    builtins.concatMap (comp: with comp;
+      builtins.concatMap (py: with py;
+        let k = {
+          pkg = view;
+          prefix = "${py.packs.pkgs.python.name}-${py.packs.pkgs.compiler.name}";
+          note = "${lib.specName py.packs.pkgs.python.spec}%${lib.specName py.packs.pkgs.compiler.spec}";
+        }; in [
+          k
+          (k // { prefix = k.prefix + "-mkl"; note = k.note+"+mkl"; include = [mkl]; })
+        ]
+      ) pythons
+    ) compilers
+  );
+};
+
 in
 
 corePacks // {
@@ -800,6 +819,8 @@ corePacks // {
     pkgs = modPkgs;
 
   };
+
+  inherit jupyter-kernels;
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = getPkg p; in
