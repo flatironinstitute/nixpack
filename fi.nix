@@ -116,7 +116,7 @@ corePacks = import ./packs {
       extern = "/usr";
       version = "2.11";
     };
-    python = builtins.head pythons;
+    python = corePython;
     mpi = "openmpi";
     openmpi = {
       version = "4.0";
@@ -343,55 +343,81 @@ corePacks = import ./packs {
   // blasVirtuals "openblas";
 };
 
+blasVirtuals = blas: {
+  blas      = blas;
+  lapack    = blas;
+  scalapack = blas;
+};
+
+cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
+
 coreCompiler = {
   name = "gcc";
   resolver = "bootstrap";
 };
 
-compilers = [
-  coreCompiler
-  { name = "gcc"; version = "10.2"; }
-  # intel?
-];
+mkCompilers = base: gen:
+  builtins.map (compiler: gen (rec {
+    inherit compiler;
+    isCore = compiler == coreCompiler;
+    packs = if isCore then base else
+      base.withCompiler compiler;
+    defaulting = pkg: { default = isCore; inherit pkg; };
+  }))
+  [
+    coreCompiler
+    { name = "gcc"; version = "10.2"; }
+    # intel?
+  ];
 
-forCompilers = packs: gen:
-  builtins.concatMap (compiler:
-    let
-      isCore = compiler == coreCompiler;
-      compPacks = if isCore then packs else
-        packs.withCompiler compiler;
-    in gen compPacks
-  ) compilers;
-
-mpis = [
-  { name = "openmpi"; }
-  { name = "openmpi";
-    version = "2.1";
-    variants = {
-      # openmpi 2 on ib reports: "unknown link width 0x10" and is a bit slow
-      fabrics = {
-        ucx = false;
+mkMpis = base: gen:
+  builtins.map (mpi: gen {
+    inherit mpi;
+    packs = base.withPrefs {
+      package = {
+        inherit mpi;
       };
-      internal-hwloc = true;
-    };
-  }
-  { name = "openmpi";
-    version = "1.10";
-    variants = {
-      fabrics = {
-        ucx = false;
+      global = {
+        variants = {
+          mpi = true;
+        };
       };
-      internal-hwloc = true;
+      package = {
+        fftw = {
+          variants = {
+            precision = {
+              quad = false;
+            };
+          };
+        };
+      };
     };
-  }
-  { name = "intel-oneapi-mpi"; }
-  { name = "intel-mpi"; }
-];
-
-pythons = [
-  { version = "3.8"; }
-  { version = "3.9"; }
-];
+    isOpenmpi = mpi.name == "openmpi";
+  })
+  [
+    { name = "openmpi"; }
+    { name = "openmpi";
+      version = "2.1";
+      variants = {
+        # openmpi 2 on ib reports: "unknown link width 0x10" and is a bit slow
+        fabrics = {
+          ucx = false;
+        };
+        internal-hwloc = true;
+      };
+    }
+    { name = "openmpi";
+      version = "1.10";
+      variants = {
+        fabrics = {
+          ucx = false;
+        };
+        internal-hwloc = true;
+      };
+    }
+    { name = "intel-oneapi-mpi"; }
+    { name = "intel-mpi"; }
+  ];
 
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
@@ -420,28 +446,24 @@ withPython = packs: py: let
       else coreRes));
   in pyPacks;
 
-forPythons = packs: gen:
-  builtins.concatMap (py:
-    let
-      isCorePy = py == builtins.head pythons;
-      pyPacks = withPython packs py;
-      defaulting = pkg: { default = isCorePy; inherit pkg; };
-    in
-    map defaulting (gen pyPacks)
-  ) pythons;
+corePython = { version = "3.8"; };
+
+mkPythons = base: gen:
+  builtins.map (python: gen (rec {
+    inherit python;
+    isCore = python == corePython;
+    packs = withPython base python;
+    defaulting = pkg: { default = isCore; inherit pkg; };
+  }))
+  [
+    corePython
+    { version = "3.9"; }
+  ];
 
 pyView = pl: corePacks.pythonView { pkgs = lib.findDeps (x: isRDep x.deptype) pl; };
 
-blasVirtuals = blas: {
-  blas      = blas;
-  lapack    = blas;
-  scalapack = blas;
-};
-
-cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
-
-modpkgs =
-  (with corePacks.pkgs; [
+pkgStruct = {
+  pkgs = with corePacks.pkgs; [
     slurm
     (llvm.withPrefs { version = "10"; })
     (llvm.withPrefs { version = "11"; })
@@ -512,12 +534,13 @@ modpkgs =
   ++
   map (v: matlab.withPrefs
     { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; })
-    ["R2018a" "R2018b" "R2020a" "R2021a"])
-  ++
-  ### COMPILERS ###
-  forCompilers corePacks (compPacks:
-    (with compPacks.pkgs; [
-      { pkg = compPacks.pkgs.compiler; default = compPacks.label == "core"; }
+    ["R2018a" "R2018b" "R2020a" "R2021a"]
+
+  ;
+
+  compilers = mkCompilers corePacks (comp: comp // {
+    pkgs = with comp.packs.pkgs; [
+      (comp.defaulting compiler)
       boost
       eigen
       (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
@@ -540,140 +563,113 @@ modpkgs =
             [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
           ];
         };
-        depends = { mpi = compPacks.pkgs.openmpi; };
+        depends = { mpi = corePacks.pkgs.openmpi; };
       }
-    ])
-    ++
+    ];
 
-    ### MPIS ###
-    builtins.concatMap (mpi:
-      let
-        mpiPacks = compPacks.withPrefs {
-          package = {
-            inherit mpi;
-          };
-          global = {
-            variants = {
-              mpi = true;
-            };
-          };
-          package = {
-            fftw = {
-              variants = {
-                precision = {
-                  quad = false;
-                };
-              };
-            };
-          };
-        };
-        isOpenmpi = mpi.name == "openmpi";
-        ifOpenmpi = lib.optionals isOpenmpi;
-      in
-      ifOpenmpi # others are above, compiler-independent
-        [ (compPacks.getPackage mpi) ]
-      ++
-      (with mpiPacks.pkgs; [
-        boost
-        (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; }; }; })
-        fftw
-        (hdf5.withPrefs { version = ":1.8"; })
-        hdf5
-        osu-micro-benchmarks
-      ] ++
-      lib.optionals (compPacks.label == "core") (ifOpenmpi [
-        # these are broken with intel...
-        gromacs
-        relion
-      ] ++ [
-        ior
-        petsc
-        valgrind
-      ]))
-      ++
-      forPythons mpiPacks (pyPacks:
-        [ (pyPacks.pythonView { pkgs = with pyPacks.pkgs; [
-            py-mpi4py
-            py-h5py
-          ]; })
-        ])
-      ) mpis
-    ++
+    mpis = mkMpis comp.packs (mpi: mpi // {
+      pkgs = with mpi.packs.pkgs;
+        lib.optionals mpi.isOpenmpi [ mpi.packs.pkgs.mpi ] # others are above, compiler-independent
+        ++ [
+          boost
+          (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; }; }; })
+          fftw
+          (hdf5.withPrefs { version = ":1.8"; })
+          hdf5
+          osu-micro-benchmarks
+        ] ++
+        lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
+          # these are broken with intel...
+          gromacs
+          relion
+        ] ++ [
+          ior
+          petsc
+          valgrind
+        ]);
 
-    ### PYTHONS ###
-    forPythons compPacks (pyPacks:
-      [ (with pyPacks.pkgs; pyView [
-          python
-          py-cherrypy
-          py-flask
-          py-pip
-          py-ipython
-          py-pyyaml
-          py-pylint
-          py-autopep8
-          py-sqlalchemy
-          py-nose
-          py-mako
-          py-pkgconfig
-          py-virtualenv
-          py-sympy
-          py-pycairo
-          py-sphinx
-          py-pytest
-          py-hypothesis
-          py-cython
+      pythons = mkPythons mpi.packs (py: py // {
+        view = py.packs.pythonView { pkgs = with py.packs.pkgs; [
+          py-mpi4py
           py-h5py
-          #py-torch # some strange argparse allow_abbrev issue
-          py-ipykernel
-          py-pandas
-          py-scikit-learn
-          py-emcee
-          py-astropy
-          py-dask
-          py-seaborn
-          py-matplotlib
-          py-numba
-          #py-pyqt5 #install broken: tries to install plugins/designer to qt
-        ])
-        (let mklPacks = withPython (compPacks.withPrefs # invert py/mkl prefs
-          { package = blasVirtuals "intel-mkl"; }) # intel-oneapi-mkl not supported
-          pyPacks.prefs.package.python;
+        ]; };
+      });
+    });
+
+    pythons = mkPythons comp.packs (py: py // {
+      view = with py.packs.pkgs; pyView [
+        python
+        py-cherrypy
+        py-flask
+        py-pip
+        py-ipython
+        py-pyyaml
+        py-pylint
+        py-autopep8
+        py-sqlalchemy
+        py-nose
+        py-mako
+        py-pkgconfig
+        py-virtualenv
+        py-sympy
+        py-pycairo
+        py-sphinx
+        py-pytest
+        py-hypothesis
+        py-cython
+        py-h5py
+        #py-torch # some strange argparse allow_abbrev issue
+        py-ipykernel
+        py-pandas
+        py-scikit-learn
+        py-emcee
+        py-astropy
+        py-dask
+        py-seaborn
+        py-matplotlib
+        py-numba
+        #py-pyqt5 #install broken: tries to install plugins/designer to qt
+      ];
+      mkl = 
+        let
+          mklPacks = withPython (comp.packs.withPrefs # invert py/mkl prefs
+              { package = blasVirtuals "intel-mkl"; }) # intel-oneapi-mkl not supported
+            py.python;
         in
         # replaces python-blas-backend
         mklPacks.pythonView { pkgs = with mklPacks.pkgs; [
           py-numpy
           py-scipy
-        ]; })
-      ])
-  )
-  ++
-  ### CLANG LIBCPP ###
-  (let
-    clangPacks = corePacks.withPrefs {
-      package = {
-        compiler = {
-          name = "llvm";
-          resolver = corePacks;
-        };
-        boost = {
-          variants = {
-            clanglibcpp = true;
+        ]; };
+    });
+  });
+
+  clangcpp =
+    let
+      clangPacks = corePacks.withPrefs {
+        package = {
+          compiler = {
+            name = "llvm";
+            resolver = corePacks;
+          };
+          boost = {
+            variants = {
+              clanglibcpp = true;
+            };
           };
         };
       };
-    };
-  in with clangPacks.pkgs; [
-    boost
-  ])
-  ++
-  ### NIXPKGS ###
-  map (p: builtins.parseDrvName p.name // { prefix = p; }) (with corePacks.nixpkgs; [
+    in with clangPacks.pkgs; [
+      boost
+    ];
+
+  nixpkgs = with corePacks.nixpkgs; [
     #nix
     #vscode
-  ])
-  ++
-  ### STATIC/META ###
-  [
+  ];
+
+  static = [
+
     { name = "modules-traditional";
       static = {
         short_description = "Make old modules available";
@@ -682,6 +678,35 @@ modpkgs =
       };
     }
   ];
+
+};
+
+getPkg = p: p.pkg or p;
+
+modPkgs = with pkgStruct;
+  pkgs
+  ++
+  builtins.concatMap (comp: with comp;
+    pkgs
+    ++
+    builtins.concatMap (mpi: with mpi;
+      pkgs
+      ++
+      builtins.map (py: py.defaulting py.view) pythons
+    ) mpis
+    ++
+    builtins.concatMap (py: with py;
+      map defaulting [ view mkl ]
+    ) pythons
+  ) compilers
+  ++
+  clangcpp
+  ++
+  map (p: builtins.parseDrvName p.name // { prefix = p; })
+    nixpkgs
+  ++
+  static
+;
 
 in
 
@@ -769,11 +794,11 @@ corePacks // {
       };
     };
 
-    pkgs = modpkgs;
+    pkgs = modPkgs;
 
   };
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
-    let q = p.pkg or p; in
-    q.pkgs or (if q ? spec then [q] else [])) modpkgs);
+    let q = getPkg p; in
+    q.pkgs or (if q ? spec then [q] else [])) modPkgs);
 }

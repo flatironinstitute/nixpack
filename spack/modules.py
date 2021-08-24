@@ -64,7 +64,7 @@ class FakeSpec(nixpack.NixSpec):
 
 class ModSpec:
     def __init__(self, p):
-        if isinstance(p, str) or 'extern' in p:
+        if isinstance(p, str) or 'spec' in p:
             self.pkg = p
             p = {}
         else:
