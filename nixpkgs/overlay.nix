@@ -9,7 +9,6 @@ with pkgs;
   });
 
   nix = (nix.override {
-    withLibseccomp = false;
     withAWS = false;
   }).overrideAttrs (old: {
     doInstallCheck = false;

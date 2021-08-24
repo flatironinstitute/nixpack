@@ -664,7 +664,7 @@ pkgStruct = {
     ];
 
   nixpkgs = with corePacks.nixpkgs; [
-    #nix
+    nix
     #vscode
   ];
 
@@ -711,6 +711,8 @@ modPkgs = with pkgStruct;
 in
 
 corePacks // {
+  inherit pkgStruct;
+
   mods = corePacks.modules {
     coreCompilers = map (p: p.pkgs.compiler) [corePacks corePacks.sets.bootstrap];
     config = {

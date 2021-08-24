@@ -9,7 +9,7 @@ traceSpecs() {
 
 release() {
 	profile=$1 ; shift
-	nix-env -p $NIX_STATE_DIR/profiles/system/$1 -i -f $nixfile "$@"
+	nix-env -p $NIX_STATE_DIR/profiles/system/$profile -i -f $nixfile "$@"
 }
 
 if [[ $# -eq 0 ]] ; then
