@@ -464,6 +464,150 @@ pyView = pl: { pkgs ? [], ... } @ args: corePacks.pythonView (args // {
   pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "py-" x.name) pl ++ pkgs;
 });
 
+rView = corePacks.view {
+  pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "r-" x.name) (with corePacks.pkgs; [
+    r
+    r-irkernel
+    r-annotationdbi
+    r-bh
+    r-bsgenome
+    r-biasedurn
+    r-biocinstaller
+    r-biocmanager
+    r-deseq2
+    r-dt
+    #r-diffbind
+    r-formula
+    r-gostats
+    r-gseabase
+    r-genomicalignments
+    r-genomicfeatures
+    r-genomicranges
+    r-iranges
+    r-keggrest
+    r-rbgl
+    r-rcurl
+    r-r-methodss3
+    #r-rsoo
+    #r-rsutils
+    r-rcpparmadillo
+    r-rcppeigen
+    #r-rcppgsl
+    r-rhdf5lib
+    r-rsamtools
+    r-rtsne
+    r-tfmpvalue
+    r-vgam
+    #r-venndiagram
+    r-acepack
+    r-ade4
+    r-askpass
+    r-assertthat
+    r-backports
+    r-biomart
+    r-biomformat
+    r-bit64
+    r-bitops
+    r-blob
+    r-catools
+    r-callr
+    r-checkmate
+    r-cli
+    r-clipr
+    r-clisymbols
+    r-crosstalk
+    r-desc
+    r-devtools
+    r-dplyr
+    r-evaluate
+    r-formatr
+    r-fs
+    r-futile-logger
+    r-futile-options
+    r-gdata
+    r-genefilter
+    r-getopt
+    r-ggplot2
+    r-glmnet
+    r-glue
+    r-gplots
+    #r-grimport
+    r-gridextra
+    r-gtools
+    r-hexbin
+    r-highr
+    #r-huge
+    r-hms
+    r-htmltable
+    r-httpuv
+    #r-idr
+    r-igraph
+    r-ini
+    r-jpeg
+    r-knitr
+    r-lambda-r
+    r-later
+    r-lattice
+    r-latticeextra
+    r-lazyeval
+    r-limma
+    r-markdown
+    r-matrixstats
+    r-memoise
+    r-mime
+    r-miniui
+    r-multtest
+    #r-nabor
+    #r-pdsh
+    r-pheatmap
+    r-phyloseq
+    r-pkgbuild
+    r-pkgconfig
+    r-pkgload
+    r-plogr
+    r-plotly
+    r-png
+    r-polynom
+    r-powerlaw
+    r-preprocesscore
+    #r-preseqr
+    r-processx
+    r-progress
+    r-promises
+    r-ps
+    #r-pulsar
+    r-purrr
+    r-randomforest
+    r-rcmdcheck
+    r-readr
+    r-remotes
+    r-rlang
+    r-rprojroot
+    r-rstudioapi
+    r-rtracklayer
+    r-segmented
+    r-seqinr
+    r-sessioninfo
+    #r-sf #needs old proj
+    r-shape
+    r-shiny
+    r-snow
+    r-sourcetools
+    r-sys
+    r-tibble
+    r-tidyr
+    r-tidyselect
+    r-units
+    r-viridis
+    r-whisker
+    r-xfun
+    r-xopen
+    r-xtable
+    r-yaml
+    r-zlibbioc
+  ]);
+};
+
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
     slurm
@@ -511,8 +655,7 @@ pkgStruct = {
     perl
     petsc
     postgresql
-    r
-    #r-irkernel #r-credentials build broken...
+    rView
     rclone
     rust
     singularity
@@ -820,6 +963,13 @@ corePacks // {
       openmpi-opa = {
         autoload = "direct";
       };
+      r = {
+        environment = {
+          prepend_path = {
+            R_LIBS_SITE = "{prefix}/rlib/R/library";
+          };
+        };
+      };
     };
 
     pkgs = modPkgs;
@@ -831,4 +981,5 @@ corePacks // {
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = getPkg p; in
     q.pkgs or (if q ? spec then [q] else [])) modPkgs);
+
 }

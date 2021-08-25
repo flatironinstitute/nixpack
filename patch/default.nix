@@ -2,6 +2,13 @@
 lib:
 let
   nocompiler = spec: old: { depends = old.depends or {} // { compiler = null; }; };
+  tmphome = {
+    build = {
+      setup = ''
+        os.environ['HOME'] = os.environ['TMPDIR']
+      '';
+    };
+  };
 in
 {
   /* compiler pseudo-virtual */
@@ -67,6 +74,10 @@ in
       '';
     };
   };
+
+  /* tries to set ~/.gitconfig */
+  r-credentials = tmphome;
+  r-gert = tmphome;
 
   /* some things don't use a compiler */
   intel = nocompiler;
