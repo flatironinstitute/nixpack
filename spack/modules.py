@@ -62,6 +62,21 @@ class FakeSpec(nixpack.NixSpec):
     def package_class(self):
         return self._package
 
+class ConfigModule:
+    def __init__(self, module, projection=None):
+        self.module = module
+        self.projection = projection
+
+    def configuration(self, name):
+        conf = self.module.configuration(name)
+        if self.projection:
+            conf = conf.copy()
+            conf['projections'] = {'all': self.projection}
+        return conf
+
+    def __getattr__(self, attr):
+        return getattr(self.module, attr)
+
 class ModSpec:
     def __init__(self, p):
         if isinstance(p, str) or 'spec' in p:
@@ -81,6 +96,10 @@ class ModSpec:
         self.default = p.get('default', False)
         self.static = p.get('static', None)
         self.path = p.get('path', None)
+        self.environment = p.get('environment', {})
+        self.projection = p.get('projection')
+        self.autoload = p.get('autoload', [])
+        self.prerequisites = p.get('prerequisites', [])
 
     @property
     def writer(self):
@@ -89,6 +108,12 @@ class ModSpec:
         except AttributeError:
             self.spec.concretize()
             self._writer = cls(self.spec, name)
+            spack.modules.common.update_dictionary_extending_lists(
+                    self._writer.conf.conf.setdefault('environment', {}),
+                    self.environment)
+            self._writer.conf.module = ConfigModule(self._writer.conf.module, self.projection)
+            for t in ('autoload', 'prerequisites'):
+                self._writer.conf.conf[t].extend(map(nixpack.NixSpec.get, getattr(self, t)))
             return self._writer
 
     @property

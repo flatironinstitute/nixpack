@@ -5,8 +5,9 @@ packs:
 , pkgs /* packages to include, list of:
    pkg (spack derivation)
    { pkg = pkg; default = true; } (for default module)
-   { static = "content"; name = "name"; }
-   { static = { template variables }; name = "name"; }
+   { pkg = pkg; environment = { ... }; projection = "{name}/{version}"; } (overrides config)
+   { name = "name"; static = "content"; }
+   { name = "name"; static = { template variables }; }
    */
 , coreCompilers ? [packs.pkgs.compiler]
 }:

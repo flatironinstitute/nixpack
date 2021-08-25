@@ -610,7 +610,15 @@ rView = corePacks.view {
 
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
-    slurm
+    { pkg = slurm;
+      environment = {
+        set = {
+          CMD_WLM_CLUSTER_NAME = "slurm";
+          SLURM_CONF = "/cm/shared/apps/slurm/var/etc/slurm/slurm.conf";
+        };
+      };
+      projection = "{name}";
+    }
     (llvm.withPrefs { version = "10"; })
     (llvm.withPrefs { version = "11"; })
     (llvm.withPrefs { version = "12"; })
@@ -655,7 +663,13 @@ pkgStruct = {
     perl
     petsc
     postgresql
-    rView
+    { pkg = rView;
+      environment = {
+        prepend_path = {
+          R_LIBS_SITE = "{prefix}/rlib/R/library";
+        };
+      };
+    }
     rclone
     rust
     singularity
@@ -677,9 +691,15 @@ pkgStruct = {
     { version = v; extern = "/cm/shared/sw/pkg/vendor/mathematica/${v}"; })
     ["11.2" "11.3" "12.1" "12.2"]
   ++
-  map (v: matlab.withPrefs
-    { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; })
-    ["R2018a" "R2018b" "R2020a" "R2021a"]
+  map (v: {
+    pkg = matlab.withPrefs
+      { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; };
+    environment = {
+      set = {
+        MLM_LICENSE_FILE = "/cm/shared/sw/pkg/vendor/matlab/src/network.lic";
+      };
+    };
+  }) ["R2018a" "R2018b" "R2020a" "R2021a"]
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
@@ -689,15 +709,25 @@ pkgStruct = {
       eigen
       (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
       fftw
-      (gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; })
-      (gsl.withPrefs { depends = blasVirtuals "intel-oneapi-mkl"; })
+      { pkg = gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; };
+        projection = "{name}/{version}-openblas";
+      }
+      { pkg = gsl.withPrefs { depends = blasVirtuals "intel-oneapi-mkl"; };
+        projection = "{name}/{version}-mkl";
+      }
       (hdf5.withPrefs { version = ":1.8"; })
       hdf5
       magma
       nfft
-      (openblas.withPrefs { variants = { threads = "none"; }; })
-      (openblas.withPrefs { variants = { threads = "openmp"; }; })
-      (openblas.withPrefs { variants = { threads = "pthreads"; }; })
+      { pkg = openblas.withPrefs { variants = { threads = "none"; }; };
+        projection = "{name}/{version}-single";
+      }
+      { pkg = openblas.withPrefs { variants = { threads = "openmp"; }; };
+        projection = "{name}/{version}-openmp";
+      }
+      { pkg = openblas.withPrefs { variants = { threads = "pthreads"; }; };
+        projection = "{name}/{version}-threaded";
+      }
       pgplot
 
       { name = "openmpi-opa";
@@ -708,6 +738,7 @@ pkgStruct = {
           ];
         };
         depends = { mpi = openmpi; };
+        projection = "{name}/{^openmpi.version}";
       }
     ];
 
@@ -788,24 +819,24 @@ pkgStruct = {
     });
   });
 
-  clangcpp =
-    let
-      clangPacks = corePacks.withPrefs {
-        package = {
-          compiler = {
-            name = "llvm";
-            resolver = corePacks;
-          };
-          boost = {
-            variants = {
-              clanglibcpp = true;
-            };
+  clangcpp = rec {
+    packs = corePacks.withPrefs {
+      package = {
+        compiler = {
+          name = "llvm";
+          resolver = corePacks;
+        };
+        boost = {
+          variants = {
+            clanglibcpp = true;
           };
         };
       };
-    in with clangPacks.pkgs; [
+    };
+    pkgs = with packs.pkgs; [
       boost
     ];
+  };
 
   nixpkgs = with corePacks.nixpkgs; [
     nix
@@ -820,6 +851,7 @@ pkgStruct = {
         has_modulepath_modifications = true;
         unlocked_paths = ["/cm/shared/sw/modules"];
       };
+      projection = "{name}";
     }
   ];
 
@@ -836,15 +868,28 @@ modPkgs = with pkgStruct;
     builtins.concatMap (mpi: with mpi;
       pkgs
       ++
-      builtins.map (py: py.defaulting py.view) pythons
+      builtins.map (py: {
+        pkg = py.view;
+        default = py.isCore;
+        projection = "python-mpi/{^python.version}";
+        #autoload = [comp.pythons[py].view]
+      }) pythons
     ) mpis
     ++
-    builtins.concatMap (py: with py;
-      map defaulting [ view mkl ]
-    ) pythons
+    builtins.concatMap (py: with py; [
+      { pkg = view;
+        default = isCore;
+      }
+      { pkg = mkl;
+        default = isCore;
+        projection = "python-mkl/{^python.version}";
+        autoload = [view];
+      }
+    ]) pythons
   ) compilers
   ++
-  clangcpp
+  map (pkg: { inherit pkg; projection = "{name}/{version}-libcpp"; })
+    clangcpp.pkgs
   ++
   map (p: builtins.parseDrvName p.name // { prefix = p; })
     nixpkgs
@@ -883,25 +928,17 @@ corePacks // {
   inherit pkgStruct;
 
   mods = corePacks.modules {
-    coreCompilers = map (p: p.pkgs.compiler) [corePacks corePacks.sets.bootstrap];
+    coreCompilers = map (p: p.pkgs.compiler) [
+      corePacks
+      corePacks.sets.bootstrap
+      pkgStruct.clangcpp.packs
+    ];
     config = {
       hierarchy = ["mpi"];
       hash_length = 0;
       projections = {
         # warning: order is lost
-        "boost+clanglibcpp" = "{name}/{version}-libcpp";
         "gromacs+plumed" = "{name}/{version}-plumed";
-        "gsl^intel-oneapi-mkl" = "{name}/{version}-mkl";
-        "gsl^openblas" = "{name}/{version}-openblas";
-        "openblas threads=none" = "{name}/{version}-single";
-        "openblas threads=openmp" = "{name}/{version}-openmp";
-        "openblas threads=pthreads" = "{name}/{version}-threaded";
-        "openmpi-opa" = "{name}/{^openmpi.version}";
-        "py-numpy^intel-mkl" = "python-mkl/{^python.version}";
-        "py-mpi4py" = "python-mpi/{^python.version}";
-        "py-setuptools" = "python/{^python.version}"; # autoload redirect
-        "slurm" = "{name}/current";
-        "modules-traditional" = "{name}";
       };
       all = {
         autoload = "none";
@@ -925,21 +962,6 @@ corePacks // {
           };
         };
       };
-      matlab = {
-        environment = {
-          set = {
-            MLM_LICENSE_FILE = "/cm/shared/sw/pkg/vendor/matlab/src/network.lic";
-          };
-        };
-      };
-      slurm = {
-        environment = {
-          set = {
-            CMD_WLM_CLUSTER_NAME = "slurm";
-            SLURM_CONF = "/cm/shared/apps/slurm/var/etc/slurm/slurm.conf";
-          };
-        };
-      };
       hdf5 = {
         environment = {
           set = {
@@ -954,21 +976,8 @@ corePacks // {
           };
         };
       };
-      py-numpy = {
-        autoload = "direct";
-      };
       py-mpi4py = {
         autoload = "direct";
-      };
-      openmpi-opa = {
-        autoload = "direct";
-      };
-      r = {
-        environment = {
-          prepend_path = {
-            R_LIBS_SITE = "{prefix}/rlib/R/library";
-          };
-        };
       };
     };
 
