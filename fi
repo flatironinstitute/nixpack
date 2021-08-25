@@ -44,6 +44,9 @@ case "$cmd" in
 				sudo singularity/bin/spack_perms_fix.sh
 				release nixpack -A mods
 				;;
+			(jupyter)
+				release nixpack-jupyter -A jupyter
+				;;
 			(*)
 				echo "Unknown release"
 				;;
@@ -66,6 +69,7 @@ Commands:
   gc           Cleanup any unreferenced nix stores (nix-store --gc).
   release      Publish a release profile for...
     modules    nixpack lmod modules (default)
+    jupyter    jupyterhub server environment
     nix        nix build environment
 
 EOF

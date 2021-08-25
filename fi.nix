@@ -460,9 +460,9 @@ mkPythons = base: gen:
     { version = "3.9"; }
   ];
 
-pyView = pl: corePacks.pythonView {
-  pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "py-" x.name) pl;
-};
+pyView = pl: { pkgs ? [], ... } @ args: corePacks.pythonView (args // {
+  pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "py-" x.name) pl ++ pkgs;
+});
 
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
@@ -630,7 +630,7 @@ pkgStruct = {
         py-matplotlib
         py-numba
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
-      ];
+      ] {};
       mkl = 
         let
           mklPacks = withPython (comp.packs.withPrefs # invert py/mkl prefs
@@ -709,8 +709,14 @@ modPkgs = with pkgStruct;
   static
 ;
 
-jupyter-kernels = corePacks.view {
-  name = "jupyter-kernels";
+jupyter = pyView (with corePacks.pkgs; [
+    python
+    py-jupyterhub
+    py-jupyterlab
+    py-batchspawner
+    node-js
+  ]) {
+  name = "jupyter";
   pkgs = map (import jupyter/kernel corePacks) (
     with pkgStruct;
     builtins.concatMap (comp: with comp;
@@ -820,7 +826,7 @@ corePacks // {
 
   };
 
-  inherit jupyter-kernels;
+  inherit jupyter;
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = getPkg p; in

@@ -60,6 +60,14 @@ in
     };
   };
 
+  py-cryptography = {
+    build = {
+      setup = ''
+        os.environ['CARGO_HOME'] = os.path.join(os.environ['TMPDIR'], 'cargo')
+      '';
+    };
+  };
+
   /* some things don't use a compiler */
   intel = nocompiler;
   intel-mkl = nocompiler;
