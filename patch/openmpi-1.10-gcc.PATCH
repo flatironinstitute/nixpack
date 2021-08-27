@@ -1,0 +1,12 @@
+diff -up ./ompi/mca/mtl/psm/mtl_psm_types.h.ORIG ./ompi/mca/mtl/psm/mtl_psm_types.h
+--- ./ompi/mca/mtl/psm/mtl_psm_types.h.ORIG	2016-08-24 10:54:57.000000000 -0400
++++ ./ompi/mca/mtl/psm/mtl_psm_types.h	2021-07-07 11:50:26.362739893 -0400
+@@ -70,7 +70,7 @@
+ };
+ typedef struct mca_mtl_psm_component_t mca_mtl_psm_component_t;
+ 
+-OMPI_DECLSPEC mca_mtl_psm_component_t mca_mtl_psm_component;
++OMPI_DECLSPEC extern mca_mtl_psm_component_t mca_mtl_psm_component;
+     
+ #define PSM_MAKE_MQTAG(ctxt,rank,utag)		    \
+         ( (((ctxt)&0xffffULL)<<48)| (((rank)&0xffffULL)<<32)| \

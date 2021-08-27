@@ -1,0 +1,44 @@
+diff -up ./ompi/mca/btl/openib/mca-btl-openib-device-params.ini.ORIG ./ompi/mca/btl/openib/mca-btl-openib-device-params.ini
+--- ./ompi/mca/btl/openib/mca-btl-openib-device-params.ini.ORIG	2017-04-22 23:28:31.000000000 -0400
++++ ./ompi/mca/btl/openib/mca-btl-openib-device-params.ini	2020-09-02 18:16:36.863520711 -0400
+@@ -190,6 +190,15 @@ max_inline_data = 256
+ 
+ ############################################################################
+ 
++[Mellanox ConnectX6]
++vendor_id = 0x2c9,0x5ad,0x66a,0x8f1,0x1708,0x03ba,0x15b3,0x119f
++vendor_part_id = 4123
++use_eager_rdma = 1
++mtu = 4096
++max_inline_data = 256
++
++############################################################################
++
+ [IBM eHCA 4x and 12x]
+ vendor_id = 0x5076
+ vendor_part_id = 0
+diff -up ./ompi/mca/common/verbs/common_verbs_port.c.ORIG ./ompi/mca/common/verbs/common_verbs_port.c
+--- ./ompi/mca/common/verbs/common_verbs_port.c.ORIG	2016-08-24 10:54:57.000000000 -0400
++++ ./ompi/mca/common/verbs/common_verbs_port.c	2020-09-02 18:14:40.482659000 -0400
+@@ -70,6 +70,10 @@ int ompi_common_verbs_port_bw(struct ibv
+         /* EDR: 25.78125 Gbps * 64/66, in megabits */
+         *bandwidth = 25000;
+         break;
++    case 64:
++        /* HDR: 50Gbps * 64/66, in megabits */
++        *bandwidth = 50000;
++        break;
+     default:
+         /* Who knows? */
+         return OMPI_ERR_NOT_FOUND;
+@@ -92,6 +96,10 @@ int ompi_common_verbs_port_bw(struct ibv
+         /* 12x */
+         *bandwidth *= 12;
+         break;
++    case 16:
++        /* 16x */
++        *bandwidth *= 16;
++        break;
+     default:
+         /* Who knows? */
+         return OMPI_ERR_NOT_FOUND;
