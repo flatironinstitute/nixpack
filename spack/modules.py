@@ -16,11 +16,14 @@ coreCompilers.append(nixpack.nullCompilerSpec)
 modconf = nixpack.getJson('config')
 modconf.setdefault('core_compilers', [])
 modconf['core_compilers'].extend(str(comp.as_compiler) for comp in coreCompilers)
-config = { name : {
+config = {
+    'prefix_inspections': modconf.pop('prefix_inspections', {}),
+    name: {
         'enable': [modtype],
         'roots': { modtype: root },
         modtype: modconf
-    } }
+    }
+}
 spack.config.set(f'modules', config, 'command_line')
 
 cls = spack.modules.module_types[modtype]
@@ -97,6 +100,7 @@ class ModSpec:
         self.static = p.get('static', None)
         self.path = p.get('path', None)
         self.environment = p.get('environment', {})
+        self.context = p.get('context', {})
         self.projection = p.get('projection')
         self.autoload = p.get('autoload', [])
         self.prerequisites = p.get('prerequisites', [])
@@ -108,12 +112,13 @@ class ModSpec:
         except AttributeError:
             self.spec.concretize()
             self._writer = cls(self.spec, name)
-            spack.modules.common.update_dictionary_extending_lists(
-                    self._writer.conf.conf.setdefault('environment', {}),
-                    self.environment)
             self._writer.conf.module = ConfigModule(self._writer.conf.module, self.projection)
             for t in ('autoload', 'prerequisites'):
                 self._writer.conf.conf[t].extend(map(nixpack.NixSpec.get, getattr(self, t)))
+            for t in ('environment', 'context'):
+                spack.modules.common.update_dictionary_extending_lists(
+                        self._writer.conf.conf.setdefault(t, {}),
+                        getattr(self, t))
             return self._writer
 
     @property

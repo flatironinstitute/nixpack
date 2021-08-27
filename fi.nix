@@ -731,11 +731,13 @@ pkgStruct = {
       pgplot
 
       { name = "openmpi-opa";
-        static = {
+        context = {
           short_description = "Load openmpi4 for Omnipath fabric";
-          environment_modifications = [
-            [ "SetEnv" { name = "OMPI_MCA_pml"; value = "cm"; } ]
-          ];
+        };
+        environment = {
+          set = {
+            "OMPI_MCA_pml" = "cm";
+          };
         };
         depends = { mpi = openmpi; };
         projection = "{name}/{^openmpi.version}";
@@ -844,9 +846,20 @@ pkgStruct = {
   ];
 
   static = [
-
+    { name = "jupyter-kernels";
+      prefix = "/cm/shared/sw/pkg/flatiron/jupyter-kernels";
+      environment = {
+        prepend_path = {
+          PYTHONPATH = "{prefix}/bin";
+        };
+      };
+      context = {
+        short_description = "Tools to manage custom jupyter kernels";
+      };
+      projection = "{name}";
+    }
     { name = "modules-traditional";
-      static = {
+      context = {
         short_description = "Make old modules available";
         has_modulepath_modifications = true;
         unlocked_paths = ["/cm/shared/sw/modules"];
@@ -934,7 +947,13 @@ modPkgs = with pkgStruct;
     }
   ]
   ++
-  map (p: builtins.parseDrvName p.name // { prefix = p; })
+  map (p: builtins.parseDrvName p.name // {
+    prefix = p;
+    context = {
+      short_description = p.meta.description;
+      long_description = p.meta.longDescription;
+    };
+  })
     nixpkgs
   ++
   static
@@ -958,14 +977,12 @@ corePacks // {
         # warning: order is lost
         "gromacs+plumed" = "{name}/{version}-plumed";
       };
+      prefix_inspections = {
+        "" = ["{name}_BASE"];
+      };
       all = {
         autoload = "none";
         prerequisites = "direct";
-        environment = {
-          set = {
-            "{name}_BASE" = "{prefix}";
-          };
-        };
         suffixes = {
           "^mpi" = "mpi";
         };
