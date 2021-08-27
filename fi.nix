@@ -18,7 +18,7 @@ corePacks = import ./packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "3e5744d33f5188196874f164fb552101f292731e";
+    rev = "073a11e3bbd257bb0633e9e1653a2cac49ce72da";
   };
   spackConfig = {
     config = {
@@ -99,6 +99,10 @@ corePacks = import ./packs {
             termlib = true;
             abi = "5";
           };
+        };
+        pkgconfig = {
+          extern = "/usr";
+          version = "0.27.1";
         };
       };
     };
@@ -292,12 +296,8 @@ corePacks = import ./packs {
       version = "11.3";
     };
     psm = {
-      depends = {
-        compiler = {
-          name = "gcc";
-          version = ":5";
-        };
-      };
+      /* needs old gcc */
+      resolver = "bootstrap";
     };
     shadow = {
       extern = "/usr";
@@ -460,9 +460,9 @@ mkPythons = base: gen:
     { version = "3.9"; }
   ];
 
-pyView = pl: { pkgs ? [], ... } @ args: corePacks.pythonView (args // {
-  pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "py-" x.name) pl ++ pkgs;
-});
+pyView = pl: corePacks.pythonView {
+  pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "py-" x.name) pl;
+};
 
 rView = corePacks.view {
   pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "r-" x.name) (with corePacks.pkgs; [
@@ -804,7 +804,7 @@ pkgStruct = {
         py-matplotlib
         py-numba
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
-      ] {};
+      ];
       mkl = 
         let
           mklPacks = withPython (comp.packs.withPrefs # invert py/mkl prefs
@@ -857,7 +857,45 @@ pkgStruct = {
 
 };
 
-getPkg = p: p.pkg or p;
+jupyterBase = pyView (with corePacks.pkgs; [
+  python
+  py-jupyterhub
+  py-jupyterlab
+  py-batchspawner
+  node-js
+]);
+
+jupyter = jupyterBase.extendView (
+  map (import jupyter/kernel corePacks) (
+    with pkgStruct;
+    builtins.concatMap (comp: with comp;
+      builtins.concatMap (py: with py;
+        let k = {
+          pkg = view;
+          prefix = "${py.packs.pkgs.python.name}-${py.packs.pkgs.compiler.name}";
+          note = "${lib.specName py.packs.pkgs.python.spec}%${lib.specName py.packs.pkgs.compiler.spec}";
+        }; in [
+          k
+          (k // { prefix = k.prefix + "-mkl"; note = k.note+"+mkl"; include = [mkl]; })
+        ]
+      ) pythons
+    ) compilers
+    ++
+    [
+      { pkg = rView;
+        kernelSrc = import jupyter/kernel/ir corePacks {
+          pkg = rView;
+          jupyter = jupyterBase;
+        };
+        prefix = "${rView.name}";
+        note = "${lib.specName rView.spec}";
+        env = {
+          R_LIBS_SITE = "${rView}/rlib/R/library";
+        };
+      }
+    ]
+  )
+);
 
 modPkgs = with pkgStruct;
   pkgs
@@ -891,36 +929,16 @@ modPkgs = with pkgStruct;
   map (pkg: { inherit pkg; projection = "{name}/{version}-libcpp"; })
     clangcpp.pkgs
   ++
+  [ { pkg = jupyter;
+      projection = "jupyterhub";
+    }
+  ]
+  ++
   map (p: builtins.parseDrvName p.name // { prefix = p; })
     nixpkgs
   ++
   static
 ;
-
-jupyter = pyView (with corePacks.pkgs; [
-    python
-    py-jupyterhub
-    py-jupyterlab
-    py-batchspawner
-    node-js
-  ]) {
-  name = "jupyter";
-  pkgs = map (import jupyter/kernel corePacks) (
-    with pkgStruct;
-    builtins.concatMap (comp: with comp;
-      builtins.concatMap (py: with py;
-        let k = {
-          pkg = view;
-          prefix = "${py.packs.pkgs.python.name}-${py.packs.pkgs.compiler.name}";
-          note = "${lib.specName py.packs.pkgs.python.spec}%${lib.specName py.packs.pkgs.compiler.spec}";
-        }; in [
-          k
-          (k // { prefix = k.prefix + "-mkl"; note = k.note+"+mkl"; include = [mkl]; })
-        ]
-      ) pythons
-    ) compilers
-  );
-};
 
 in
 
@@ -988,7 +1006,7 @@ corePacks // {
   inherit jupyter;
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
-    let q = getPkg p; in
+    let q = p.pkg or p; in
     q.pkgs or (if q ? spec then [q] else [])) modPkgs);
 
 }

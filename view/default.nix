@@ -1,4 +1,5 @@
 packs:
+packs.lib.fix (makeView:
 { name ? (builtins.head pkgs).name + "-view"
 , pkgs /* packages to include */
 , exclude ? [] /* globs of files to exclude (all globs rooted at top) */
@@ -6,7 +7,7 @@ packs:
 , wrap ? [] /* files to replace with executable wrapper "exec -a new old" */
 , copy ? [] /* files to copy as-is (rather than link) */
 , meta ? builtins.head pkgs /* behave as package in terms of modules and dependencies */
-}:
+} @ args:
 derivation {
   inherit (packs) system;
   builder = packs.prefs.spackPython;
@@ -16,4 +17,5 @@ derivation {
   forcePkgs = [meta meta];
 } // {
   inherit (meta) spec;
-}
+  extendView = p: makeView (args // { pkgs = pkgs ++ p; });
+})
