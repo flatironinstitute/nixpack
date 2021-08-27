@@ -64,6 +64,7 @@ packsWithPrefs =
   , spackConfig ? {}
   , spackPython ? "/usr/bin/python3"
   , spackPath ? "/bin:/usr/bin"
+  , nixpkgsSrc ? null
   , logs ? false
   , repoPatch ? {}
   , global ? {}
@@ -366,7 +367,8 @@ lib.fix (packs: with packs; {
 
   modules = import ../spack/modules.nix packs;
 
-  nixpkgs = import ../nixpkgs { inherit system target; };
+  nixpkgs = lib.when (nixpkgsSrc != null)
+    (import ../nixpkgs { inherit system target; src = nixpkgsSrc; });
 });
 
 in packsWithPrefs

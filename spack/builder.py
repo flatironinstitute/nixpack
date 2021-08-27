@@ -33,6 +33,7 @@ if 'go' in spec._dependencies:
     os.environ['GOCACHE'] = os.path.join(os.environ['TMPDIR'], 'go-cache')
 
 setup = nixpack.getVar('setup', None)
+post = nixpack.getVar('post', None)
 if setup:
     exec(setup)
 
@@ -59,3 +60,6 @@ spack.installer.build_process(pkg, opts)
 os.environ.clear()
 os.environ.update(origenv)
 spack.build_environment.setup_package(pkg, True, context='test')
+
+if post:
+    exec(post)

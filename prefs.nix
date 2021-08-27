@@ -21,7 +21,6 @@
   spackConfig = {
     config = {
       #source_cache = "/mnt/home/spack/cache";
-      #build_jobs = 28; /* overridden by NIX_BUILD_CORES */
     };
   };
   /* environment for running spack. spack needs things like python, cp, tar,
@@ -29,6 +28,14 @@
      from nixpkgs or similar, but regardless need to be external to nixpacks. */
   spackPython = "/usr/bin/python3";
   spackPath = "/bin:/usr/bin";
+
+  /* packs can optionally include nixpkgs for additional packages or bootstrapping.
+     omit to disable. */
+  nixpkgsSrc = {
+    #url = "git://github.com/NixOS/nixpkgs";
+    ref = "master";
+    #rev = "72bab23841f015aeaf5149a4e980dc696c59d7ca";
+  };
 
   /* print build logs during spack bulids (to be captured by nix).
      regardless, spack also keeps logs in .spack */

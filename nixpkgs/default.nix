@@ -1,14 +1,14 @@
 { system ? builtins.currentSystem
 , target ? builtins.head (builtins.split "-" system)
+, src ? {}
 }:
 
 let
 
-nixpkgs = fetchGit {
+nixpkgs = fetchGit ({
   url = "git://github.com/NixOS/nixpkgs";
   ref = "master";
-  rev = "72bab23841f015aeaf5149a4e980dc696c59d7ca";
-};
+}) // src;
 
 args = {
   localSystem = {

@@ -18,18 +18,20 @@ corePacks = import ./packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "073a11e3bbd257bb0633e9e1653a2cac49ce72da";
+    rev = "887588d171fdf523c2df43fc75f2ae57de5b7300";
   };
   spackConfig = {
     config = {
       source_cache = "/mnt/home/spack/cache";
-      build_jobs = 28;
     };
   };
   spackPython = "/usr/bin/python3";
   spackPath = "/bin:/usr/bin";
 
-  repoPatch = {
+  nixpkgsSrc = {
+    url = "git://github.com/NixOS/nixpkgs";
+    ref = "master";
+    rev = "d90b2fc264e4238eac6b8f2fe1e62c9f0759445e";
   };
 
   global = {
@@ -44,6 +46,7 @@ corePacks = import ./packs {
   };
   sets = {
     bootstrap = {
+      target = "haswell";
       global = {
         resolver = null;
       };
@@ -341,6 +344,42 @@ corePacks = import ./packs {
     };
   }
   // blasVirtuals "openblas";
+
+  repoPatch = {
+    openmpi = spec: {
+      patches =
+        lib.optionals (spec.version == "1.10.7") [ patch/openmpi-1.10.7.PATCH ] ++
+        lib.optionals (lib.versionAtMostSpec spec.version "1.10") [ patch/openmpi-1.10-gcc.PATCH ] ++
+        lib.optionals (spec.version == "2.1.6") [ patch/openmpi-2.1.6.PATCH ];
+      build = {
+        setup = ''
+          configure_args = pkg.configure_args()
+          configure_args.append('CPPFLAGS=-I/usr/include/infiniband')
+          pkg.configure_args = lambda: configure_args
+        '';
+        post = ''
+          mca_conf_path = os.path.join(pkg.prefix.etc, "openmpi-mca-params.conf")
+          with open(mca_conf_path, 'a') as f:
+              f.write("""
+          oob_tcp_if_exclude = idrac,lo,ib0
+          btl_tcp_if_exclude = idrac,lo,ib0
+
+          btl_openib_if_exclude = i40iw0,i40iw1,mlx5_1
+          btl_openib_warn_nonexistent_if = 0
+          """)
+              if spec.satisfies("@4.0:"):
+                  f.write("""
+          #btl_openib_receive_queues=P,128,2048,1024,32:S,2048,2048,1024,64:S,12288,2048,1024,64:S,65536,2048,1024,64
+          btl=^openib,usnix
+          mtl=^psm,ofi
+          pml=ucx
+          pml_ucx_tls=any
+          """)
+        '';
+      };
+    };
+  };
+
 };
 
 blasVirtuals = blas: {
