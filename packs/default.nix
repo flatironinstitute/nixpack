@@ -57,8 +57,6 @@ repoPatches = patchRepo (import ../patch lib);
 packsWithPrefs = 
   { system ? builtins.currentSystem
   , os ? "unknown"
-  , target ? builtins.head (lib.splitRegex "-" system)
-  , platform ? builtins.elemAt (lib.splitRegex "-" system) 1
   , label ? "packs"
   , spackSrc ? {}
   , spackConfig ? {}
@@ -75,7 +73,10 @@ packsWithPrefs =
 lib.fix (packs: with packs; {
   inherit lib;
   prefs = packPrefs;
-  inherit system os target platform label;
+  inherit system os label;
+  splitSystem = lib.splitRegex "-" system;
+  target = builtins.head splitSystem;
+  platform = builtins.elemAt splitSystem 1;
   withPrefs = p: packsWithPrefs (lib.recursiveUpdate
     (builtins.removeAttrs packPrefs ["label" "sets"] // {
       label = "${label}.withPrefs";
@@ -98,7 +99,7 @@ lib.fix (packs: with packs; {
 
   /* common attributes for running spack */
   spackBuilder = attrs: builtins.removeAttrs (derivation ({
-    inherit (packs) system platform target os spackConfig spackCache;
+    inherit (packs) system os spackConfig spackCache;
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
     PATH = spackPath;
@@ -146,9 +147,10 @@ lib.fix (packs: with packs; {
     , tests ? false
     , fixedDeps ? false
     , resolver ? null
+    , target ? packs.target
     }:
     {
-      inherit version variants patches depends extern tests provides fixedDeps;
+      inherit version variants patches depends extern tests provides fixedDeps target;
       resolver = deptype: name: let r = lib.applyOptional (lib.applyOptional resolver deptype) name; in
         if builtins.isFunction r then r
         else (if r == null then packs
@@ -275,7 +277,7 @@ lib.fix (packs: with packs; {
           prefs = fillPrefs pprefs;
           spec = {
             inherit (desc) name namespace provides paths;
-            inherit (prefs) extern tests;
+            inherit (prefs) extern tests target;
             version = if prefs.extern != null && lib.versionIsConcrete prefs.version
                    then prefs.version
                    else resolveVersion desc.version  prefs.version;
@@ -329,9 +331,7 @@ lib.fix (packs: with packs; {
   repo = patchRepo repoPatch (repoPatches (import spackRepo {
       /* utilities needed by the repo */
       inherit (lib) when versionMatches variantMatches;
-      inherit platform os;
-      /* needs generic target (actually needs all, but only generic is used) */
-      target = builtins.head (lib.splitRegex "-" system);
+      inherit platform os target;
     }));
 
   /* partially applied specs, which take preferences as argument */
@@ -368,7 +368,11 @@ lib.fix (packs: with packs; {
   modules = import ../spack/modules.nix packs;
 
   nixpkgs = lib.when (nixpkgsSrc != null)
-    (import ../nixpkgs { inherit system target; src = nixpkgsSrc; });
+    (import ../nixpkgs {
+      inherit system;
+      target = global.target or target;
+      src = nixpkgsSrc;
+    });
 });
 
 in packsWithPrefs

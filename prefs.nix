@@ -1,7 +1,5 @@
 {
   system = builtins.currentSystem;
-  /* spack architecture targets */
-  target = "broadwell";
   os = "centos7";
 
   /* where to get the spack respository. Can also be a path (string) to an
@@ -50,6 +48,8 @@
   };
   /* global defaults for all packages */
   global = {
+    /* spack architecture targets */
+    target = "broadwell";
     /* enable tests and test deps (not fully implemented) */
     tests = false;
     /* how to resolve dependencies, similar to concretize together or separately.

@@ -12,7 +12,6 @@ isRLDep = d: isLDep d || isRDep d;
 corePacks = import ./packs {
   label = "core";
   system = builtins.currentSystem;
-  inherit target;
   os = "centos7";
 
   spackSrc = {
@@ -35,6 +34,7 @@ corePacks = import ./packs {
   };
 
   global = {
+    inherit target;
     tests = false;
     fixedDeps = true;
     variants = {
@@ -46,8 +46,8 @@ corePacks = import ./packs {
   };
   sets = {
     bootstrap = {
-      target = "haswell";
       global = {
+        target = "haswell";
         resolver = null;
       };
       package = {

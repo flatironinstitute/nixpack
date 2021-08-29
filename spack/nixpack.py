@@ -23,6 +23,8 @@ if not sys.executable: # why not?
 os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
 
 import spack.main # otherwise you get recursive import errors
+import archspec.cpu
+import llnl.util.tty
 
 # monkeypatch store.layout for the few things we need
 class NixLayout():
@@ -60,9 +62,7 @@ def nixLog(j):
 nixStore = getVar('NIX_STORE')
 
 system = getVar('system')
-basetarget, baseplatform = system.split('-', 1)
-target = getVar('target')
-platform = getVar('platform')
+basetarget, platform = system.split('-', 1)
 archos = getVar('os')
 
 nullCompiler = None
@@ -123,7 +123,7 @@ class NixSpec(spack.spec.Spec):
         self.namespace = nixspec['namespace']
         version = nixspec['version']
         self.versions = spack.version.VersionList([spack.version.Version(version)])
-        self._set_architecture(target=target, platform=platform, os=archos)
+        self._set_architecture(target=nixspec.get('target', basetarget), platform=platform, os=archos)
         self.prefix = prefix
         self.external_path = nixspec['extern']
         if self.external_path:
@@ -178,9 +178,28 @@ class NixSpec(spack.spec.Spec):
                 patches.append(spack.patch.FilePatch(self.package, p, 1, '.', ordering_key = ('~nixpack', i)))
             spack.repo.path.patch_index.update_package(self.fullname)
 
+    def supports_target(self, target):
+        try:
+            target.optimization_flags(self.compiler)
+            return True
+        except archspec.cpu.UnsupportedMicroarchitecture:
+            return False
+
+    def adjust_target(self):
+        """replicate spack.concretize.Concretizer.adjust_target (which has too many limitations)"""
+        target = self.architecture.target
+        if self.supports_target(target):
+            return
+        for ancestor in target.microarchitecture.ancestors:
+            candidate = spack.architecture.Target(ancestor)
+            if self.supports_target(candidate):
+                print(f"Downgrading target {target} -> {candidate} for {self.compiler}")
+                self.architecture.target = candidate
+                self.nixspec['target'] = str(candidate)
+                return
+
     def concretize(self):
-        conc = spack.concretize.Concretizer()
-        conc.adjust_target(self)
+        self.adjust_target()
         spack.spec.Spec.inject_patches_variant(self)
         self._mark_concrete()
 
