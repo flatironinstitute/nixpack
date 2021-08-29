@@ -53,6 +53,8 @@ for pn, pa in zip(pkg.phases, pkg._InstallPhase_phases):
     pf = getattr(pkg, pa)
     setattr(pkg, pa, functools.partial(wrapPhase, pn, pf))
 
+# make sure cache is group-writable (should be configurable, ideally in spack)
+os.umask(0o002)
 # do the actual install
 spack.installer.build_process(pkg, opts)
 
