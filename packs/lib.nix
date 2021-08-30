@@ -188,10 +188,36 @@ rec {
     && all (name: versionsOverlap spec.provides.${name} provides.${name}) (attrNames provides)
     && spec.extern == extern;
 
+  /* determine if something is a package (derivation) */
+  isPkg = p: p ? out;
+
+  /* update two prefs, with the second overriding the first */
+  prefsUpdate = let
+      scalar = a: b: b;
+      updaters = {
+        version = scalar;
+        variants = mergeWith (a: b:
+          if isAttrs a && isAttrs b then a // b
+          else b);
+        patches = scalar;
+        depends = mergeWith prefsUpdate;
+        extern = scalar;
+        tests = scalar;
+        fixedDeps = scalar;
+        resolver = scalar;
+        deptype = scalar;
+        target = scalar;
+        provides = a: b: a // b;
+      };
+    in
+    a: b:
+      if isPkg b || isString b || isPkg a || isString a then b else
+      mergeWithKeys (k: updaters.${k}) a b;
+
   /* unify two prefs, making sure they're compatible */
   prefsIntersect = let
       err = a: b: throw "incompatible prefs: ${toJSON a} vs ${toJSON b}";
-      intersectScalar = a: b: if a == b then a else err a b;
+      scalar = a: b: if a == b then a else err a b;
       intersectors = {
         version = versionsIntersect;
         variants = mergeWith (a: b: if a == b then a else
@@ -199,13 +225,23 @@ rec {
           else err a b);
         patches = a: b: a ++ b;
         depends = mergeWith prefsIntersect;
-        extern = intersectScalar;
-        tests = intersectScalar;
-        fixedDeps = intersectScalar;
-        resolver = intersectScalar;
+        extern = scalar;
+        tests = scalar;
+        fixedDeps = scalar;
+        resolver = scalar;
         deptype = union;
+        target = scalar;
+        provides = mergeWith versionsIntersect;
       };
-    in coalesceWith (mergeWithKeys (k: getAttr k intersectors));
+      intersectPkg = o: p: if specMatches o.spec p then o else err o p;
+    in a: b:
+      if isPkg a
+        then if isPkg b
+          then intersectScalar a b
+          else intersectPkg a b
+        else if isPkg b
+          then intersectPkg b a
+          else mergeWithKeys (k: intersectors.${k}) a b;
 
   /* unify a list of package prefs, making sure they're compatible */
   prefsIntersection = l: if isList l then foldl' prefsIntersect null l else l;

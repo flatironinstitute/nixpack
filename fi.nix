@@ -14,11 +14,11 @@ corePacks = import ./packs {
   system = builtins.currentSystem;
   os = "centos7";
 
-  spackSrc = {
+  spackSrc = "/mnt/home/dylan/spack"; /*{
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
     rev = "887588d171fdf523c2df43fc75f2ae57de5b7300";
-  };
+  };*/
   spackConfig = {
     config = {
       source_cache = "/mnt/home/spack/cache";
@@ -44,74 +44,8 @@ corePacks = import ./packs {
       if isRLDep deptype
         then null else corePacks;
   };
-  sets = {
-    bootstrap = {
-      global = {
-        target = "haswell";
-        resolver = null;
-      };
-      package = {
-        compiler = {
-          name = "gcc";
-          version = "4.8.5";
-          extern = "/usr";
-        };
-        zlib = {
-          extern = "/usr";
-          version = "1.2.7";
-        };
-        diffutils = {
-          extern = "/usr";
-          version = "3.3";
-        };
-        bzip2 = {
-          extern = "/usr";
-          version = "1.0.6";
-        };
-        perl = {
-          extern = "/usr";
-          version = "5.16.3";
-        };
-        m4 = {
-          extern = "/usr";
-          version = "1.4.16";
-        };
-        libtool = {
-          extern = "/usr";
-          version = "2.4.2";
-        };
-        autoconf = {
-          extern = "/usr";
-          version = "2.69";
-        };
-        automake = {
-          extern = "/usr";
-          version = "1.13.4";
-        };
-        openssl = {
-          extern = "/usr";
-          version = "1.0.2k";
-          variants = {
-            fips = false;
-          };
-        };
-        ncurses = {
-          extern = "/usr";
-          version = "5.9.20130511";
-          variants = {
-            termlib = true;
-            abi = "5";
-          };
-        };
-        pkgconfig = {
-          extern = "/usr";
-          version = "0.27.1";
-        };
-      };
-    };
-  };
   package = {
-    compiler = coreCompiler;
+    compiler = bootstrapPacks.pkgs.gcc;
     gcc = {
       version = "7";
     };
@@ -298,10 +232,8 @@ corePacks = import ./packs {
     cuda = {
       version = "11.3";
     };
-    psm = {
-      /* needs old gcc */
-      resolver = "bootstrap";
-    };
+    /* needs old gcc */
+    psm = bootstrapPacks.pkgs.psm;
     shadow = {
       extern = "/usr";
       version = "4.6";
@@ -379,8 +311,75 @@ corePacks = import ./packs {
       };
     };
   };
-
 };
+
+bootstrapPacks = corePacks.withPrefs {
+  label = "bootstrap";
+  global = {
+    target = "haswell";
+    resolver = null;
+  };
+  package = {
+    compiler = {
+      name = "gcc";
+      version = "4.8.5";
+      extern = "/usr";
+    };
+    zlib = {
+      extern = "/usr";
+      version = "1.2.7";
+    };
+    diffutils = {
+      extern = "/usr";
+      version = "3.3";
+    };
+    bzip2 = {
+      extern = "/usr";
+      version = "1.0.6";
+    };
+    perl = {
+      extern = "/usr";
+      version = "5.16.3";
+    };
+    m4 = {
+      extern = "/usr";
+      version = "1.4.16";
+    };
+    libtool = {
+      extern = "/usr";
+      version = "2.4.2";
+    };
+    autoconf = {
+      extern = "/usr";
+      version = "2.69";
+    };
+    automake = {
+      extern = "/usr";
+      version = "1.13.4";
+    };
+    openssl = {
+      extern = "/usr";
+      version = "1.0.2k";
+      variants = {
+        fips = false;
+      };
+    };
+    ncurses = {
+      extern = "/usr";
+      version = "5.9.20130511";
+      variants = {
+        termlib = true;
+        abi = "5";
+      };
+    };
+    pkgconfig = {
+      extern = "/usr";
+      version = "0.27.1";
+    };
+    psm = {};
+  };
+};
+
 
 blasVirtuals = blas: {
   blas      = blas;
@@ -398,14 +397,14 @@ coreCompiler = {
 mkCompilers = base: gen:
   builtins.map (compiler: gen (rec {
     inherit compiler;
-    isCore = compiler == coreCompiler;
+    isCore = compiler == corePacks.pkgs.compiler;
     packs = if isCore then base else
       base.withCompiler compiler;
     defaulting = pkg: { default = isCore; inherit pkg; };
   }))
   [
-    coreCompiler
-    { name = "gcc"; version = "10.2"; }
+    corePacks.pkgs.compiler
+    (corePacks.pkgs.gcc.withPrefs { version = "10.2"; })
     # intel?
   ];
 
@@ -863,10 +862,7 @@ pkgStruct = {
   clangcpp = rec {
     packs = corePacks.withPrefs {
       package = {
-        compiler = {
-          name = "llvm";
-          resolver = corePacks;
-        };
+        compiler = corePacks.pkgs.llvm;
         boost = {
           variants = {
             clanglibcpp = true;
@@ -1006,7 +1002,7 @@ corePacks // {
   mods = corePacks.modules {
     coreCompilers = map (p: p.pkgs.compiler) [
       corePacks
-      corePacks.sets.bootstrap
+      bootstrapPacks
       pkgStruct.clangcpp.packs
     ];
     config = {

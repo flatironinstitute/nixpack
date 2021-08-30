@@ -2,8 +2,6 @@ let
 
 lib = import ./lib.nix;
 
-prefsUpdate = lib.recursiveUpdate; # TODO
-
 versionsUnion = l:
   if builtins.isList l then
     let l' = lib.remove null l;
@@ -54,6 +52,27 @@ patchRepo = patch: repo: repo //
 
 repoPatches = patchRepo (import ../patch lib);
 
+prefsUpdate = let
+    scalar = a: b: b;
+    updaters = {
+      system = scalar;
+      os = scalar;
+      label = a: b: "${a}.${b}";
+      spackSrc = scalar;
+      spackConfig = lib.recursiveUpdate;
+      spackPython = scalar;
+      spackPath = scalar;
+      nixpkgsSrc = scalar;
+      logs = scalar;
+      repoPatch = a: b: a // b;
+      global = lib.prefsUpdate;
+      package = a: b: a // b;
+      sets = scalar;
+      parent = scalar;
+    };
+  in
+  lib.mergeWithKeys (k: updaters.${k});
+
 packsWithPrefs = 
   { system ? builtins.currentSystem
   , os ? "unknown"
@@ -77,11 +96,8 @@ lib.fix (packs: with packs; {
   splitSystem = lib.splitRegex "-" system;
   target = builtins.head splitSystem;
   platform = builtins.elemAt splitSystem 1;
-  withPrefs = p: packsWithPrefs (lib.recursiveUpdate
-    (builtins.removeAttrs packPrefs ["label" "sets"] // {
-      label = "${label}.withPrefs";
-      parent = packs;
-    }) p);
+  withPrefs = p: packsWithPrefs (prefsUpdate packPrefs
+    ({ label = "withPrefs"; parent = packs; sets = {}; } // p));
 
   spack = if builtins.isString spackSrc then spackSrc else
     builtins.fetchGit ({ name = "spack"; url = "git://github.com/spack/spack"; } // spackSrc);
@@ -118,14 +134,16 @@ lib.fix (packs: with packs; {
 
   /* look up a package requirement and resolve it with prefs */
   getResolver = name: pref: builtins.addErrorContext "getting package ${label}.${name}"
-    (if pref == {}
+    (if builtins.trace "${label}.${name}" pref == {}
       then pkgs.${name}
-      else resolvers.${name} (prefsUpdate (getPackagePrefs name) pref));
+      else resolvers.${name} (lib.prefsUpdate (getPackagePrefs name) pref));
 
   /* look up a package with default prefs */
   getPackage = arg:
     if arg == null then
       null
+    else if lib.isPkg arg then
+      arg
     else if builtins.isString arg then
       getResolver arg {}
     else if arg ? name then
@@ -158,7 +176,7 @@ lib.fix (packs: with packs; {
           else r).getResolver name;
     };
 
-  getPackagePrefs = name: prefsUpdate global packPrefs.package.${name} or {};
+  getPackagePrefs = name: lib.prefsUpdate global package.${name} or {};
 
   /* resolve a named package descriptor into a concrete spec (concretize)
 
@@ -227,11 +245,11 @@ lib.fix (packs: with packs; {
       resolveDepends = depends: pprefs:
         resolveEach (dname: dep: pref: let
           deptype = (t: if pprefs.tests then t else lib.remove "test" t) dep.deptype or [];
-          res = pprefs.resolver deptype dname;
-          clean = lib.mapNullable (d: builtins.removeAttrs d ["deptype"]);
+          res = pprefs.resolver deptype (builtins.trace "${label}.${pname}: ${dname}" dname);
+          clean = d: builtins.removeAttrs d ["deptype"];
           virtualize = { deptype, version ? ":" }:
             { provides = { "${dname}" = version; }; };
-          dep' = (if isVirtual dname then virtualize else clean) dep;
+          dep' = lib.mapNullable (if isVirtual dname then virtualize else clean) dep;
 
           /* dynamic */
           isr = builtins.elem "link" deptype;
@@ -239,7 +257,7 @@ lib.fix (packs: with packs; {
           /* for link dependencies with dependencies in common with ours, we propagate our prefs down.
              this doesn't entirely ensure consistent linking, but helps in many common cases. */
           pdeps = builtins.intersectAttrs (getPossibleDepends dname) pprefs.depends;
-          rdeps = lib.prefsIntersect dpref { depends = builtins.mapAttrs (n: clean) pdeps; };
+          rdeps = lib.prefsIntersect dpref { depends = builtins.mapAttrs (n: lib.mapNullable clean) pdeps; };
           dpkg = res (if isr then rdeps else dpref);
 
           /* static */
@@ -268,7 +286,7 @@ lib.fix (packs: with packs; {
           passAsFile = ["spec"];
         } // desc.build) // {
           inherit spec;
-          withPrefs = p: resolvePackage pname gen (prefsUpdate pprefs p);
+          withPrefs = p: resolvePackage pname gen (lib.prefsUpdate pprefs p);
         };
 
       /* resolve a real package into a spec */
@@ -288,12 +306,13 @@ lib.fix (packs: with packs; {
             deptypes = builtins.mapAttrs (n: d: d.deptype or null) spec.depends;
           };
         in
+        if lib.isPkg pprefs then pprefs else
         if spec.extern != null || desc.conflicts == [] then makePackage gen desc spec pprefs
         else throw "${pname}: has conflicts: ${toString desc.conflicts}");
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
       virtual = providers: prefs: builtins.addErrorContext "resolving virtual ${pname}" (let
-          provs = if builtins.isList prefs || prefs ? name || builtins.isString prefs
+          provs = if builtins.isList prefs || prefs ? name || builtins.isString prefs || lib.isPkg prefs
             then prefs
             else providers;
           version = prefs.provides.${pname} or ":";
@@ -351,7 +370,7 @@ lib.fix (packs: with packs; {
 
   /* use this packs to bootstrap another with the specified compiler */
   withCompiler = compiler: packs.withPrefs {
-    package = { compiler = { resolver = packs; } // compiler; };
+    package = { inherit compiler; };
   };
 
   /* special case of withPrefs where you only replace one named package */
