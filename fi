@@ -52,6 +52,10 @@ case "$cmd" in
 				;;
 		esac
 		;;
+	(spack)
+		nix-build -o spackBin -A spackBin $nixfile
+		exec ./spackBin "$@"
+		;;
 	(*)
 		if [[ $cmd != help ]] ; then
 			echo "Unknown command"
@@ -71,6 +75,8 @@ Commands:
     modules    nixpack lmod modules (default)
     jupyter    jupyterhub server environment
     nix        nix build environment
+  spack ...    Run a spack command in the nixpack environment (things like list
+	       and info work, but those managing packages will not)
 
 EOF
 esac
