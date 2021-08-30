@@ -88,6 +88,7 @@ lib.fix (packs: with packs; {
 
   makeSpackConfig = import ../spack/config.nix packs;
 
+  inherit spackPython spackPath;
   spackConfig = makeSpackConfig (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
 
   spackNixLib = derivation {
@@ -366,6 +367,9 @@ lib.fix (packs: with packs; {
   pythonView = args: view ({ shbang = ["bin/*"]; wrap = ["bin/python*"]; } // args);
 
   modules = import ../spack/modules.nix packs;
+
+  /* a runnable (if only partly functional) spack binary */
+  spackBin = import ../spack/bin.nix packs;
 
   nixpkgs = lib.when (nixpkgsSrc != null)
     (import ../nixpkgs {
