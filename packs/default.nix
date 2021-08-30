@@ -63,7 +63,6 @@ packsWithPrefs =
   , spackPython ? "/usr/bin/python3"
   , spackPath ? "/bin:/usr/bin"
   , nixpkgsSrc ? null
-  , logs ? false
   , repoPatch ? {}
   , global ? {}
   , package ? {}
@@ -149,6 +148,7 @@ lib.fix (packs: with packs; {
     , fixedDeps ? false
     , resolver ? null
     , target ? packs.target
+    , logs ? false # only used by builder
     }:
     {
       inherit version variants patches depends extern tests provides fixedDeps target;
@@ -264,7 +264,7 @@ lib.fix (packs: with packs; {
         else spackBuilder ({
           args = [../spack/builder.py];
           inherit name;
-          verbose = logs;
+          verbose = pprefs.logs or false;
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
         } // desc.build) // {
