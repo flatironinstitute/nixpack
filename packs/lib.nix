@@ -195,6 +195,7 @@ rec {
   prefsUpdate = let
       scalar = a: b: b;
       updaters = {
+        name = scalar;
         version = scalar;
         variants = mergeWith (a: b:
           if isAttrs a && isAttrs b then a // b
@@ -208,6 +209,7 @@ rec {
         deptype = scalar;
         target = scalar;
         provides = a: b: a // b;
+        logs = scalar;
       };
     in
     a: b:
@@ -233,6 +235,7 @@ rec {
         deptype = union;
         target = scalar;
         provides = mergeWith versionsIntersect;
+        logs = scalar;
       };
       intersectPkg = o: p: if specMatches o.spec p then o else err o p;
     in coalesceWith (a: b:

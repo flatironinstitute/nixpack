@@ -72,15 +72,15 @@ packs = import ./packs {
   };
   package = {
     /* compiler is an implicit virtual dependency for every package */
-    compiler = packs.sets.bootstrap.pkgs.gcc;
+    compiler = bootstrapPacks.pkgs.gcc;
     /* preferences for individual packages or virtuals */
     /* get cpio from system:
     cpio = {
       extern = "/usr";
       version = "2.11";
     }; */
-    /* specify virtual providers: can be (lists of) names or { name; ...prefs }
-    mpi = [ "openmpi" ];
+    /* specify virtual providers: can be (lists of) package or { name; ...prefs }
+    mpi = [ packs.pkgs.openmpi ];
     java = { name = "openjdk"; version = "10"; }; */
     /* use gcc 7.x:
     gcc = {
@@ -109,17 +109,17 @@ packs = import ./packs {
       };
     };
   };
-  sets = {
-bootstrap = {
+
+};
+
+bootstrapPacks = packs.withPrefs {
   package = {
     /* must be set to an external compiler capable of building compiler (above) */
     compiler = {
       name = "gcc";
       version = "4.8.5";
       extern = "/usr";
-      /* can also have multiple layers of bootstrapping, where each compiler is built by another:
-      resolver = "bootstrap2";
-      */
+      /* can also have multiple layers of bootstrapping, where each compiler is built by another */
     };
     /* can speed up bootstrapping by providing more externs
     zlib = {
@@ -127,9 +127,6 @@ bootstrap = {
       version = "...";
     }; ... */
   };
-};
-};
-
 };
 
 in

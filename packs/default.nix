@@ -67,8 +67,6 @@ prefsUpdate = let
       repoPatch = a: b: a // b;
       global = lib.prefsUpdate;
       package = a: b: a // b;
-      sets = scalar;
-      parent = scalar;
     };
   in
   lib.mergeWithKeys (k: updaters.${k});
@@ -85,8 +83,6 @@ packsWithPrefs =
   , repoPatch ? {}
   , global ? {}
   , package ? {}
-  , sets ? {}
-  , parent ? null
   } @ packPrefs:
 lib.fix (packs: with packs; {
   inherit lib;
@@ -96,7 +92,7 @@ lib.fix (packs: with packs; {
   target = builtins.head splitSystem;
   platform = builtins.elemAt splitSystem 1;
   withPrefs = p: packsWithPrefs (prefsUpdate packPrefs
-    ({ label = "withPrefs"; parent = packs; sets = {}; } // p));
+    ({ label = "withPrefs"; } // p));
 
   spack = if builtins.isString spackSrc then spackSrc else
     builtins.fetchGit ({ name = "spack"; url = "git://github.com/spack/spack"; } // spackSrc);
@@ -172,9 +168,7 @@ lib.fix (packs: with packs; {
       inherit version variants patches depends extern tests provides fixedDeps target;
       resolver = deptype: name: let r = lib.applyOptional (lib.applyOptional resolver deptype) name; in
         if builtins.isFunction r then r
-        else (if r == null then packs
-          else if builtins.isString r then packs.sets.${r}
-          else r).getResolver name;
+        else (lib.coalesce r packs).getResolver name;
     };
 
   getPackagePrefs = name: lib.prefsUpdate global package.${name} or {};
@@ -363,20 +357,9 @@ lib.fix (packs: with packs; {
   /* debugging to show package spec */
   traceSpecs = builtins.mapAttrs (name: lib.traceSpecTree) pkgs;
 
-  /* child packs sets with different preferences */
-  sets = parent.sets or { root = packs; } //
-    builtins.mapAttrs (name: set: packs.withPrefs
-    ({ label = "${label}.${name}"; } // set)) packPrefs.sets or {}
-    // { self = packs; };
-
   /* use this packs to bootstrap another with the specified compiler */
   withCompiler = compiler: packs.withPrefs {
     package = { inherit compiler; };
-  };
-
-  /* special case of withPrefs where you only replace one named package */
-  withPackage = name: pkg: packs.withPrefs {
-    package = { "${name}" = pkg; };
   };
 
   /* create a view (or an "env" in nix terms): a merged set of packages */

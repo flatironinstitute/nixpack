@@ -14,11 +14,11 @@ corePacks = import ./packs {
   system = builtins.currentSystem;
   os = "centos7";
 
-  spackSrc = "/mnt/home/dylan/spack"; /*{
+  spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
     rev = "887588d171fdf523c2df43fc75f2ae57de5b7300";
-  };*/
+  };
   spackConfig = {
     config = {
       source_cache = "/mnt/home/spack/cache";
@@ -275,7 +275,7 @@ corePacks = import ./packs {
       };
     };
   }
-  // blasVirtuals "openblas";
+  // blasVirtuals { name = "openblas"; };
 
   repoPatch = {
     openmpi = spec: {
@@ -388,11 +388,6 @@ blasVirtuals = blas: {
 };
 
 cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
-
-coreCompiler = {
-  name = "gcc";
-  resolver = "bootstrap";
-};
 
 mkCompilers = base: gen:
   builtins.map (compiler: gen (rec {
@@ -750,7 +745,7 @@ pkgStruct = {
       { pkg = gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; };
         projection = "{name}/{version}-openblas";
       }
-      { pkg = gsl.withPrefs { depends = blasVirtuals "intel-oneapi-mkl"; };
+      { pkg = gsl.withPrefs { depends = blasVirtuals { name = "intel-oneapi-mkl"; }; };
         projection = "{name}/{version}-mkl";
       }
       (hdf5.withPrefs { version = ":1.8"; })
@@ -848,7 +843,7 @@ pkgStruct = {
       mkl = 
         let
           mklPacks = withPython (comp.packs.withPrefs # invert py/mkl prefs
-              { package = blasVirtuals "intel-mkl"; }) # intel-oneapi-mkl not supported
+              { package = blasVirtuals { name = "intel-mkl"; }; }) # intel-oneapi-mkl not supported
             py.python;
         in
         # replaces python-blas-backend
