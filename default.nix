@@ -1,6 +1,7 @@
 let
 
 packs = import ./packs {
+  /* packs prefs */
   system = builtins.currentSystem;
   os = "centos7";
 
@@ -20,7 +21,7 @@ packs = import ./packs {
      function) here. */
   spackConfig = {
     config = {
-      /* must be set to somewhere your nix builder can write to */
+      /* must be set to somewhere your nix builder(s) can write to */
       source_cache = "/tmp/spack_cache";
     };
   };

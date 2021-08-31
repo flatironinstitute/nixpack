@@ -211,7 +211,8 @@ rec {
       };
     in
     a: b:
-      if isPkg b || isString b || isPkg a || isString a then b else
+      if isPkg b then b else
+      if isPkg a then a.withPrefs b else
       mergeWithKeys (k: updaters.${k}) a b;
 
   /* unify two prefs, making sure they're compatible */
@@ -234,14 +235,14 @@ rec {
         provides = mergeWith versionsIntersect;
       };
       intersectPkg = o: p: if specMatches o.spec p then o else err o p;
-    in a: b:
+    in coalesceWith (a: b:
       if isPkg a
         then if isPkg b
           then intersectScalar a b
           else intersectPkg a b
         else if isPkg b
           then intersectPkg b a
-          else mergeWithKeys (k: intersectors.${k}) a b;
+          else mergeWithKeys (k: intersectors.${k}) a b);
 
   /* unify a list of package prefs, making sure they're compatible */
   prefsIntersection = l: if isList l then foldl' prefsIntersect null l else l;

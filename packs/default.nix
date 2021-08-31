@@ -135,7 +135,7 @@ lib.fix (packs: with packs; {
 
   /* look up a package requirement and resolve it with prefs */
   getResolver = name: pref: builtins.addErrorContext "getting package ${label}.${name}"
-    (if builtins.trace "${label}.${name}" pref == {}
+    (if pref == {}
       then pkgs.${name}
       else resolvers.${name} (lib.prefsUpdate (getPackagePrefs name) pref));
 
@@ -246,7 +246,7 @@ lib.fix (packs: with packs; {
       resolveDepends = depends: pprefs:
         resolveEach (dname: dep: pref: let
           deptype = (t: if pprefs.tests then t else lib.remove "test" t) dep.deptype or [];
-          res = pprefs.resolver deptype (builtins.trace "${label}.${pname}: ${dname}" dname);
+          res = pprefs.resolver deptype dname;
           clean = d: builtins.removeAttrs d ["deptype"];
           virtualize = { deptype, version ? ":" }:
             { provides = { "${dname}" = version; }; };
@@ -307,29 +307,29 @@ lib.fix (packs: with packs; {
             deptypes = builtins.mapAttrs (n: d: d.deptype or null) spec.depends;
           };
         in
-        if lib.isPkg pprefs then pprefs else
-        if spec.extern != null || desc.conflicts == [] then makePackage gen desc spec pprefs
-        else throw "${pname}: has conflicts: ${toString desc.conflicts}");
+        if lib.isPkg pprefs then pprefs
+        else if ! (builtins.all
+          (p: desc.provides.${p} or null != null && lib.versionsOverlap desc.provides.${p} prefs.provides.${p})
+          (builtins.attrNames prefs.provides)) then
+          throw "${pname}: does not provide ${builtins.toJSON prefs.provides}"
+        else if spec.extern == null && desc.conflicts != [] then
+          throw "${pname}: has conflicts: ${toString desc.conflicts}"
+        else makePackage gen desc spec pprefs);
 
       /* resolving virtual packages, which resolve to a specific package as soon as prefs are applied */
       virtual = providers: prefs: builtins.addErrorContext "resolving virtual ${pname}" (let
-          provs = if builtins.isList prefs || prefs ? name || builtins.isString prefs || lib.isPkg prefs
-            then prefs
-            else providers;
-          version = prefs.provides.${pname} or ":";
+          provs = if builtins.isAttrs prefs && !(prefs ? name)
+            then map (p: prefs // { name = p; }) providers
+            else lib.toList prefs;
 
           /* TODO: really need to try multiple versions too (see: java) */
-          opts = map getPackage (lib.toList provs);
-          check = opt:
-            let
-              provtry = builtins.tryEval opt.spec.provides.${pname}; /* catch conflicts */
-              prov = lib.when provtry.success provtry.value;
-            in prov != null && lib.versionsOverlap prov version;
+          opts = map getPackage provs;
+          check = opt: (builtins.tryEval opt.spec).success; /* catch conflicts/provides */
           choice = if prefs.fixedDeps or global.fixedDeps or false /* what if prefs is a list? */
             then opts
             else builtins.filter check opts;
         in if choice == []
-          then throw "no providers for ${pname}@${version}"
+          then throw "no providers for ${pname}"
           else builtins.head choice);
 
     in desc:
