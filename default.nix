@@ -39,10 +39,6 @@ packs = import ./packs {
     #rev = "72bab23841f015aeaf5149a4e980dc696c59d7ca";
   };
 
-  /* print build logs during spack bulids (to be captured by nix).
-     regardless, spack also keeps logs in .spack */
-  logs = false;
-
   repoPatch = {
     /* updates or additions to the spack repo (see patch/default.nix)
     package = [spec: [old:]] {
@@ -54,6 +50,9 @@ packs = import ./packs {
   global = {
     /* spack architecture targets */
     target = "broadwell";
+    /* print build logs during spack bulids (to be captured by nix).
+       regardless, spack also keeps logs in .spack */
+    logs = false;
     /* enable tests and test deps (not fully implemented) */
     tests = false;
     /* how to resolve dependencies, similar to concretize together or separately.
@@ -74,12 +73,6 @@ packs = import ./packs {
   package = {
     /* compiler is an implicit virtual dependency for every package */
     compiler = packs.sets.bootstrap.pkgs.gcc;
-    /*
-    compiler = {
-      name = "gcc";
-      resolver = "bootstrap";
-    };
-    */
     /* preferences for individual packages or virtuals */
     /* get cpio from system:
     cpio = {

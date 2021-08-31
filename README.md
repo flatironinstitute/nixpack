@@ -98,6 +98,8 @@ example = {
   extern = "/opt/local/mypackage"; # a prefix string or derivation (e.g., nixpkgs package) for an external installation (overrides depends)
   fixedDeps = false; # only use user preferences to resolve dependencies (see prefs.nix)
   resolver = "set"; # name of set to use to resolve dependencies
+  target = "microarch"; # defaults to currentSystem (e.g., x86_64)
+  logs = true; # to enable nix-build -Q and nix-store -l (otherwise only spack keeps build logs)
 };
 ```
 
