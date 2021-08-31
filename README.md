@@ -10,7 +10,7 @@ While this is largely functional, it is still a work in progress, and you probab
 ## Usage
 
 - install and configure nix sufficient to build derivations
-- edit `prefs.nix` (`sets.bootstrap.package.compiler` is critical)
+- edit `default.nix` (`bootstrapPacks.package.compiler` is critical)
 - run `nix-build -A pkgs.foo` to build the spack package `foo`
 - see `fi.nix` for a complete working example with view and modules: `nix-build -A mods fi.nix`
 
@@ -96,7 +96,7 @@ example = {
   };
   patches = []; # extra patches to apply (in additon to those in the descriptor)
   extern = "/opt/local/mypackage"; # a prefix string or derivation (e.g., nixpkgs package) for an external installation (overrides depends)
-  fixedDeps = false; # only use user preferences to resolve dependencies (see prefs.nix)
+  fixedDeps = false; # only use user preferences to resolve dependencies (see default.nix)
   resolver = "set"; # name of set to use to resolve dependencies
   target = "microarch"; # defaults to currentSystem (e.g., x86_64)
   logs = true; # to enable nix-build -Q and nix-store -l (otherwise only spack keeps build logs)
@@ -112,11 +112,6 @@ A resolved (concrete) package specifier created by applying (optional) package p
 An actual derivation.
 These contain a `spec` metadata attribute.
 
-### preferences
-
-Global user preferences.
-See [`prefs.nix`](prefs.nix).
-
 ### compiler
 
 Rather than spack's dedicated `%compiler` concept, we introduce a new virtual "compiler" that all packages depend on and is provided by gcc and llvm (by default).
@@ -126,26 +121,22 @@ By setting the package preference for compiler, you determine which compiler to 
 
 The world, like `nixpkgs`.
 It contains `repo` with package descriptor generators and `pkgs`.
+You can have one or more `packs` instances.
 
-### sets
-
-In `prefs.nix` is `sets`, which is set of additional named preferences, each of which is used to create another package set under `packs.sets`.
-These preferences override the defaults specified at the top level.
-These can be used to have package sets with different providers or package settings (like a different compiler, mpi version, blas provider, etc.).
-
-When nesting sets, sets inherit all from their parent, along with the implicit sets `self`, `parent`, and `root`.
-You can also dynamically create new sets using `packs.withPrefs { .. }`.
+Each instance is defined by a set of global user preferences, as passed to `import ./packs`.
+You can also create additional sets based on another using `packs.withPrefs`.
+See [`default.nix`](default.nix) for preferences that can be set.
+Thus, difference package sets can have different providers or package settings (like a different compiler, mpi version, blas provider, variants, etc.).
 
 ### Bootstrapping
 
-The default compiler specifies `resolver = "bootstrap"` which means that all dependencies for the compiler package will be resolved using `sets.bootstrap` preferences.
-These preferences in turn specify a compiler with `extern` set, i.e., one from the host system.
+The default compiler is specified in `default.nix` by `compiler = bootstrapPacks.pkgs.gcc` which means that the compiler used to build everything is `packs` comes from `bootstrapPacks`, and is built with the preferences and compiler defined there.
+`bootstrapPacks` in turn specifies a compiler of gcc with `extern` set, i.e., one from the host system.
 This compiler is used to build any other bootstrap packages, which are then used to build the main compiler.
 You could specify more extern packages in bootstrap to speed up bootstrapping.
 
 You could also add additional bootstrap layers by setting the bootstrap compiler `resolver` to a different set.
-It's also possible to specify `resolver` for other packages.
-Each of these can be set to the name of a set, an already-constructed `packs`, or a function to resolve packages.
+You could also replace specific dependencies or packages from a different `packs` set to bootstrap or modify other packages.
 
 # Flatiron Specific
 

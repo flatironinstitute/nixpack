@@ -112,6 +112,10 @@ packs = import ./packs {
 
 };
 
+/* A set of packages with different preferences, based on packs above.
+   This set is used to bootstrap gcc, but other packs could also be used to set
+   different virtuals, versions, variants, compilers, etc.
+ */
 bootstrapPacks = packs.withPrefs {
   package = {
     /* must be set to an external compiler capable of building compiler (above) */
