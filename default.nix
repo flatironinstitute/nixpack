@@ -48,11 +48,12 @@ packs = import ./packs {
   };
   /* global defaults for all packages */
   global = {
-    /* spack architecture targets */
+    /* spack architecture target */
     target = "broadwell";
-    /* print build logs during spack bulids (to be captured by nix).
-       regardless, spack also keeps logs in .spack */
-    logs = false;
+    /* set spack verbose to print build logs during spack bulids (and thus
+       captured by nix).  regardless, spack also keeps logs in pkg/.spack.
+     */
+    verbose = false;
     /* enable tests and test deps (not fully implemented) */
     tests = false;
     /* how to resolve dependencies, similar to concretize together or separately.

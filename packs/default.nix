@@ -63,7 +63,7 @@ prefsUpdate = let
       spackPython = scalar;
       spackPath = scalar;
       nixpkgsSrc = scalar;
-      logs = scalar;
+      verbose = scalar;
       repoPatch = a: b: a // b;
       global = lib.prefsUpdate;
       package = a: b: a // b;
@@ -162,7 +162,7 @@ lib.fix (packs: with packs; {
     , fixedDeps ? false
     , resolver ? null
     , target ? packs.target
-    , logs ? false # only used by builder
+    , verbose ? false # only used by builder
     }:
     {
       inherit version variants patches depends extern tests provides fixedDeps target;
@@ -276,7 +276,7 @@ lib.fix (packs: with packs; {
         else spackBuilder ({
           args = [../spack/builder.py];
           inherit name;
-          verbose = pprefs.logs or false;
+          verbose = pprefs.verbose or false;
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
         } // desc.build) // {
