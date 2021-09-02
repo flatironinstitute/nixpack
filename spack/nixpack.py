@@ -160,6 +160,25 @@ class NixSpec(spack.spec.Spec):
         self.external_path = nixspec['extern']
         if self.external_path:
             assert self.external_path == prefix, f"{self.name} extern {nixspec['extern']} doesn't match prefix {prefix}"
+        else:
+            # add any dynamic packages
+            repodir = os.path.join(prefix, '.spack', 'repos')
+            try:
+                rl = os.listdir(repodir)
+            except FileNotFoundError:
+                rl = []
+            for r in rl:
+                try:
+                    repo = dynRepos[r]
+                except KeyError:
+                    continue
+                pkgdir = os.path.join(repodir, r, 'packages')
+                for p in os.listdir(pkgdir):
+                    try:
+                        os.symlink(os.path.join(pkgdir, p), repo.dirname_for_package_name(p))
+                    except FileExistsError:
+                        # just trust that it should be identical
+                        pass
         if top:
             self._top = True
 
@@ -183,24 +202,6 @@ class NixSpec(spack.spec.Spec):
             self._hash = spack.util.hash.b32_hash(self.external_path)
         else:
             self._nix_hash, nixname = key.split('-', 1)
-            # add any dynamic packages
-            repodir = os.path.join(prefix, '.spack', 'repos')
-            try:
-                rl = os.listdir(repodir)
-            except FileNotFoundError:
-                rl = []
-            for r in rl:
-                try:
-                    repo = dynRepos[r]
-                except KeyError:
-                    continue
-                pkgdir = os.path.join(repodir, r, 'packages')
-                for p in os.listdir(pkgdir):
-                    try:
-                        os.symlink(os.path.join(pkgdir, p), repo.dirname_for_package_name(p))
-                    except FileExistsError:
-                        # just trust that it should be identical
-                        pass
 
         depends = nixspec['depends'].copy()
         compiler = depends.pop('compiler', None)
@@ -221,6 +222,12 @@ class NixSpec(spack.spec.Spec):
 
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
+
+        if nixspec['patches']:
+            patches = self.package.patches.setdefault(spack.directives.make_when_spec(True), [])
+            for i, p in enumerate(nixspec['patches']):
+                patches.append(spack.patch.FilePatch(self.package, p, 1, '.', ordering_key = ('~nixpack', i)))
+            spack.repo.path.patch_index.update_package(self.fullname)
 
     def supports_target(self, target):
         try:
@@ -244,11 +251,6 @@ class NixSpec(spack.spec.Spec):
 
     def concretize(self):
         self.adjust_target()
-        if self.nixspec['patches']:
-            patches = self.package.patches.setdefault(spack.directives.make_when_spec(True), [])
-            for i, p in enumerate(self.nixspec['patches']):
-                patches.append(spack.patch.FilePatch(self.package, p, 1, '.', ordering_key = ('~nixpack', i)))
-            spack.repo.path.patch_index.update_package(self.fullname)
         spack.spec.Spec.inject_patches_variant(self)
         self._mark_concrete()
 
