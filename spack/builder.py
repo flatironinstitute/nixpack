@@ -14,6 +14,17 @@ spack.hooks.post_install = post_install
 
 nixpack.getVar('name')
 nixspec = nixpack.getJson('spec')
+
+# add any dynamic packages
+repoPkgs = nixpack.getVar('repoPkgs', '').split(' ')
+for i, r in enumerate(nixpack.repoPath.repos):
+        try:
+            p = repoPkgs[i]
+        except IndexError:
+            continue
+        if p:
+            os.symlink(p, r.dirname_for_package_name(nixspec['name']))
+
 spec = nixpack.NixSpec.get(nixspec, nixpack.getVar('out'))
 spec.concretize()
 

@@ -5,10 +5,13 @@ packs = import ./packs {
   system = builtins.currentSystem;
   os = "centos7";
 
-  /* where to get the spack respository. Can also be a path (string) to an
-     existing spack install, however this will eliminate the dependency and
-     break purity, and can cause your repo metadata to get out of sync,
-     so is not recommended for production. */
+  /* where to get the spack respository. Note that since everything depends on
+     spack, changing the spack revision will trigger rebuilds of all packages.
+     Can also be set a path (string) to an existing spack install, which will
+     eliminate the dependency and also break purity, so can cause your repo
+     metadata to get out of sync, and is not recommended for production.
+     See also repos and repoPatch below for other ways of updating packages
+     without modifying the spack repo.  */
   spackSrc = {
     /* default:
     url = "git://github.com/spack/spack"; */
@@ -39,20 +42,32 @@ packs = import ./packs {
     #rev = "72bab23841f015aeaf5149a4e980dc696c59d7ca";
   };
 
+  /* additional spack repos to include by path, managed by nixpack.
+     These should be normal spack repos, including repo.yaml, and are prepended
+     to any configured spack repos.
+     Repos specified here have the advantage of correctly managing nix
+     dependencies, so changing a package will only trigger rebuilds of
+     it and dependent packages.
+     Theoretically you could copy the entire spack builtins repo here and
+     manage package updates that way, leaving spackSrc at a fixed revision.
+     However, if you update the repo, you'll need to ensure compatibility with
+     the spack core libraries, too. */
+  repos = [
+    spack/repo
+  ];
+  /* updates to the spack repo (see patch/default.nix for examples) */
   repoPatch = {
-    /* updates or additions to the spack repo (see patch/default.nix)
     package = [spec: [old:]] {
       new...
     };
-    */
   };
-  /* global defaults for all packages */
+
+  /* global defaults for all packages (merged with per-package prefs) */
   global = {
     /* spack architecture target */
     target = "broadwell";
     /* set spack verbose to print build logs during spack bulids (and thus
-       captured by nix).  regardless, spack also keeps logs in pkg/.spack.
-     */
+       captured by nix).  regardless, spack also keeps logs in pkg/.spack.  */
     verbose = false;
     /* enable tests and test deps (not fully implemented) */
     tests = false;
@@ -67,10 +82,10 @@ packs = import ./packs {
          different versions.  Top-level packages explicitly resolved with
          different prefs or dependency prefs may also be different.  Virtuals
          are always resolved (to a package name) dynamically.
-       this can be overridden per-package for only that package's dependencies.
-     */
+       this can be overridden per-package for only that package's dependencies.  */
     fixedDeps = false;
   };
+  /* package-specific preferences */
   package = {
     /* compiler is an implicit virtual dependency for every package */
     compiler = bootstrapPacks.pkgs.gcc;
@@ -115,8 +130,7 @@ packs = import ./packs {
 
 /* A set of packages with different preferences, based on packs above.
    This set is used to bootstrap gcc, but other packs could also be used to set
-   different virtuals, versions, variants, compilers, etc.
- */
+   different virtuals, versions, variants, compilers, etc.  */
 bootstrapPacks = packs.withPrefs {
   package = {
     /* must be set to an external compiler capable of building compiler (above) */

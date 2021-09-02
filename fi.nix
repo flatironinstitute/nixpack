@@ -1050,7 +1050,7 @@ corePacks // {
 
   };
 
-  inherit jupyter;
+  inherit bootstrapPacks jupyter;
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = p.pkg or p; in

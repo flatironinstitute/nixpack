@@ -15,6 +15,7 @@ sys.path[:0] = ['$spackNixLib', '$spack/lib/spack', '$spack/lib/spack/external']
 import nixpack
 import spack.main
 if __name__ == "__main__":
+    sys.argv[0] = "spack"
     sys.exit(spack.main.main())
 EOF
 

@@ -20,6 +20,17 @@ def getJson(var: str):
 if not sys.executable: # why not?
     sys.executable = getVar('builder')
 
+def linktree(src, dst):
+    os.mkdir(dst)
+    for srcentry in os.scandir(src):
+        srcname = os.path.join(src, srcentry.name)
+        dstname = os.path.join(dst, srcentry.name)
+        srcobj = srcname
+        if srcentry.is_dir():
+            linktree(srcname, dstname)
+        else:
+            os.symlink(srcname, dstname)
+
 os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
 
 import spack.main # otherwise you get recursive import errors
@@ -41,14 +52,35 @@ class NixStore():
 spack.store.store = NixStore()
 
 spack.config.command_line_scopes = getVar('spackConfig').split()
-cache = getVar('spackCache', None)
-if cache:
-    spack.config.set('config:misc_cache', cache, 'command_line')
 
 spack.config.set('config:build_stage', [getVar('NIX_BUILD_TOP')], 'command_line')
 cores = int(getVar('NIX_BUILD_CORES', 0))
 if cores > 0:
     spack.config.set('config:build_jobs', cores, 'command_line')
+
+# add in dynamic overlay repos
+repos = getVar('repos', '').split()
+dynRepos = {}
+for i, r in enumerate(repos):
+    if os.path.isfile(r):
+        d = os.path.join(os.environ['TMPDIR'], 'repos', str(i))
+        pd = os.path.join(d, 'packages')
+        os.makedirs(pd)
+        os.symlink(r, os.path.join(d, 'repo.yaml'))
+        repo = spack.repo.Repo(d)
+        repos[i] = repo
+        dynRepos[repo.namespace] = repo
+repoPath = spack.repo.RepoPath(*repos)
+spack.repo.path.put_first(repoPath)
+
+cache = getVar('spackCache', None)
+if cache:
+    if dynRepos:
+        # copy repo cache so we can add more to it
+        tmpcache = os.path.join(os.environ['TMPDIR'], 'spack-cache')
+        linktree(cache, tmpcache)
+        cache = tmpcache
+    spack.config.set('config:misc_cache', cache, 'command_line')
 
 nixLogFd = int(getVar('NIX_LOG_FD', -1))
 nixLogFile = None
@@ -151,6 +183,24 @@ class NixSpec(spack.spec.Spec):
             self._hash = spack.util.hash.b32_hash(self.external_path)
         else:
             self._nix_hash, nixname = key.split('-', 1)
+            # add any dynamic packages
+            repodir = os.path.join(prefix, '.spack', 'repos')
+            try:
+                rl = os.listdir(repodir)
+            except FileNotFoundError:
+                rl = []
+            for r in rl:
+                try:
+                    repo = dynRepos[r]
+                except KeyError:
+                    continue
+                pkgdir = os.path.join(repodir, r, 'packages')
+                for p in os.listdir(pkgdir):
+                    try:
+                        os.symlink(os.path.join(pkgdir, p), repo.dirname_for_package_name(p))
+                    except FileExistsError:
+                        # just trust that it should be identical
+                        pass
 
         depends = nixspec['depends'].copy()
         compiler = depends.pop('compiler', None)
@@ -171,12 +221,6 @@ class NixSpec(spack.spec.Spec):
 
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
-
-        if nixspec['patches']:
-            patches = self.package.patches.setdefault(spack.directives.make_when_spec(True), [])
-            for i, p in enumerate(nixspec['patches']):
-                patches.append(spack.patch.FilePatch(self.package, p, 1, '.', ordering_key = ('~nixpack', i)))
-            spack.repo.path.patch_index.update_package(self.fullname)
 
     def supports_target(self, target):
         try:
@@ -200,6 +244,11 @@ class NixSpec(spack.spec.Spec):
 
     def concretize(self):
         self.adjust_target()
+        if self.nixspec['patches']:
+            patches = self.package.patches.setdefault(spack.directives.make_when_spec(True), [])
+            for i, p in enumerate(self.nixspec['patches']):
+                patches.append(spack.patch.FilePatch(self.package, p, 1, '.', ordering_key = ('~nixpack', i)))
+            spack.repo.path.patch_index.update_package(self.fullname)
         spack.spec.Spec.inject_patches_variant(self)
         self._mark_concrete()
 

@@ -19,6 +19,7 @@ in
 packs.spackBuilder ({
   args = [./modules.py];
   inherit name modtype;
+  withRepos = true;
 } // builtins.mapAttrs (name: builtins.toJSON) jsons // {
   passAsFile = builtins.attrNames jsons;
 }) // jsons

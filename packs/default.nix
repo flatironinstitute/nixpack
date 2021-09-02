@@ -15,7 +15,6 @@ defaultSpackConfig = {
     install_tree = {
       root = "/rootless-spack";
     };
-    misc_cache = "$tempdir/cache"; /* overridden by spackCache */
   };
   compilers = [];
 };
@@ -80,6 +79,7 @@ packsWithPrefs =
   , spackPython ? "/usr/bin/python3"
   , spackPath ? "/bin:/usr/bin"
   , nixpkgsSrc ? null
+  , repos ? [ ../spack/repo ]
   , repoPatch ? {}
   , global ? {}
   , package ? {}
@@ -111,20 +111,30 @@ lib.fix (packs: with packs; {
 
   /* common attributes for running spack */
   spackBuilder = attrs: builtins.removeAttrs (derivation ({
-    inherit (packs) system os spackConfig spackCache;
+    inherit (packs) system os spackConfig;
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
     PATH = spackPath;
     LC_ALL = "en_US.UTF-8"; # work around spack bugs processing log files
+    repos = if attrs ? withRepos
+      then if attrs.withRepos
+        then repos
+        else null
+      else map (r: r + "/repo.yaml") repos;
+    spackCache = if attrs.withRepos or false then spackCacheRepos else spackCache;
   } // attrs)) ["PYTHONPATH" "PATH" "LC_ALL" "spackConfig" "spackCache" "passAsFile"];
 
-  /* pre-generated spack repo index cache */
-  spackCache = lib.when (builtins.isAttrs spackSrc)
-    (spackBuilder {
+  /* pre-generated spack repo index cache (both with and without overlay repos) */
+  makeSpackCache = withRepos: lib.when (builtins.isAttrs spackSrc)
+    (spackBuilder ({
       name = "spack-cache";
       args = [../spack/cache.py];
       spackCache = null;
-    });
+      inherit withRepos;
+    }));
+
+  spackCache      = makeSpackCache false;
+  spackCacheRepos = makeSpackCache true;
 
   isVirtual = name: builtins.isList repo.${name} or null;
 
@@ -279,6 +289,8 @@ lib.fix (packs: with packs; {
           verbose = pprefs.verbose or false;
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
+          repoPkgs = map (r: let p = r + "/packages/${pname}"; in
+            lib.when (builtins.pathExists p) p) repos;
         } // desc.build) // {
           inherit spec;
           withPrefs = p: resolvePackage pname gen (lib.prefsUpdate pprefs p);
@@ -339,6 +351,7 @@ lib.fix (packs: with packs; {
   spackRepo = spackBuilder {
     name = "spack-repo.nix";
     args = [../spack/generate.py];
+    withRepos = true;
   };
 
   /* full metadata repo package descriptions */

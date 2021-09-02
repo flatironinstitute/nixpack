@@ -1,9 +1,9 @@
 packs:
 with packs;
-derivation {
+packs.spackBuilder {
   name = "nixpack-spack-bin.py";
   builder = ./bin.sh;
-  inherit system os spackNixLib spack spackConfig spackCache;
-  PATH = spackPath;
+  inherit spackNixLib spack;
   SPACK_PYTHON = spackPython;
+  withRepos = true;
 }
