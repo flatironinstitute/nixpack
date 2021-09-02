@@ -55,12 +55,12 @@ packs = import ./packs {
   repos = [
     spack/repo
   ];
-  /* updates to the spack repo (see patch/default.nix for examples) */
+  /* updates to the spack repo (see patch/default.nix for examples)
   repoPatch = {
     package = [spec: [old:]] {
       new...
     };
-  };
+  }; */
 
   /* global defaults for all packages (merged with per-package prefs) */
   global = {
@@ -84,6 +84,21 @@ packs = import ./packs {
          are always resolved (to a package name) dynamically.
        this can be overridden per-package for only that package's dependencies.  */
     fixedDeps = false;
+    /* How to find dependencies.  Normally dependencies are pulled from other
+       packages in this same packs.  In some cases you may want some or all
+       dependencies for a package to come from a different packs, perhaps
+       because you don't care if build-only dependencies use the same compiler
+       or python version.  This lets you override where dependencies come from.
+       It takes two optional arguments:
+         * list of dependency types (["build" "link" "run" "test"])
+         * the name of the dependent package
+       And should return either:
+         * null, meaning use the current packs default
+         * an existing packs object, to use instead
+         * a function taking package preferences to a resolved package (like
+           packs.getResolver).  In this case, prefs will be {} if fixedDeps =
+           true, or the dependency prefs from the parent if fixedDeps = false.
+    resolver = [deptype: [name: <packs | prefs: pkg>]]; */
   };
   /* package-specific preferences */
   package = {
