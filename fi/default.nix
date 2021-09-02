@@ -17,7 +17,7 @@ corePacks = import ../packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "887588d171fdf523c2df43fc75f2ae57de5b7300";
+    rev = "c48ff3793f125eba320a6e5ac2e2353a36de2af6";
   };
   spackConfig = {
     config = {
@@ -30,8 +30,13 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     url = "git://github.com/NixOS/nixpkgs";
     ref = "master";
-    rev = "d90b2fc264e4238eac6b8f2fe1e62c9f0759445e";
+    rev = "abfdb24af00d88abff4ed7184f45b0c0b8abf268";
   };
+
+  repos = [
+    ./repo
+    ../spack/repo
+  ];
 
   global = {
     inherit target;

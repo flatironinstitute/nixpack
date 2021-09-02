@@ -127,7 +127,7 @@ lib.fix (packs: with packs; {
   /* pre-generated spack repo index cache (both with and without overlay repos) */
   makeSpackCache = withRepos: lib.when (builtins.isAttrs spackSrc)
     (spackBuilder ({
-      name = "spack-cache";
+      name = "spack-cache" + (if withRepos then "-repos" else "");
       args = [../spack/cache.py];
       spackCache = null;
       inherit withRepos;
