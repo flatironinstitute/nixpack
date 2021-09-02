@@ -1,7 +1,8 @@
 #!/bin/sh -e
 
-. ./env
-nixfile=fi.nix
+fi=`dirname $0`
+. $fi/env
+nixfile=$fi
 
 traceSpecs() {
 	nix-instantiate --eval -A "$1" $nixfile |& sed 's/^trace: //'

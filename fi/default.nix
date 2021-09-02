@@ -9,7 +9,7 @@ isLDep = builtins.elem "link";
 isRDep = builtins.elem "run";
 isRLDep = d: isLDep d || isRDep d;
 
-corePacks = import ./packs {
+corePacks = import ../packs {
   label = "core";
   system = builtins.currentSystem;
   os = "centos7";
@@ -280,9 +280,9 @@ corePacks = import ./packs {
   repoPatch = {
     openmpi = spec: {
       patches =
-        lib.optionals (spec.version == "1.10.7") [ patch/openmpi-1.10.7.PATCH ] ++
-        lib.optionals (lib.versionAtMostSpec spec.version "1.10") [ patch/openmpi-1.10-gcc.PATCH ] ++
-        lib.optionals (spec.version == "2.1.6") [ patch/openmpi-2.1.6.PATCH ];
+        lib.optionals (spec.version == "1.10.7")                  [ ./openmpi-1.10.7.PATCH ] ++
+        lib.optionals (lib.versionAtMostSpec spec.version "1.10") [ ./openmpi-1.10-gcc.PATCH ] ++
+        lib.optionals (spec.version == "2.1.6")                   [ ./openmpi-2.1.6.PATCH ];
       build = {
         setup = ''
           configure_args = pkg.configure_args()
@@ -909,7 +909,7 @@ jupyterBase = pyView (with corePacks.pkgs; [
 ]);
 
 jupyter = jupyterBase.extendView (
-  map (import jupyter/kernel corePacks) (
+  map (import ../jupyter/kernel corePacks) (
     with pkgStruct;
     builtins.concatMap (comp: with comp;
       builtins.concatMap (py: with py;
@@ -926,7 +926,7 @@ jupyter = jupyterBase.extendView (
     ++
     [
       { pkg = rView;
-        kernelSrc = import jupyter/kernel/ir corePacks {
+        kernelSrc = import ../jupyter/kernel/ir corePacks {
           pkg = rView;
           jupyter = jupyterBase;
         };
