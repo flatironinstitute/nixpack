@@ -15,6 +15,7 @@ defaultSpackConfig = {
     install_tree = {
       root = "/rootless-spack";
     };
+    misc_cache = "$tempdir/cache"; /* overridden by spackCache (except for extern spackSrc) */
   };
   compilers = [];
 };
