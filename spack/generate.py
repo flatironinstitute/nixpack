@@ -142,8 +142,10 @@ def printNix(x, indent=0, out=sys.stdout):
     elif isinstance(x, float):
         # messy but rare (needed for nix parsing #5063)
         out.write('%.15e'%x)
-    elif isinstance(x, (list, tuple, set)):
+    elif isinstance(x, (list, tuple)):
         List(x).print(indent, out)
+    elif isinstance(x, set):
+        List(sorted(x)).print(indent, out)
     elif isinstance(x, dict):
         AttrSet(x).print(indent, out)
     else:
