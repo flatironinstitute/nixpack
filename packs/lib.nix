@@ -209,7 +209,7 @@ rec {
         deptype = scalar;
         target = scalar;
         provides = a: b: a // b;
-        logs = scalar;
+        verbose = scalar;
       };
     in
     a: b:
@@ -235,7 +235,7 @@ rec {
         deptype = union;
         target = scalar;
         provides = mergeWith versionsIntersect;
-        logs = scalar;
+        verbose = scalar;
       };
       intersectPkg = o: p: if specMatches o.spec p then o else err o p;
     in coalesceWith (a: b:
