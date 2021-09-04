@@ -100,7 +100,11 @@ class ModSpec:
         self.static = p.get('static', None)
         self.path = p.get('path', None)
         self.environment = p.get('environment', {})
-        self.context = p.get('context', {})
+        def_context = {}
+        if self.spec in coreCompilers:
+            # messy hack to prevent core compilers from unlocking themselves (should be handled in spack)
+            def_context['unlocked_paths'] = []
+        self.context = p.get('context', def_context)
         self.projection = p.get('projection')
         self.autoload = p.get('autoload', [])
         self.prerequisites = p.get('prerequisites', [])
