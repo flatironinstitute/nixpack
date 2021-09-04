@@ -1,0 +1,11 @@
+--- nix-2.0/src/libstore/local-store.cc 1969-12-31 16:00:01.000000000 -0800
++++ nix-2.0-patch/src/libstore/local-store.cc   2018-02-27 06:58:16.979381054 -0800
+@@ -463,6 +463,8 @@
+             /* Ignore SELinux security labels since these cannot be
+                removed even by root. */
+             if (eaName == "security.selinux") continue;
++            if (eaName == "lustre.lov") continue;
++            if (eaName == "system.nfs4_acl") continue;
+             if (lremovexattr(path.c_str(), eaName.c_str()) == -1)
+                 throw SysError("removing extended attribute '%s' from '%s'", eaName, path);
+         }

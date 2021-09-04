@@ -11,6 +11,7 @@ with pkgs;
   nix = (nix.override {
     withAWS = false;
   }).overrideAttrs (old: {
+    patches = [../patch/nix-ignore-fsea.patch];
     doInstallCheck = false;
   });
 }

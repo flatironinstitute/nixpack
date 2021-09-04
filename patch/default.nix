@@ -49,6 +49,10 @@ in
     patches = [./openssh-keysign-setuid.patch];
   };
 
+  nix = {
+    patches = [./nix-ignore-fsea.patch];
+  };
+
   shadow = {
     /* disable installing with set[ug]id */
     patches = [./shadow-nosuid.patch];
