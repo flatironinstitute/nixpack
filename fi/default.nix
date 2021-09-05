@@ -28,9 +28,8 @@ corePacks = import ../packs {
   spackPath = "/bin:/usr/bin";
 
   nixpkgsSrc = {
-    url = "git://github.com/NixOS/nixpkgs";
-    ref = "master";
-    rev = "abfdb24af00d88abff4ed7184f45b0c0b8abf268";
+    ref = "release-21.05";
+    rev = "8ecb35368aacb62d7d3de5ae2a3a1aa0432cfd76";
   };
 
   repos = [
@@ -985,8 +984,8 @@ modPkgs = with pkgStruct;
   map (p: builtins.parseDrvName p.name // {
     prefix = p;
     context = {
-      short_description = p.meta.description;
-      long_description = p.meta.longDescription;
+      short_description = p.meta.description or null;
+      long_description = p.meta.longDescription or null;
     };
   })
     nixpkgs
