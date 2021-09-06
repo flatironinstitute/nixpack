@@ -50,41 +50,10 @@ corePacks = import ../packs {
   };
   package = {
     compiler = bootstrapPacks.pkgs.gcc;
-    gcc = {
-      version = "7";
-    };
-    mpfr = {
-      version = "3.1.6";
-    };
-    cpio = {
-      /* some intel installers need this -- avoid compiler dependency */
-      extern = "/usr";
-      version = "2.11";
-    };
-    python = corePython;
-    mpi = "openmpi";
-    openmpi = {
-      version = "4.0";
+
+    aocc = {
       variants = {
-        fabrics = {
-          none = false;
-          ofi = true;
-          ucx = true;
-          psm = true;
-          psm2 = true;
-          verbs = true;
-        };
-        schedulers = { none = false; slurm = true; };
-        pmi = true;
-        static = false;
-        thread_multiple = true;
-        legacylaunchers = true;
-      };
-    };
-    openblas = {
-      version = "0.3.15";
-      variants = {
-        threads = "pthreads";
+        license-agreed = true;
       };
     };
     binutils = {
@@ -93,8 +62,12 @@ corePacks = import ../packs {
         ld = true;
       };
     };
-    zstd = {
-      variants = { multithread = false; };
+    boost = {
+      variants = {
+        context = true;
+        coroutine = true;
+        cxxstd = "14";
+      };
     };
     cairo = {
       variants = {
@@ -107,16 +80,183 @@ corePacks = import ../packs {
         svg = false;
       };
     };
+    cpio = { # some intel installers need this -- avoid compiler dependency
+      extern = "/usr";
+      version = "2.11";
+    };
+    cuda = {
+      version = "11.3";
+    };
+    docbook-xml = { # for gtk-doc
+      version = "4.3";
+    };
+    docbook-xsl = {
+      version = "1.78.1";
+    };
+    fftw = {
+      version = "3.3.9";
+      variants = {
+        precision = ["float" "double" "quad" "long_double"];
+      };
+    };
+    freetype = { # for vtk
+      version = ":2.10.2";
+    };
+    gcc = {
+      version = "7";
+    };
+    gsl = {
+      variants = {
+        external-cblas = true;
+      };
+    };
+    harfbuzz = {
+      variants = {
+        graphite2 = true;
+      };
+    };
+    hdf5 = {
+      version = "1.10";
+      variants = {
+        hl = true;
+        fortran = true;
+        cxx = true;
+      };
+    };
+    intel-mpi = { # not available anymore...
+      extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
+      version = "2017.4.196";
+    };
+    libepoxy = {
+      variants = {
+        #glx = false; # ~glx breaks gtkplus
+      };
+    };
+    libfabric = {
+      variants = {
+        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "psm" "mlx"];
+      };
+    };
+    llvm = {
+      version = "10";
+    };
+    magma = {
+      variants = {
+        inherit cuda_arch;
+      };
+    };
+    mpfr = {
+      version = "3.1.6";
+    };
+    mpi = corePacks.pkgs.openmpi;
+    nccl = {
+      variants = {
+        inherit cuda_arch;
+      };
+    };
+    nix = {
+      variants = {
+        storedir = builtins.getEnv "NIX_STORE_DIR";
+        statedir = builtins.getEnv "NIX_STATE_DIR";
+        sandboxing = false;
+      };
+    };
+    ocaml = {
+      /* for unison */ variants = {
+        force-safe-string = false;
+      };
+    };
+    openblas = {
+      version = "0.3.15";
+      variants = {
+        threads = "pthreads";
+      };
+    };
+    openmpi = {
+      version = "4.0";
+      variants = {
+        fabrics = {
+          none = false;
+          ofi = true;
+          ucx = true;
+          psm = true;
+          psm2 = true;
+          verbs = true;
+        };
+        schedulers = {
+          none = false;
+          slurm = true;
+        };
+        pmi = true;
+        static = false;
+        thread_multiple = true;
+        legacylaunchers = true;
+      };
+    };
     pango = {
       version = "1.42.0"; # newer builds are broken (meson #25355)
       variants = {
         X = true;
       };
     };
+    petsc = {
+      variants = {
+        hdf5 = false;
+        hypre = false;
+        superlu-dist = false;
+      };
+    };
+    psm = bootstrapPacks.pkgs.psm; # needs old gcc
+    py-h5py = {
+      version = ":2";
+    };
+    py-protobuf = {
+      version = "3.15.7"; # newer have wrong hash (#25469)
+    };
+    py-pybind11 = {
+      version = "2.6.2";
+    };
+    py-pyqt5 = {
+      depends = {
+        py-sip = {
+          variants = {
+            module = "PyQt5.sip";
+          };
+        };
+      };
+    };
     py-setuptools-scm = {
       variants = {
         toml = true;
       };
+    };
+    py-torch = {
+      variants = {
+        inherit cuda_arch;
+        valgrind = false;
+      };
+    };
+    python = corePython;
+    qt = {
+      variants = {
+        dbus = true;
+        opengl = true;
+      };
+    };
+    r = {
+      variants = {
+        X = true;
+      };
+    };
+    relion = {
+      variants = {
+        inherit cuda_arch;
+        mklfft = false;
+      };
+    };
+    shadow = {
+      extern = "/usr";
+      version = "4.6";
     };
     slurm = {
       extern = "/cm/shared/apps/slurm/current";
@@ -126,11 +266,6 @@ corePacks = import ../packs {
         pmix = true;
         hwloc = true;
       };
-    };
-    intel-mpi = {
-      # not available anymore...
-      extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
-      version = "2017.4.196";
     };
     ucx = {
       variants = {
@@ -143,149 +278,14 @@ corePacks = import ../packs {
         ib-hw-tm = true;
       };
     };
-    libfabric = {
-      variants = {
-        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "psm" "mlx"];
-      };
-    };
-    llvm = {
-      version = "10";
-    };
-    hdf5 = {
-      version = "1.10";
-      variants = {
-        hl = true;
-        fortran = true;
-        cxx = true;
-      };
-    };
-    fftw = {
-      version = "3.3.9";
-      variants = {
-        precision = ["float" "double" "quad" "long_double"];
-      };
-    };
-    py-torch = {
-      variants = {
-        inherit cuda_arch;
-        valgrind = false;
-      };
-    };
-    nccl = {
-      variants = {
-        inherit cuda_arch;
-      };
-    };
-    magma = {
-      variants = {
-        inherit cuda_arch;
-      };
-    };
-    relion = {
-      variants = {
-        inherit cuda_arch;
-        mklfft = false;
-      };
-    };
-    py-pybind11 = {
-      version = "2.6.2";
-    };
-    qt = {
-      variants = {
-        dbus = true;
-        opengl = true;
-      };
-    };
-    harfbuzz = {
-      variants = {
-        graphite2 = true;
-      };
-    };
-    r = {
-      variants = {
-        X = true;
-      };
-    };
-    /* for gtk-doc */
-    docbook-xml = {
-      version = "4.3";
-    };
-    docbook-xsl = {
-      version = "1.78.1";
-    };
-    libepoxy = {
-      variants = {
-        #glx = false; # ~glx breaks gtkplus
-      };
-    };
-    /* for unison */
-    ocaml = {
-      variants = {
-        force-safe-string = false;
-      };
-    };
-    /* for vtk */
-    freetype = {
-      version = ":2.10.2";
-    };
-    gsl = {
-      variants = {
-        external-cblas = true;
-      };
-    };
-    cuda = {
-      version = "11.3";
-    };
-    /* needs old gcc */
-    psm = bootstrapPacks.pkgs.psm;
-    shadow = {
-      extern = "/usr";
-      version = "4.6";
-    };
-    petsc = {
-      variants = {
-        hdf5 = false;
-        hypre = false;
-        superlu-dist = false;
-      };
-    };
-    py-pyqt5 = {
-      depends = {
-        py-sip = {
-          variants = {
-            module = "PyQt5.sip";
-          };
-        };
-      };
-    };
-    py-protobuf = {
-      version = "3.15.7"; # newer have wrong hash (#25469)
-    };
-    py-h5py = {
-      version = ":2";
-    };
-    boost = {
-      variants = {
-        context = true;
-        coroutine = true;
-        cxxstd = "14";
-      };
-    };
-    nix = {
-      variants = {
-        storedir = builtins.getEnv "NIX_STORE_DIR";
-        statedir = builtins.getEnv "NIX_STATE_DIR";
-        sandboxing = false;
-      };
-    };
-    aocc = {
-      variants = {
-        license-agreed = true;
-      };
-    };
     visit = {
       variants = {
         python = false; # needs python2
+      };
+    };
+    zstd = {
+      variants = {
+        multithread = false;
       };
     };
   }
@@ -339,30 +339,7 @@ bootstrapPacks = corePacks.withPrefs {
       version = "4.8.5";
       extern = "/usr";
     };
-    zlib = {
-      extern = "/usr";
-      version = "1.2.7";
-    };
-    diffutils = {
-      extern = "/usr";
-      version = "3.3";
-    };
-    bzip2 = {
-      extern = "/usr";
-      version = "1.0.6";
-    };
-    perl = {
-      extern = "/usr";
-      version = "5.16.3";
-    };
-    m4 = {
-      extern = "/usr";
-      version = "1.4.16";
-    };
-    libtool = {
-      extern = "/usr";
-      version = "2.4.2";
-    };
+
     autoconf = {
       extern = "/usr";
       version = "2.69";
@@ -371,12 +348,21 @@ bootstrapPacks = corePacks.withPrefs {
       extern = "/usr";
       version = "1.13.4";
     };
-    openssl = {
+    bzip2 = {
       extern = "/usr";
-      version = "1.0.2k";
-      variants = {
-        fips = false;
-      };
+      version = "1.0.6";
+    };
+    diffutils = {
+      extern = "/usr";
+      version = "3.3";
+    };
+    libtool = {
+      extern = "/usr";
+      version = "2.4.2";
+    };
+    m4 = {
+      extern = "/usr";
+      version = "1.4.16";
     };
     ncurses = {
       extern = "/usr";
@@ -386,11 +372,26 @@ bootstrapPacks = corePacks.withPrefs {
         abi = "5";
       };
     };
+    openssl = {
+      extern = "/usr";
+      version = "1.0.2k";
+      variants = {
+        fips = false;
+      };
+    };
+    perl = {
+      extern = "/usr";
+      version = "5.16.3";
+    };
     pkgconfig = {
       extern = "/usr";
       version = "0.27.1";
     };
     psm = {};
+    zlib = {
+      extern = "/usr";
+      version = "1.2.7";
+    };
   };
 };
 
@@ -1123,10 +1124,10 @@ corePacks // {
           environment_blacklist = ["CC" "FC" "CXX" "F77"];
         };
       };
-      openmpi = {
+      boost = {
         environment = {
           set = {
-            OPENMPI_VERSION = "{version}";
+            BOOST_ROOT = "{prefix}";
           };
         };
       };
@@ -1137,10 +1138,10 @@ corePacks // {
           };
         };
       };
-      boost = {
+      openmpi = {
         environment = {
           set = {
-            BOOST_ROOT = "{prefix}";
+            OPENMPI_VERSION = "{version}";
           };
         };
       };
