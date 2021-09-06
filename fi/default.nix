@@ -17,7 +17,7 @@ corePacks = import ../packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "c48ff3793f125eba320a6e5ac2e2353a36de2af6";
+    rev = "96c6bbddf13a97de9aa12d5c4cb3432b79f44116";
   };
   spackConfig = {
     config = {
@@ -276,6 +276,16 @@ corePacks = import ../packs {
         storedir = builtins.getEnv "NIX_STORE_DIR";
         statedir = builtins.getEnv "NIX_STATE_DIR";
         sandboxing = false;
+      };
+    };
+    aocc = {
+      variants = {
+        license-agreed = true;
+      };
+    };
+    visit = {
+      variants = {
+        python = false; # needs python2
       };
     };
   }
@@ -660,6 +670,8 @@ pkgStruct = {
     (llvm.withPrefs { version = "10"; })
     (llvm.withPrefs { version = "11"; })
     (llvm.withPrefs { version = "12"; })
+    aocc
+    blast-plus
     cmake
     cuda
     cudnn
@@ -680,27 +692,34 @@ pkgStruct = {
     #i3 #needs some xcb things
     imagemagick
     intel-mkl
+    (intel-mkl.withPrefs { version = "2017.4.239"; })
     intel-mpi
+    intel-oneapi-compilers
     intel-oneapi-mkl
     intel-oneapi-mpi
+    intel-oneapi-vtune
     julia
     keepassxc
     lftp
+    libzmq
     likwid
     mercurial
     mplayer
     mpv
     mupdf
+    nccl
     #nix #too old/broken
     node-js
     (node-js.withPrefs { version = ":12"; })
     nvhpc
     octave
     openjdk
+    openmm
     #pdftk #needs gcc java (gcj)
     perl
     petsc
     postgresql
+    qt
     { pkg = rView;
       environment = {
         prepend_path = {
@@ -721,6 +740,7 @@ pkgStruct = {
     unison
     valgrind
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
+    #visit #needs qt <= 5.14.2
     vtk
     xscreensaver
     zsh
@@ -739,11 +759,28 @@ pkgStruct = {
       };
     };
   }) ["R2018a" "R2018b" "R2020a" "R2021a"]
+  ++
+  map (v: {
+    pkg = intel-parallel-studio.withPrefs
+      { inherit (v) version; extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/${v.path}"; };
+    environment = {
+      set = {
+        INTEL_LICENSE_FILE = "28518@lic1.flatironinstitute.org";
+      };
+    }; }) [
+      { version = "cluster.2017.1"; path = "2017-1"; }
+      { version = "cluster.2017.4"; path = "2017-4"; }
+      { version = "cluster.2019.0"; path = "2019"; }
+      { version = "cluster.2019.3"; path = "2019-3"; }
+      { version = "cluster.2020.0"; path = "2020"; }
+      { version = "cluster.2020.4"; path = "2020-4"; }
+    ]
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
     pkgs = with comp.packs.pkgs; [
       (comp.defaulting compiler)
+      arpack-ng
       boost
       eigen
       ffmpeg
@@ -755,9 +792,16 @@ pkgStruct = {
       { pkg = gsl.withPrefs { depends = blasVirtuals { name = "intel-oneapi-mkl"; }; };
         projection = "{name}/{version}-mkl";
       }
+      gmp
       (hdf5.withPrefs { version = ":1.8"; })
       hdf5
+      healpix-cxx
+      hwloc
+      libdrm
       magma
+      mesa
+      mpc
+      mpfr
       netcdf-c
       nfft
       { pkg = openblas.withPrefs { variants = { threads = "none"; }; };
@@ -770,6 +814,7 @@ pkgStruct = {
         projection = "{name}/{version}-threaded";
       }
       pgplot
+      ucx
 
       { name = "openmpi-opa";
         context = {
@@ -846,6 +891,7 @@ pkgStruct = {
         py-seaborn
         py-matplotlib
         py-numba
+        #py-yt #needs py-h5py>=3.1
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
       ];
       mkl = 
@@ -901,6 +947,25 @@ pkgStruct = {
   ];
 
   static = [
+    {
+      name = "cuda-dcgm";
+      prefix = "/cm/local/apps/cuda-dcgm/current";
+      projection = "{name}";
+    }
+    {
+      name = "fdcache";
+      environment = {
+        prepend_path = {
+          LD_PRELOAD = "/cm/shared/sw/pkg/flatiron/fdcache/src/libfdcache.so";
+        };
+      };
+      projection = "{name}";
+    }
+    {
+      name = "gpfs";
+      prefix = "/usr/lpp/mmfs";
+      projection = "{name}";
+    }
     { name = "jupyter-kernels";
       prefix = "/cm/shared/sw/pkg/flatiron/jupyter-kernels";
       environment = {
@@ -924,6 +989,19 @@ pkgStruct = {
   ];
 
 };
+
+# missing things:
+#  amd/aocl
+#  amd/uprof
+#  intel/compiler (-parallel-studio?)
+#  vtune
+#  pvfmm
+#  slack
+#  spider2
+#  stkfmm
+#  triqs/...
+#  py jaxlib cuda
+#  py deadalus mpi
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python

@@ -214,7 +214,9 @@ lib.fix (packs: with packs; {
     let
       /* combining preferences with descriptor to get concrete package spec */
       resolveEach = resolver: arg: pref:
-        builtins.mapAttrs (n: a: resolver n a pref.${n} or null) arg;
+        /* let unknowns = builtins.removeAttrs pref (builtins.attrNames arg); in
+        (if unknowns == {} then lib.id else builtins.trace "Warning: ${pname}: unknown prefs: ${toString (builtins.attrNames unknowns)}") */
+        (builtins.mapAttrs (n: a: resolver n a pref.${n} or null) arg);
       resolveVersion = arg: pref:
         /* special version matching: a (list of intersected) version constraint */
         let v = builtins.filter (v: lib.versionMatches v pref) arg;

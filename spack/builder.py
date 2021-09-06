@@ -7,10 +7,11 @@ import json
 import nixpack
 import spack
 
-# disable post_install hooks (sbang, permissions)
-def post_install(spec):
+# disable pre_ and post_install hooks (sbang, permissions, licensing)
+def noop_hook(spec):
     pass
-spack.hooks.post_install = post_install
+spack.hooks.pre_install = noop_hook
+spack.hooks.post_install = noop_hook
 
 nixpack.getVar('name')
 nixspec = nixpack.getJson('spec')
