@@ -642,6 +642,7 @@ rView = corePacks.view {
     r-xtable
     r-yaml
     r-zlibbioc
+    #rstudio?
   ]);
 };
 
@@ -721,6 +722,7 @@ pkgStruct = {
     valgrind
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
     vtk
+    xscreensaver
     zsh
   ]
   ++
@@ -744,6 +746,7 @@ pkgStruct = {
       (comp.defaulting compiler)
       boost
       eigen
+      ffmpeg
       (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
       fftw
       { pkg = gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; };
@@ -755,6 +758,7 @@ pkgStruct = {
       (hdf5.withPrefs { version = ":1.8"; })
       hdf5
       magma
+      netcdf-c
       nfft
       { pkg = openblas.withPrefs { variants = { threads = "none"; }; };
         projection = "{name}/{version}-single";
@@ -876,7 +880,24 @@ pkgStruct = {
 
   nixpkgs = with corePacks.nixpkgs; [
     nix
-    #vscode
+    elinks
+    #evince
+    feh
+    #gimp
+    #git
+    #i3-env
+    #inkscape
+    #jabref
+    #keepassx2
+    #libreoffice
+    #meshlab
+    #pass
+    #pdftk
+    #rxvt-unicode
+    #sage
+    vscode
+    #wecall
+    #xscreensaver
   ];
 
   static = [
