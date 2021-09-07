@@ -108,6 +108,7 @@ class ModSpec:
         self.projection = p.get('projection')
         self.autoload = p.get('autoload', [])
         self.prerequisites = p.get('prerequisites', [])
+        self.postscript = p.get('postscript', '')
 
     @property
     def writer(self):
@@ -154,6 +155,9 @@ class ModSpec:
                 f.write(content)
         else:
             self.writer.write()
+            if self.postscript:
+                with open(fn, 'a') as f:
+                    f.write(self.postscript)
         if self.default:
             bn = os.path.basename(fn)
             os.symlink(bn, os.path.join(dn, "default"))
