@@ -402,7 +402,7 @@ blasVirtuals = blas: {
   scalapack = blas;
 };
 
-cuda_arch = { "35" = true; "60" = true; "70" = true; "80" = true; none = false; };
+cuda_arch = { "60" = true; "70" = true; "80" = true; none = false; };
 
 mkCompilers = base: gen:
   builtins.map (compiler: gen (rec {
