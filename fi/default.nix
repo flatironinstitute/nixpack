@@ -208,10 +208,7 @@ corePacks = import ../packs {
     };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
     py-h5py = {
-      version = ":2";
-    };
-    py-protobuf = {
-      version = "3.15.7"; # newer have wrong hash (#25469)
+      version = "3.1";
     };
     py-pybind11 = {
       version = "2.6.2";
@@ -688,9 +685,10 @@ pkgStruct = {
     git-lfs
     go
     gperftools
-    gromacs
+    { pkg = gromacs.withPrefs { variants = { cuda = true; }; };
+      projection = "{name}/{version}-singlegpu";
+    }
     (hdfview.withPrefs { fixedDeps = false; })
-    #i3 #needs some xcb things
     imagemagick
     intel-mkl
     (intel-mkl.withPrefs { version = "2017.4.239"; })
@@ -743,7 +741,7 @@ pkgStruct = {
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
     #visit #needs qt <= 5.14.2
     vtk
-    xscreensaver
+    #xscreensaver
     zsh
   ]
   ++
@@ -769,7 +767,6 @@ pkgStruct = {
         INTEL_LICENSE_FILE = "28518@lic1.flatironinstitute.org";
       };
     }; }) [
-      { version = "cluster.2017.1"; path = "2017-1"; }
       { version = "cluster.2017.4"; path = "2017-4"; }
       { version = "cluster.2019.0"; path = "2019"; }
       { version = "cluster.2019.3"; path = "2019-3"; }
@@ -794,8 +791,9 @@ pkgStruct = {
         projection = "{name}/{version}-mkl";
       }
       gmp
-      (hdf5.withPrefs { version = ":1.8"; })
-      hdf5
+      (hdf5.withPrefs { version = "1.8"; })
+      hdf5 # default 1.10
+      (hdf5.withPrefs { version = "1.12"; })
       healpix-cxx
       hwloc
       libdrm
@@ -892,7 +890,7 @@ pkgStruct = {
         py-seaborn
         py-matplotlib
         py-numba
-        #py-yt #needs py-h5py>=3.1
+        py-yt #needs py-h5py>=3.1
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
       ];
       mkl = 
@@ -942,9 +940,10 @@ pkgStruct = {
     #pdftk
     #rxvt-unicode
     #sage
+    slack
     vscode
     #wecall
-    #xscreensaver
+    xscreensaver
   ];
 
   static = [
@@ -994,15 +993,10 @@ pkgStruct = {
 # missing things:
 #  amd/aocl
 #  amd/uprof
-#  intel/compiler (-parallel-studio?)
-#  vtune
-#  pvfmm
-#  slack
-#  spider2
-#  stkfmm
+#  pvfmm, stkfmm: robert
 #  triqs/...
 #  py jaxlib cuda
-#  py deadalus mpi
+#  py deadalus mpi: robert
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python
