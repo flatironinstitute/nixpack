@@ -290,7 +290,7 @@ corePacks = import ../packs {
       };
     };
   }
-  // blasVirtuals { name = "openblas"; };
+  // blasVirtuals { name = "flexiblas"; };
 
   repoPatch = {
     openmpi = spec: {
@@ -789,15 +789,7 @@ pkgStruct = {
       ffmpeg
       (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
       fftw
-      { pkg = gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; };
-        projection = "{name}/{version}-openblas";
-      }
-      { pkg = gsl.withPrefs { depends = { blas = { name = "flexiblas"; }; }; };
-        projection = "{name}/{version}-flexiblas";
-      }
-      { pkg = gsl.withPrefs { depends = blasVirtuals { name = "intel-oneapi-mkl"; }; };
-        projection = "{name}/{version}-mkl";
-      }
+      gsl
       gmp
       (hdf5.withPrefs { version = ":1.8"; })
       hdf5
@@ -897,31 +889,11 @@ pkgStruct = {
         py-seaborn
         py-matplotlib
         py-numba
+        py-numpy
+        py-scipy
         #py-yt #needs py-h5py>=3.1
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
       ];
-      mkl =
-        let
-          mklPacks = withPython (comp.packs.withPrefs # invert py/mkl prefs
-              { package = blasVirtuals { name = "intel-mkl"; }; }) # intel-oneapi-mkl not supported
-            py.python;
-        in
-        # replaces python-blas-backend
-        mklPacks.pythonView { pkgs = with mklPacks.pkgs; [
-          py-numpy
-          py-scipy
-      ]; };
-      flexiblas =
-        let
-          flexiblasPacks = withPython (comp.packs.withPrefs # invert py/flexiblas prefs
-              { package = blasVirtuals { name = "flexiblas"; }; })
-            py.python;
-        in
-        # replaces python-blas-backend
-        flexiblasPacks.pythonView { pkgs = with flexiblasPacks.pkgs; [
-          py-numpy
-          py-scipy
-      ]; };
     });
   });
 
@@ -1039,7 +1011,7 @@ jupyter = jupyterBase.extendView (
           note = "${lib.specName py.packs.pkgs.python.spec}%${lib.specName py.packs.pkgs.compiler.spec}";
         }; in [
           k
-          (k // { prefix = k.prefix + "-mkl"; note = k.note+"+mkl"; include = [mkl]; })
+          # (k // { prefix = k.prefix + "-mkl"; note = k.note+"+mkl"; include = [mkl]; })
         ]
       ) pythons
     ) compilers
@@ -1081,17 +1053,6 @@ modPkgs = with pkgStruct;
       { pkg = view;
         default = isCore;
       }
-      { pkg = mkl;
-        default = isCore;
-        projection = "python-mkl/{^python.version}";
-        autoload = [view];
-      }
-      { pkg = flexiblas;
-        default = isCore;
-        projection = "python-flexiblas/{^python.version}";
-        autoload = [view];
-      }
-
     ]) pythons
   ) compilers
   ++
