@@ -19,6 +19,7 @@ corePacks = import ../packs {
     ref = "fi-nixpack";
     rev = "96c6bbddf13a97de9aa12d5c4cb3432b79f44116";
   };
+
   spackConfig = {
     config = {
       source_cache = "/mnt/home/spack/cache";
@@ -469,7 +470,7 @@ mkMpis = base: gen:
 
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
-     environment polution, but anything that doesn't need python at runtime 
+     environment polution, but anything that doesn't need python at runtime
      can fall back on default
     */
   ifHasPy = p: o: name: prefs:
@@ -488,7 +489,7 @@ withPython = packs: py: let
   };
   coreRes = ifHasPy corePyPacks corePacks;
   corePyPacks = corePacks.withPrefs (pyPrefs (deptype: coreRes));
-  pyPacks = packs.withPrefs (pyPrefs 
+  pyPacks = packs.withPrefs (pyPrefs
     (deptype: if isRLDep deptype
       then ifHasPy pyPacks packs
       else coreRes));
@@ -681,6 +682,7 @@ pkgStruct = {
     distcc
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
+    flexiblas
     gdal
     (gdb.withPrefs { fixedDeps = false; })
     ghostscript
@@ -790,6 +792,9 @@ pkgStruct = {
       { pkg = gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; };
         projection = "{name}/{version}-openblas";
       }
+      { pkg = gsl.withPrefs { depends = { blas = { name = "flexiblas"; }; }; };
+        projection = "{name}/{version}-flexiblas";
+      }
       { pkg = gsl.withPrefs { depends = blasVirtuals { name = "intel-oneapi-mkl"; }; };
         projection = "{name}/{version}-mkl";
       }
@@ -895,7 +900,7 @@ pkgStruct = {
         #py-yt #needs py-h5py>=3.1
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
       ];
-      mkl = 
+      mkl =
         let
           mklPacks = withPython (comp.packs.withPrefs # invert py/mkl prefs
               { package = blasVirtuals { name = "intel-mkl"; }; }) # intel-oneapi-mkl not supported
@@ -905,7 +910,18 @@ pkgStruct = {
         mklPacks.pythonView { pkgs = with mklPacks.pkgs; [
           py-numpy
           py-scipy
-        ]; };
+      ]; };
+      flexiblas =
+        let
+          flexiblasPacks = withPython (comp.packs.withPrefs # invert py/flexiblas prefs
+              { package = blasVirtuals { name = "flexiblas"; }; })
+            py.python;
+        in
+        # replaces python-blas-backend
+        flexiblasPacks.pythonView { pkgs = with flexiblasPacks.pkgs; [
+          py-numpy
+          py-scipy
+      ]; };
     });
   });
 
@@ -1070,6 +1086,12 @@ modPkgs = with pkgStruct;
         projection = "python-mkl/{^python.version}";
         autoload = [view];
       }
+      { pkg = flexiblas;
+        default = isCore;
+        projection = "python-flexiblas/{^python.version}";
+        autoload = [view];
+      }
+
     ]) pythons
   ) compilers
   ++
@@ -1131,6 +1153,30 @@ corePacks // {
           };
         };
       };
+      openblas = {
+        environment = {
+          prepend_path = {
+            FLEXIBLAS = "{prefix}/lib/libopenblas.so";
+            FLEXIBLAS_LIBRARY_PATH = "{prefix}/lib";
+          };
+        };
+      };
+      intel-mkl = {
+        environment = {
+          prepend_path = {
+            FLEXIBLAS = "{prefix}/mkl/lib/intel64/libmkl_rt.so";
+            FLEXIBLAS_LIBRARY_PATH = "{prefix}/mkl/lib/intel64";
+          };
+        };
+      };
+      intel-oneapi-mkl = {
+        environment = {
+          prepend_path = {
+            FLEXIBLAS = "{prefix}/mkl/latest/lib/intel64/libmkl_rt.so";
+            FLEXIBLAS_LIBRARY_PATH = "{prefix}/mkl/latest/lib/intel64";
+          };
+        };
+      };
       hdf5 = {
         environment = {
           set = {
@@ -1159,5 +1205,4 @@ corePacks // {
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = p.pkg or p; in
     q.pkgs or (if q ? spec then [q] else [])) modPkgs);
-
 }
