@@ -479,6 +479,16 @@ flexiblas = {
   };
 };
 
+blasPkg = pkg: {
+  inherit pkg;
+  environment = {
+    set = builtins.mapAttrs (v: path: "{prefix}" + path) flexiblas.${pkg.spec.name};
+  };
+  postscript = ''
+    family("blas")
+  '';
+};
+
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
      environment polution, but anything that doesn't need python at runtime
@@ -706,11 +716,11 @@ pkgStruct = {
     }
     (hdfview.withPrefs { fixedDeps = false; })
     imagemagick
-    intel-mkl
-    (intel-mkl.withPrefs { version = "2017.4.239"; })
+    (blasPkg intel-mkl)
+    (blasPkg (intel-mkl.withPrefs { version = "2017.4.239"; }))
     intel-mpi
     intel-oneapi-compilers
-    intel-oneapi-mkl
+    (blasPkg intel-oneapi-mkl)
     intel-oneapi-mpi
     intel-oneapi-vtune
     julia
@@ -814,15 +824,15 @@ pkgStruct = {
       mpfr
       netcdf-c
       nfft
-      { pkg = openblas.withPrefs { variants = { threads = "none"; }; };
+      (blasPkg (openblas.withPrefs { variants = { threads = "none"; }; }) // {
         projection = "{name}/{version}-single";
-      }
-      { pkg = openblas.withPrefs { variants = { threads = "openmp"; }; };
+      })
+      (blasPkg (openblas.withPrefs { variants = { threads = "openmp"; }; }) // {
         projection = "{name}/{version}-openmp";
-      }
-      { pkg = openblas.withPrefs { variants = { threads = "pthreads"; }; };
+      })
+      (blasPkg (openblas.withPrefs { variants = { threads = "pthreads"; }; }) // {
         projection = "{name}/{version}-threaded";
-      }
+      })
       pgplot
       ucx
 
@@ -1147,11 +1157,7 @@ corePacks // {
       py-mpi4py = {
         autoload = "direct";
       };
-    } // builtins.mapAttrs (blas: env: {
-      environment = {
-        prepend_path = builtins.mapAttrs (v: path: "{prefix}" + path) env;
-      };
-    }) flexiblas;
+    };
 
     pkgs = modPkgs;
 
