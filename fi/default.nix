@@ -19,6 +19,7 @@ corePacks = import ../packs {
     ref = "fi-nixpack";
     rev = "96c6bbddf13a97de9aa12d5c4cb3432b79f44116";
   };
+
   spackConfig = {
     config = {
       source_cache = "/mnt/home/spack/cache";
@@ -286,7 +287,7 @@ corePacks = import ../packs {
       };
     };
   }
-  // blasVirtuals { name = "openblas"; };
+  // blasVirtuals { name = "flexiblas"; };
 
   repoPatch = {
     openmpi = spec: {
@@ -392,7 +393,6 @@ bootstrapPacks = corePacks.withPrefs {
   };
 };
 
-
 blasVirtuals = blas: {
   blas      = blas;
   lapack    = blas;
@@ -464,9 +464,34 @@ mkMpis = base: gen:
     { name = "intel-mpi"; }
   ];
 
+flexiBlases = {
+  openblas = {
+    FLEXIBLAS_LIBRARY_PATH = "/lib";
+    FLEXIBLAS              = "/lib/libopenblas.so";
+  };
+  intel-mkl = {
+    FLEXIBLAS_LIBRARY_PATH = "/mkl/lib/intel64";
+    FLEXIBLAS              = "/mkl/lib/intel64/libmkl_rt.so";
+  };
+  intel-oneapi-mkl = {
+    FLEXIBLAS_LIBRARY_PATH = "/mkl/latest/lib/intel64";
+    FLEXIBLAS              = "/mkl/latest/lib/intel64/libmkl_rt.so";
+  };
+};
+
+blasPkg = pkg: {
+  inherit pkg;
+  environment = {
+    set = builtins.mapAttrs (v: path: "{prefix}" + path) flexiBlases.${pkg.spec.name};
+  };
+  postscript = ''
+    family("blas")
+  '';
+};
+
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
-     environment polution, but anything that doesn't need python at runtime 
+     environment polution, but anything that doesn't need python at runtime
      can fall back on default
     */
   ifHasPy = p: o: name: prefs:
@@ -485,7 +510,7 @@ withPython = packs: py: let
   };
   coreRes = ifHasPy corePyPacks corePacks;
   corePyPacks = corePacks.withPrefs (pyPrefs (deptype: coreRes));
-  pyPacks = packs.withPrefs (pyPrefs 
+  pyPacks = packs.withPrefs (pyPrefs
     (deptype: if isRLDep deptype
       then ifHasPy pyPacks packs
       else coreRes));
@@ -678,6 +703,7 @@ pkgStruct = {
     distcc
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
+    flexiblas
     gdal
     (gdb.withPrefs { fixedDeps = false; })
     ghostscript
@@ -690,11 +716,11 @@ pkgStruct = {
     }
     (hdfview.withPrefs { fixedDeps = false; })
     imagemagick
-    intel-mkl
-    (intel-mkl.withPrefs { version = "2017.4.239"; })
+    (blasPkg intel-mkl)
+    (blasPkg (intel-mkl.withPrefs { version = "2017.4.239"; }))
     intel-mpi
     intel-oneapi-compilers
-    intel-oneapi-mkl
+    (blasPkg intel-oneapi-mkl)
     intel-oneapi-mpi
     intel-oneapi-vtune
     julia
@@ -784,12 +810,7 @@ pkgStruct = {
       ffmpeg
       (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
       fftw
-      { pkg = gsl.withPrefs { depends = { blas = { name = "openblas"; variants = { threads = "none"; }; }; }; };
-        projection = "{name}/{version}-openblas";
-      }
-      { pkg = gsl.withPrefs { depends = blasVirtuals { name = "intel-oneapi-mkl"; }; };
-        projection = "{name}/{version}-mkl";
-      }
+      gsl
       gmp
       (hdf5.withPrefs { version = "1.8"; })
       hdf5 # default 1.10
@@ -803,15 +824,15 @@ pkgStruct = {
       mpfr
       netcdf-c
       nfft
-      { pkg = openblas.withPrefs { variants = { threads = "none"; }; };
+      (blasPkg (openblas.withPrefs { variants = { threads = "none"; }; }) // {
         projection = "{name}/{version}-single";
-      }
-      { pkg = openblas.withPrefs { variants = { threads = "openmp"; }; };
+      })
+      (blasPkg (openblas.withPrefs { variants = { threads = "openmp"; }; }) // {
         projection = "{name}/{version}-openmp";
-      }
-      { pkg = openblas.withPrefs { variants = { threads = "pthreads"; }; };
+      })
+      (blasPkg (openblas.withPrefs { variants = { threads = "pthreads"; }; }) // {
         projection = "{name}/{version}-threaded";
-      }
+      })
       pgplot
       ucx
 
@@ -892,20 +913,11 @@ pkgStruct = {
         py-seaborn
         py-matplotlib
         py-numba
-        py-yt #needs py-h5py>=3.1
+        py-numpy
+        py-scipy
+        py-yt
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
       ];
-      mkl = 
-        let
-          mklPacks = withPython (comp.packs.withPrefs # invert py/mkl prefs
-              { package = blasVirtuals { name = "intel-mkl"; }; }) # intel-oneapi-mkl not supported
-            py.python;
-        in
-        # replaces python-blas-backend
-        mklPacks.pythonView { pkgs = with mklPacks.pkgs; [
-          py-numpy
-          py-scipy
-        ]; };
     });
   });
 
@@ -1018,8 +1030,16 @@ jupyter = jupyterBase.extendView (
           prefix = "${py.packs.pkgs.python.name}-${py.packs.pkgs.compiler.name}";
           note = "${lib.specName py.packs.pkgs.python.spec}%${lib.specName py.packs.pkgs.compiler.spec}";
         }; in [
-          k
-          (k // { prefix = k.prefix + "-mkl"; note = k.note+"+mkl"; include = [mkl]; })
+          (k // {
+            env = builtins.mapAttrs (var: path:
+              py.packs.pkgs.openblas + path) flexiBlases.openblas;
+          })
+          (k // {
+            prefix = k.prefix + "-mkl";
+            note = k.note+"+mkl";
+            env = builtins.mapAttrs (var: path:
+              py.packs.pkgs.intel-oneapi-mkl + path) flexiBlases.intel-oneapi-mkl;
+          })
         ]
       ) pythons
     ) compilers
@@ -1060,11 +1080,6 @@ modPkgs = with pkgStruct;
     builtins.concatMap (py: with py; [
       { pkg = view;
         default = isCore;
-      }
-      { pkg = mkl;
-        default = isCore;
-        projection = "python-mkl/{^python.version}";
-        autoload = [view];
       }
     ]) pythons
   ) compilers
@@ -1155,5 +1170,4 @@ corePacks // {
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = p.pkg or p; in
     q.pkgs or (if q ? spec then [q] else [])) modPkgs);
-
 }
