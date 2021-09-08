@@ -1123,6 +1123,8 @@ corePacks // {
         "gromacs+plumed" = "{name}/{version}-plumed";
       };
       prefix_inspections = {
+        "lib" = ["LIBRARY_PATH"];
+        "lib64" = ["LIBRARY_PATH"];
         "" = ["{name}_BASE"];
       };
       all = {
@@ -1139,13 +1141,6 @@ corePacks // {
         environment = {
           set = {
             BOOST_ROOT = "{prefix}";
-          };
-        };
-      };
-      python = {
-        environment = {
-          prepend_path = {
-            LIBRARY_PATH = "{prefix}/lib";
           };
         };
       };
