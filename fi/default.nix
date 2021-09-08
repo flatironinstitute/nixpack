@@ -1142,6 +1142,13 @@ corePacks // {
           };
         };
       };
+      python = {
+        environment = {
+          prepend_path = {
+            LIBRARY_PATH = "{prefix}/lib";
+          };
+        };
+      };
       hdf5 = {
         environment = {
           set = {
