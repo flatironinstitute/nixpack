@@ -393,7 +393,6 @@ bootstrapPacks = corePacks.withPrefs {
   };
 };
 
-
 blasVirtuals = blas: {
   blas      = blas;
   lapack    = blas;
@@ -464,6 +463,21 @@ mkMpis = base: gen:
     { name = "intel-oneapi-mpi"; }
     { name = "intel-mpi"; }
   ];
+
+flexiblas = {
+  openblas = {
+    FLEXIBLAS_LIBRARY_PATH = "/lib";
+    FLEXIBLAS              = "/lib/libopenblas.so";
+  };
+  intel-mkl = {
+    FLEXIBLAS_LIBRARY_PATH = "/mkl/lib/intel64";
+    FLEXIBLAS              = "/mkl/lib/intel64/libmkl_rt.so";
+  };
+  intel-oneapi-mkl = {
+    FLEXIBLAS_LIBRARY_PATH = "/mkl/latest/lib/intel64";
+    FLEXIBLAS              = "/mkl/latest/lib/intel64/libmkl_rt.so";
+  };
+};
 
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
@@ -1004,8 +1018,16 @@ jupyter = jupyterBase.extendView (
           prefix = "${py.packs.pkgs.python.name}-${py.packs.pkgs.compiler.name}";
           note = "${lib.specName py.packs.pkgs.python.spec}%${lib.specName py.packs.pkgs.compiler.spec}";
         }; in [
-          k
-          # (k // { prefix = k.prefix + "-mkl"; note = k.note+"+mkl"; include = [mkl]; })
+          (k // {
+            env = builtins.mapAttrs (var: path:
+              py.packs.pkgs.openblas + path) flexiblas.openblas;
+          })
+          (k // {
+            prefix = k.prefix + "-mkl";
+            note = k.note+"+mkl";
+            env = builtins.mapAttrs (var: path:
+              py.packs.pkgs.intel-oneapi-mkl + path) flexiblas.intel-oneapi-mkl;
+          })
         ]
       ) pythons
     ) compilers
@@ -1108,30 +1130,6 @@ corePacks // {
           };
         };
       };
-      openblas = {
-        environment = {
-          prepend_path = {
-            FLEXIBLAS = "{prefix}/lib/libopenblas.so";
-            FLEXIBLAS_LIBRARY_PATH = "{prefix}/lib";
-          };
-        };
-      };
-      intel-mkl = {
-        environment = {
-          prepend_path = {
-            FLEXIBLAS = "{prefix}/mkl/lib/intel64/libmkl_rt.so";
-            FLEXIBLAS_LIBRARY_PATH = "{prefix}/mkl/lib/intel64";
-          };
-        };
-      };
-      intel-oneapi-mkl = {
-        environment = {
-          prepend_path = {
-            FLEXIBLAS = "{prefix}/mkl/latest/lib/intel64/libmkl_rt.so";
-            FLEXIBLAS_LIBRARY_PATH = "{prefix}/mkl/latest/lib/intel64";
-          };
-        };
-      };
       hdf5 = {
         environment = {
           set = {
@@ -1149,7 +1147,11 @@ corePacks // {
       py-mpi4py = {
         autoload = "direct";
       };
-    };
+    } // builtins.mapAttrs (blas: env: {
+      environment = {
+        prepend_path = builtins.mapAttrs (v: path: "{prefix}" + path) env;
+      };
+    }) flexiblas;
 
     pkgs = modPkgs;
 
