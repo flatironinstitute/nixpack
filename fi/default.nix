@@ -464,7 +464,7 @@ mkMpis = base: gen:
     { name = "intel-mpi"; }
   ];
 
-flexiblas = {
+flexiBlases = {
   openblas = {
     FLEXIBLAS_LIBRARY_PATH = "/lib";
     FLEXIBLAS              = "/lib/libopenblas.so";
@@ -482,7 +482,7 @@ flexiblas = {
 blasPkg = pkg: {
   inherit pkg;
   environment = {
-    set = builtins.mapAttrs (v: path: "{prefix}" + path) flexiblas.${pkg.spec.name};
+    set = builtins.mapAttrs (v: path: "{prefix}" + path) flexiBlases.${pkg.spec.name};
   };
   postscript = ''
     family("blas")
@@ -1030,13 +1030,13 @@ jupyter = jupyterBase.extendView (
         }; in [
           (k // {
             env = builtins.mapAttrs (var: path:
-              py.packs.pkgs.openblas + path) flexiblas.openblas;
+              py.packs.pkgs.openblas + path) flexiBlases.openblas;
           })
           (k // {
             prefix = k.prefix + "-mkl";
             note = k.note+"+mkl";
             env = builtins.mapAttrs (var: path:
-              py.packs.pkgs.intel-oneapi-mkl + path) flexiblas.intel-oneapi-mkl;
+              py.packs.pkgs.intel-oneapi-mkl + path) flexiBlases.intel-oneapi-mkl;
           })
         ]
       ) pythons
