@@ -880,6 +880,7 @@ pkgStruct = {
         py-hypothesis
         py-cython
         py-h5py
+        py-pycuda
         py-torch
         py-ipykernel
         py-pandas
