@@ -940,7 +940,7 @@ pkgStruct = {
     #pdftk
     #rxvt-unicode
     #sage
-    slack
+    #slack
     vscode
     #wecall
     xscreensaver
