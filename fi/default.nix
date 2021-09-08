@@ -861,6 +861,7 @@ pkgStruct = {
     pythons = mkPythons comp.packs (py: py // {
       view = with py.packs.pkgs; pyView [
         python
+        gettext
         py-cherrypy
         py-flask
         py-pip
