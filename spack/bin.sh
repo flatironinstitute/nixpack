@@ -6,7 +6,7 @@ cat <<EOF
 import os
 import sys
 EOF
-for v in system os PATH SPACK_PYTHON spackConfig spackCache NIX_BUILD_TOP NIX_STORE ; do
+for v in system os PATH SPACK_PYTHON spackConfig spackCache NIX_BUILD_TOP NIX_STORE repos ; do
 	echo -n "os.environ['$v'] = "
 	eval "echo \'\"\$$v\"\'"
 done
