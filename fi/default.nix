@@ -234,6 +234,7 @@ corePacks = import ../packs {
         inherit cuda_arch;
         valgrind = false;
       };
+      depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
     };
     python = corePython;
     qt = {
