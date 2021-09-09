@@ -1,4 +1,5 @@
 { target ? "broadwell"
+, cudaarch ? "60,70,80"
 }:
 
 let
@@ -399,7 +400,9 @@ blasVirtuals = blas: {
   scalapack = blas;
 };
 
-cuda_arch = { "60" = true; "70" = true; "80" = true; none = false; };
+cuda_arch = { none = false; } // builtins.listToAttrs
+  (map (a: { name = a; value = true; })
+    (if builtins.isString cudaarch then lib.splitRegex "," cudaarch else cudaarch));
 
 mkCompilers = base: gen:
   builtins.map (compiler: gen (rec {
