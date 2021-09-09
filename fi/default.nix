@@ -107,6 +107,12 @@ corePacks = import ../packs {
     gcc = {
       version = "7";
     };
+    gl = {
+      name = "opengl";
+    };
+    glx = {
+      name = "opengl";
+    };
     gsl = {
       variants = {
         external-cblas = true;
@@ -173,6 +179,10 @@ corePacks = import ../packs {
       variants = {
         threads = "pthreads";
       };
+    };
+    opengl = {
+      version = "4.6";
+      extern = "/usr";
     };
     openmpi = {
       version = "4.0";
@@ -842,7 +852,7 @@ pkgStruct = {
       hwloc
       libdrm
       magma
-      mesa
+      #mesa
       mpc
       mpfr
       netcdf-c
