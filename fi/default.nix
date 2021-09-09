@@ -868,25 +868,49 @@ pkgStruct = {
       })
       pgplot
       ucx
-
-      { name = "openmpi-opa";
-        context = {
-          short_description = "Load openmpi4 for Omnipath fabric";
-        };
-        environment = {
-          set = {
-            "OMPI_MCA_pml" = "cm";
-          };
-        };
-        depends = { mpi = openmpi; };
-        projection = "{name}/{^openmpi.version}";
-      }
     ] ++
     optMpiPkgs comp.packs;
 
     mpis = mkMpis comp.packs (mpi: mpi // {
       pkgs = with mpi.packs.pkgs;
-        lib.optionals mpi.isOpenmpi [ mpi.packs.pkgs.mpi ] # others are above, compiler-independent
+        lib.optionals mpi.isOpenmpi ([
+          mpi.packs.pkgs.mpi # others are above, compiler-independent
+        ] ++
+          /* static mpi env modules */
+          map (p: p // {
+            depends = {
+              inherit (mpi.packs.pkgs) compiler mpi;
+            };
+            projection = "{name}/{^openmpi.version}";
+          }) ([
+            { name = "openmpi-intel";
+              context = {
+                short_description = "Set openmpi to use Intel compiler (icc)";
+              };
+              environment = {
+                set = {
+                  OMPI_CC = "icc";
+                  OMPI_CXX = "icpc";
+                  OMPI_FC = "ifort";
+                  OMPI_F77 = "ifort";
+                };
+              };
+            }
+          ]
+          ++
+          lib.optionals (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4") [
+            { name = "openmpi-opa";
+              context = {
+                short_description = "Set openmpi4 for Omnipath fabric";
+              };
+              environment = {
+                set = {
+                  "OMPI_MCA_pml" = "cm";
+                };
+              };
+            }
+          ])
+        )
         ++ [
           osu-micro-benchmarks
         ] ++
@@ -1188,16 +1212,6 @@ corePacks // {
           };
         };
       };
-      /* intel-oneapi-compilers = {
-        environment = {
-          set = {
-            OMPI_CC = "icc";
-            OMPI_CXX = "icpc";
-            OMPI_FC = "ifort";
-            OMPI_F77 = "ifort";
-          };
-        };
-      }; */
       openmpi = {
         environment = {
           set = {
