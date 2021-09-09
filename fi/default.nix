@@ -201,6 +201,12 @@ corePacks = import ../packs {
         X = true;
       };
     };
+    paraview = {
+      variants = {
+        python3 = true;
+        qt = true;
+      };
+    };
     petsc = {
       variants = {
         hdf5 = false;
@@ -527,7 +533,6 @@ mkPythons = base: gen:
     inherit python;
     isCore = python == corePython;
     packs = withPython base python;
-    defaulting = pkg: { default = isCore; inherit pkg; };
   }))
   [
     corePython
@@ -683,17 +688,20 @@ rView = corePacks.view {
   ]);
 };
 
-/* packages that we build both with and without mpi */
-optMpiPkgs = packs: with packs.pkgs; [
-  boost
-  (fftw.withPrefs { version = "2"; variants = { precision = { long_double = false; quad = false; }; }; })
-  fftw
+hdf5Pkgs = packs: with packs.pkgs; [
   (hdf5.withPrefs { version = "1.8"; })
   { pkg = hdf5; # default 1.10
     default = true;
   }
   (hdf5.withPrefs { version = "1.12"; })
 ];
+
+/* packages that we build both with and without mpi */
+optMpiPkgs = packs: with packs.pkgs; [
+  boost
+  (fftw.withPrefs { version = "2"; variants = { precision = { long_double = false; quad = false; }; }; })
+  fftw
+] ++ hdf5Pkgs packs;
 
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
@@ -760,6 +768,7 @@ pkgStruct = {
     octave
     openjdk
     openmm
+    #paraview #broken?
     #pdftk #needs gcc java (gcj)
     perl
     petsc
@@ -932,6 +941,12 @@ pkgStruct = {
       ];
     });
   });
+
+  /* does not work
+  intel = rec {
+    packs = corePacks.withCompiler corePacks.pkgs.intel-oneapi-compilers;
+    pkgs = hdf5Pkgs packs;
+  }; */
 
   clangcpp = rec {
     packs = corePacks.withPrefs {
@@ -1163,6 +1178,16 @@ corePacks // {
           };
         };
       };
+      /* intel-oneapi-compilers = {
+        environment = {
+          set = {
+            OMPI_CC = "icc";
+            OMPI_CXX = "icpc";
+            OMPI_FC = "ifort";
+            OMPI_F77 = "ifort";
+          };
+        };
+      }; */
       openmpi = {
         environment = {
           set = {
