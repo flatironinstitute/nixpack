@@ -679,6 +679,18 @@ rView = corePacks.view {
   ]);
 };
 
+/* packages that we build both with and without mpi */
+optMpiPkgs = packs: with packs.pkgs; [
+  boost
+  (fftw.withPrefs { version = "2"; variants = { precision = { long_double = false; quad = false; }; }; })
+  fftw
+  (hdf5.withPrefs { version = "1.8"; })
+  { pkg = hdf5; # default 1.10
+    default = true;
+  }
+  (hdf5.withPrefs { version = "1.12"; })
+];
+
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
     { pkg = slurm;
@@ -699,7 +711,10 @@ pkgStruct = {
     cuda
     cudnn
     curl
-    disBatch
+    { pkg = disBatch.withPrefs { version = "1"; };
+      default = true;
+    }
+    (disBatch.withPrefs { version = "2"; })
     distcc
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
@@ -805,16 +820,10 @@ pkgStruct = {
     pkgs = with comp.packs.pkgs; [
       (comp.defaulting compiler)
       arpack-ng
-      boost
       eigen
       ffmpeg
-      (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; quad = false; }; }; })
-      fftw
       gsl
       gmp
-      (hdf5.withPrefs { version = "1.8"; })
-      hdf5 # default 1.10
-      (hdf5.withPrefs { version = "1.12"; })
       healpix-cxx
       hwloc
       libdrm
@@ -848,19 +857,17 @@ pkgStruct = {
         depends = { mpi = openmpi; };
         projection = "{name}/{^openmpi.version}";
       }
-    ];
+    ] ++
+    optMpiPkgs comp.packs;
 
     mpis = mkMpis comp.packs (mpi: mpi // {
       pkgs = with mpi.packs.pkgs;
         lib.optionals mpi.isOpenmpi [ mpi.packs.pkgs.mpi ] # others are above, compiler-independent
         ++ [
-          boost
-          (fftw.withPrefs { version = ":2"; variants = { precision = { long_double = false; }; }; })
-          fftw
-          (hdf5.withPrefs { version = ":1.8"; })
-          hdf5
           osu-micro-benchmarks
         ] ++
+        optMpiPkgs mpi.packs
+        ++
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
           # these are broken with intel...
           gromacs
