@@ -4,6 +4,11 @@ fi=`dirname $0`
 . $fi/env
 nixfile=$fi
 
+if [[ `hostname -s` = pcn* ]] ; then
+	# popeye
+	nixfile="$nixfile --argstr target skylake --argstr cudaarch 70"
+fi
+
 traceSpecs() {
 	nix-instantiate --eval -A "$1" $nixfile |& sed 's/^trace: //'
 }
@@ -42,7 +47,9 @@ case "$cmd" in
 				;;
 			(modules|nixpack|"")
 				nix-build -o singularity -A pkgs.singularity $nixfile
-				sudo singularity/bin/spack_perms_fix.sh
+				for fix in singularity/bin/spack_perms_fix.sh ; do
+					sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
+				done
 				release nixpack -A mods
 				;;
 			(jupyter)
