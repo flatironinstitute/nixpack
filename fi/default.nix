@@ -709,6 +709,7 @@ pkgStruct = {
     (llvm.withPrefs { version = "10"; })
     (llvm.withPrefs { version = "11"; })
     (llvm.withPrefs { version = "12"; })
+    (gcc.withPrefs { version = "11"; })
     aocc
     blast-plus
     cmake
