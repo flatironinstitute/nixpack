@@ -225,6 +225,9 @@ corePacks = import ../packs {
       };
     };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
+    py-botocore = {
+      version = "1.19.52"; # for aiobotocore
+    };
     py-h5py = {
       version = "3.1";
     };
@@ -938,40 +941,95 @@ pkgStruct = {
       view = with py.packs.pkgs; pyView [
         python
         gettext
-        py-cherrypy
-        py-flask
-        py-pip
-        py-ipython
-        py-pyyaml
-        py-pylint
-        py-autopep8
-        py-sqlalchemy
-        py-nose
-        py-mako
-        py-pkgconfig
-        py-virtualenv
-        py-sympy
-        py-pycairo
-        py-sphinx
-        py-pytest
-        py-hypothesis
-        py-cython
-        py-h5py
-        py-pycuda
-        py-torch
-        py-ipykernel
-        py-pandas
-        py-scikit-learn
-        py-emcee
         py-astropy
+        py-autopep8
+        py-backports-ssl-match-hostname
+        #py-backports-weakref # broken?
+        py-biopython
+        py-bokeh
+        py-cherrypy
+        py-cython
         py-dask
-        py-seaborn
+        py-deeptools
+        #py-einsum2
+        py-emcee
+        #py-envisage #qt
+        py-flask-socketio
+        py-fusepy
+        #py-fuzzysearch
+        #py-fwrap
+        #py-ggplot
+        #py-glueviz
+        #py-gmpy2
+        py-gpustat
+        py-h5py
+        #py-husl
+        py-hypothesis
+        py-intervaltree
+        py-ipdb
+        py-ipykernel
+        py-ipyparallel
+        py-ipython
+        #py-jax
+        #py-jupyter #qt
+        #py-jupyter-contrib-nbextensions
+        py-jupyterlab
+        #py-leveldb
+        #py-llfuse
+        py-mako
+        #py-matlab-wrapper
         py-matplotlib
+        py-netcdf4
+        py-nose
         py-numba
         py-numpy
-        py-scipy
-        py-yt
+        py-olefile
+        #py-paho-mqtt
+        py-pandas
+        #py-parmap
+        py-partd
+        py-pathos
+        py-pip
+        py-pkgconfig
+        #py-primefac
+        py-psycopg2
+        py-pyfftw
+        py-pycairo
+        py-pycuda
+        py-pylint
+        py-pymc3
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
+        #py-pyreadline
+        #py-pysnmp
+        #py-pystan
+        py-pytest
+        #py-python-gflags
+        #py-python-hglib
+        py-pyyaml
+        #py-ray #needs bazel 4
+        py-s3fs
+        #py-scikit-cuda
+        py-scikit-image
+        py-scikit-learn
+        py-scipy
+        py-seaborn
+        py-shapely
+        py-sip
+        py-sphinx
+        py-sqlalchemy
+        #py-statistics
+        py-sympy
+        #py-tensorflow
+        #py-tess
+        py-toml
+        py-torch
+        py-torchvision
+        py-twisted
+        py-virtualenv
+        #py-ws4py
+        #py-xattr #broken: missing pip dep
+        #py-yep
+        py-yt
       ];
     });
   });
