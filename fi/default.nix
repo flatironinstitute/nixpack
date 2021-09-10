@@ -975,7 +975,9 @@ pkgStruct = {
         #py-jax
         #py-jupyter #qt
         #py-jupyter-contrib-nbextensions
+        py-jupyter-server
         py-jupyterlab
+        py-jupyterlab-server
         #py-leveldb
         #py-llfuse
         py-mako
