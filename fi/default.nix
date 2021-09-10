@@ -1137,6 +1137,7 @@ jupyterBase = pyView (with corePacks.pkgs; [
   py-jupyterlab
   py-batchspawner
   node-js
+  py-bash-kernel
 ]);
 
 jupyter = jupyterBase.extendView (
@@ -1173,6 +1174,12 @@ jupyter = jupyterBase.extendView (
         note = "${lib.specName rView.spec}";
         env = {
           R_LIBS_SITE = "${rView}/rlib/R/library";
+        };
+      }
+      { pkg = jupyterBase;
+        kernelSrc = import ../jupyter/kernel/bash corePacks {
+          pkg = jupyterBase;
+          jupyter = jupyterBase;
         };
       }
     ]
