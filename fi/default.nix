@@ -515,28 +515,24 @@ blasPkg = pkg: {
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
      environment polution, but anything that doesn't need python at runtime
-     can fall back on default
-    */
+     can fall back on default */
   ifHasPy = p: o: name: prefs:
     let q = p.getResolver name prefs; in
     if builtins.any (p: p.spec.name == "python") (lib.findDeps (x: isRLDep x.deptype) q)
       then q
       else o.getResolver name prefs;
-  pyPrefs = resolver: {
+  pyPacks = packs.withPrefs {
     label = "${packs.label}.python";
     package = {
       python = py;
     };
     global = {
-      inherit resolver;
+      resolver = deptype: ifHasPy pyPacks
+        (if isRLDep deptype
+          then packs
+          else corePacks);
     };
   };
-  coreRes = ifHasPy corePyPacks corePacks;
-  corePyPacks = corePacks.withPrefs (pyPrefs (deptype: coreRes));
-  pyPacks = packs.withPrefs (pyPrefs
-    (deptype: if isRLDep deptype
-      then ifHasPy pyPacks packs
-      else coreRes));
   in pyPacks;
 
 corePython = { version = "3.8"; };
