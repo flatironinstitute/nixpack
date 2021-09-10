@@ -150,6 +150,23 @@ class Path:
         else:
             return os.symlink(target, self.path)
 
+    def link(self, old: Union[bytes,Path]):
+        args = {}
+        if self.dirfd is not None:
+            args['dst_dir_fd'] = self.dirfd
+            dst = self.name
+        else:
+            dst = self.path
+        if isinstance(old, Path):
+            if old.dirfd is not None:
+                args['src_dir_fd'] = old.dirfd
+                src = old.name
+            else:
+                src = old.path
+        else:
+            src = old
+        return os.link(src, dst, **args)
+
     def open(self):
         "set the mode to open for reading. must be used as 'with path.open()'"
         self.mode = os.O_RDONLY|os.O_NOFOLLOW;
@@ -330,9 +347,12 @@ class File(Inode):
             with dst.create(src):
                 dst.write(b'#!/bin/sh\nexec -a "$0" '+src.path+b' "$@"\n')
         elif self.copy:
-            with src.open():
-                with dst.create(src):
-                    dst.copyfile(src)
+            try:
+                dst.link(src)
+            except PermissionError:
+                with src.open():
+                    with dst.create(src):
+                        dst.copyfile(src)
         else:
             dst.symlink(src)
 

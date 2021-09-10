@@ -382,7 +382,7 @@ lib.fix (packs: with packs; {
   view = import ../view packs;
 
   /* view with appropriate settings for python environments */
-  pythonView = args: view ({ shbang = ["bin/*"]; wrap = ["bin/python*"]; } // args);
+  pythonView = args: view ({ shbang = ["bin/*"]; copy = ["bin/python*"]; } // args);
 
   modules = import ../spack/modules.nix packs;
 
