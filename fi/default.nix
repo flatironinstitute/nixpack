@@ -549,11 +549,11 @@ mkPythons = base: gen:
   ];
 
 pyView = pl: corePacks.pythonView {
-  pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "py-" x.name) pl;
+  pkgs = lib.findDeps (x: lib.hasPrefix "py-" x.name) pl;
 };
 
 rView = corePacks.view {
-  pkgs = lib.findDeps (x: isRDep x.deptype && lib.hasPrefix "r-" x.name) (with corePacks.pkgs; [
+  pkgs = lib.findDeps (x: lib.hasPrefix "r-" x.name) (with corePacks.pkgs; [
     r
     r-irkernel
     r-annotationdbi
