@@ -10,6 +10,7 @@ import sys
 import stat
 import errno
 import fnmatch
+import json
 
 def pathstr(s: bytes) -> str:
     return s.decode('ISO-8859-1')
@@ -37,6 +38,7 @@ opts = {o: getOpt(o) for o in
         # in order of precedece:
         [ b'exclude' # paths not to link
         , b'shbang' # paths to translate #!
+        , b'jupyter' # paths to translate argv[0]
         , b'wrap' # paths to wrap executables
         , b'copy' # paths to copy
         , b'force' # paths to process only from corresponding forcePkgs
@@ -246,6 +248,7 @@ def newpath(path: bytes) -> bytes:
     for sp in srcPaths:
         if path.startswith(sp):
             return os.path.join(dstPath, os.path.relpath(path, sp))
+    return path
 
 class Conflict(Exception):
     def __init__(self, path: Path, *nodes: Inode):
@@ -306,6 +309,7 @@ class Symlink(Inode):
 
 class File(Inode):
     shbang = False
+    jupyter = False
     wrap = False
     copy = False
 
@@ -320,12 +324,14 @@ class File(Inode):
                         return
             if path.opt(b'wrap'):
                 self.wrap = True
+        if path.opt(b'jupyter'):
+            self.jupyter = True
         if path.opt(b'copy'):
             self.copy = True
 
     @property
     def needed(self):
-        return self.shbang or self.wrap or self.copy
+        return self.shbang or self.jupyter or self.wrap or self.copy
 
     def __eq__(self, other) -> bool:
         return super().__eq__(other) and False
@@ -346,6 +352,12 @@ class File(Inode):
         elif self.wrap:
             with dst.create(src):
                 dst.write(b'#!/bin/sh\nexec -a "$0" '+src.path+b' "$@"\n')
+        elif self.jupyter:
+            with src.open():
+                j = json.loads(src.read(src.stat().st_size))
+                j['argv'][0] = newpath(j['argv'][0].encode()).decode()
+                with dst.create(src):
+                    dst.write(json.dumps(j).encode())
         elif self.copy:
             try:
                 dst.link(src)
@@ -357,6 +369,8 @@ class File(Inode):
             dst.symlink(src)
 
 class Dir(Inode):
+    needany = False
+
     def __init__(self, node: Inode, src: int, path: Path):
         super().__init__(node, src, path)
         self.dir = node.dir if node else dict()
@@ -365,6 +379,12 @@ class Dir(Inode):
                 n = scan(self.dir.get(ent.name), src, ent)
                 if n:
                     self.dir[ent.name] = n
+                    if not self.needany and n.needed:
+                        self.needany = True
+
+    @property
+    def needed(self):
+        return self.needany or super().needed
 
     def __repr__(self):
         return f'Dir({self.src}, {self.dir!r})'
