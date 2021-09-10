@@ -31,7 +31,7 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     ref = "release-21.05";
-    rev = "8ecb35368aacb62d7d3de5ae2a3a1aa0432cfd76";
+    rev = "276671abd104e83ba7cb0b26f44848489eb0306b";
   };
 
   repos = [
@@ -1073,7 +1073,7 @@ pkgStruct = {
     #pdftk
     #rxvt-unicode
     #sage
-    #slack
+    slack
     vscode
     #wecall
     xscreensaver
