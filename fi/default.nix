@@ -947,6 +947,7 @@ pkgStruct = {
         #py-backports-weakref # broken?
         py-biopython
         py-bokeh
+        py-bottleneck
         py-cherrypy
         py-cython
         py-dask
@@ -954,6 +955,7 @@ pkgStruct = {
         #py-einsum2
         py-emcee
         #py-envisage #qt
+        py-flask
         py-flask-socketio
         py-fusepy
         #py-fuzzysearch
@@ -989,13 +991,17 @@ pkgStruct = {
         #py-parmap
         py-partd
         py-pathos
+        py-pexpect
         py-pip
         py-pkgconfig
         #py-primefac
+        py-prompt-toolkit
         py-psycopg2
-        py-pyfftw
+        py-pybind11
         py-pycairo
         py-pycuda
+        py-pyfftw
+        py-pygments
         py-pylint
         py-pymc3
         #py-pyqt5 #install broken: tries to install plugins/designer to qt
@@ -1026,6 +1032,7 @@ pkgStruct = {
         py-torchvision
         py-twisted
         py-virtualenv
+        py-wcwidth
         #py-ws4py
         #py-xattr #broken: missing pip dep
         #py-yep
@@ -1176,10 +1183,13 @@ jupyter = jupyterBase.extendView (
           R_LIBS_SITE = "${rView}/rlib/R/library";
         };
       }
-      { pkg = jupyterBase;
+      { pkg = corePacks.pkgs.py-bash-kernel;
         kernelSrc = import ../jupyter/kernel/bash corePacks {
           pkg = jupyterBase;
           jupyter = jupyterBase;
+        };
+        env = {
+          PYTHONHOME = null;
         };
       }
     ]

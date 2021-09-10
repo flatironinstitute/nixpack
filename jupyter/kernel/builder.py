@@ -13,7 +13,10 @@ pfx = os.environ['prefix']
 note = os.environ['note']
 envupd = json.loads(os.environ['env'])
 
-path = [os.path.join(pkg, 'bin')]
+path = []
+pbin = os.path.join(pkg, 'bin')
+if os.path.isdir(pbin):
+    path.append(pbin)
 pyth = []
 for p in include:
     pbin = os.path.join(p, 'bin')
@@ -25,7 +28,7 @@ path.append('/usr/bin')
 baseenv = {
     'PATH': ':'.join(path),
     'PYTHONHOME': pkg,
-    'PYTHONNOUSERSITE': '',
+    'PYTHONNOUSERSITE': None,
     'PYTHONPATH': ':'.join(pyth)
 }
 
@@ -42,9 +45,13 @@ for name in os.listdir(srcdir):
             os.symlink(os.path.join(src, p), os.path.join(dst, p))
     with open(os.path.join(src, kspec), 'r') as f:
         spec = json.load(f)
-    spec['argv'][0] = os.path.join(pkg, 'bin', os.path.basename(spec['argv'][0]))
+    newbin = os.path.join(pkg, 'bin', os.path.basename(spec['argv'][0]))
+    if os.path.exists(newbin):
+        spec['argv'][0] = newbin
     if note:
         spec['display_name'] += ' (' + note + ')'
-    spec.setdefault('env', {}).update(baseenv)
+    env = spec.get('env', {})
+    env.update(baseenv)
+    spec['env'] = {n: v for n, v in env.items() if v is not None}
     with open(os.path.join(dst, kspec), 'w') as f:
         json.dump(spec, f)
