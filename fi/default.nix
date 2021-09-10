@@ -1021,6 +1021,7 @@ pkgStruct = {
         py-scikit-learn
         py-scipy
         py-seaborn
+        py-setuptools
         py-shapely
         py-sip
         py-sphinx
