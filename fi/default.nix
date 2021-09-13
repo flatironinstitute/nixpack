@@ -1262,6 +1262,7 @@ corePacks // {
       prefix_inspections = {
         "lib" = ["LIBRARY_PATH"];
         "lib64" = ["LIBRARY_PATH"];
+        "include" = ["C_INCLUDE_PATH" "CPLUS_INCLUDE_PATH"];
         "" = ["{name}_ROOT" "{name}_BASE"];
       };
       all = {
