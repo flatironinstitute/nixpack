@@ -6,7 +6,8 @@ except KeyError:
     import spack.pkg.builtin.llvm as builtin
 
 class Llvm(builtin.Llvm):
-    # we had removed family = 'compiler' before but I don't think it's necessary? (see lmod tempalte change)
+    # we had removed family = 'compiler' before but I don't think it's necessary? (see lmod template change)
+    variant("pythonbind", default=False, description="Install generic python bindings")
 
     def setup_run_environment(self, env):
         pass
@@ -15,3 +16,9 @@ class Llvm(builtin.Llvm):
     def fix_module_vars(self):
         if "+python" in self.spec:
             builtin.site_packages_dir = site_packages_dir
+
+    def cmake_args(self):
+        cmake_args = super().cmake_args()
+        if '+pythonbind' in self.spec:
+            cmake_args.append("-DCLANG_PYTHON_BINDINGS_VERSIONS=3")
+        return cmake_args

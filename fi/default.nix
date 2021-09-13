@@ -147,6 +147,9 @@ corePacks = import ../packs {
     };
     llvm = {
       version = "10";
+      variants = {
+        pythonbind = true;
+      };
     };
     magma = {
       variants = {
@@ -1286,6 +1289,14 @@ corePacks // {
         environment = {
           set = {
             HDF5_ROOT = "{prefix}";
+          };
+        };
+      };
+      llvm = {
+        environment = {
+          prepend_path = {
+            # see pythonbind
+            PYTHONPATH = "{prefix}/lib/python3/site-packages";
           };
         };
       };
