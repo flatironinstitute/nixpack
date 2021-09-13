@@ -1,5 +1,4 @@
 from spack import *
-import spack.pkg.builtin.py_pycuda
 
 class PyPycuda(PythonPackage):
     """PyCUDA gives you easy, Pythonic access to Nvidia's CUDA parallel
