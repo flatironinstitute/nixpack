@@ -646,6 +646,7 @@ rView = corePacks.view {
     r-miniui
     r-multtest
     #r-nabor
+    r-nloptr
     #r-pdsh
     r-pheatmap
     r-phyloseq
@@ -856,6 +857,7 @@ pkgStruct = {
       mpfr
       netcdf-c
       nfft
+      nlopt
       (blasPkg (openblas.withPrefs { variants = { threads = "none"; }; }) // {
         projection = "{name}/{version}-single";
       })
