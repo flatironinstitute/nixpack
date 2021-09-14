@@ -1281,20 +1281,6 @@ corePacks // {
           environment_blacklist = ["CC" "FC" "CXX" "F77"];
         };
       };
-      boost = {
-        environment = {
-          set = {
-            BOOST_ROOT = "{prefix}";
-          };
-        };
-      };
-      hdf5 = {
-        environment = {
-          set = {
-            HDF5_ROOT = "{prefix}";
-          };
-        };
-      };
       llvm = {
         environment = {
           prepend_path = {
