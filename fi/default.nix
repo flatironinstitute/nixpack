@@ -873,7 +873,6 @@ pkgStruct = {
         projection = "{name}/{version}-threaded";
       })
       pgplot
-      (pvfmm.withPrefs { variants = { build_type = "Release"; }; })
       ucx
     ] ++
     optMpiPkgs comp.packs;
@@ -922,6 +921,11 @@ pkgStruct = {
           osu-micro-benchmarks
         ] ++
         optMpiPkgs mpi.packs
+        ++
+        lib.optionals mpi.isOpenmpi [
+          pvfmm
+          stkfmm
+        ]
         ++
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
           # these are broken with intel...
@@ -1140,7 +1144,6 @@ pkgStruct = {
 # missing things:
 #  amd/aocl
 #  amd/uprof
-#  pvfmm, stkfmm: robert
 #  triqs/...
 #  py jaxlib cuda
 #  py deadalus mpi: robert
@@ -1298,6 +1301,13 @@ corePacks // {
       };
       py-mpi4py = {
         autoload = "direct";
+      };
+      stkfmm = {
+        environment = {
+          prepend_path = {
+            PYTHONPATH = "{prefix}/lib64/python";
+          };
+        };
       };
     };
 

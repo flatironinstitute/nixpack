@@ -9,9 +9,9 @@ class Pvfmm(CMakePackage):
     maintainers = ['blackwer', 'dmalhotra']
 
     version('1.2.1', sha256='726ffb32c33bd38a6f87ef55affbe7ce538c306c59ce78510cc09b0de2f641d4')
-    depends_on('blas')
-    depends_on('mpi')
-    depends_on('fftw-api')
+    depends_on('blas', type=('build', 'run'))
+    depends_on('mpi', type=('build', 'run'))
+    depends_on('fftw-api@3', type=('build', 'run'))
 
     variant('extended_bc', True)
 
