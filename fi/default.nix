@@ -107,12 +107,13 @@ corePacks = import ../packs {
     gcc = {
       version = "7";
     };
+    /* external opengl:
     gl = {
       name = "opengl";
     };
     glx = {
       name = "opengl";
-    };
+    }; */
     gsl = {
       variants = {
         external-cblas = true;
