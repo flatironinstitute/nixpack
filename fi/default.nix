@@ -787,6 +787,7 @@ pkgStruct = {
     perl
     petsc
     postgresql
+    (pvfmm.withPrefs { variants = { build_type = "Release"; }; })
     qt
     { pkg = rView;
       environment = {
