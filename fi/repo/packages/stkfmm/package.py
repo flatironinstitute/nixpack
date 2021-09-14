@@ -8,11 +8,11 @@ class Stkfmm(CMakePackage):
 
     maintainers = ['blackwer', 'wenyan4work']
     version('1.0.0', sha256='029de6f1872d5d72b9810f9f2319b665dfe05dd73fcac60820c9091338c54f3f')
-    depends_on('blas', type=('build', 'run'))
-    depends_on('mpi', type=('build', 'run'))
+    depends_on('blas', type=('build', 'link'))
+    depends_on('mpi', type=('build', 'link'))
     depends_on('eigen', type=('build'))
-    depends_on('fftw-api@3', type=('build', 'run'))
-    depends_on('pvfmm+extended_bc', type=('build', 'run'))
+    depends_on('fftw-api@3', type=('build', 'link'))
+    depends_on('pvfmm+extended_bc', type=('build', 'link'))
 
     variant('python', True)
 
