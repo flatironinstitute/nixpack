@@ -98,6 +98,7 @@ corePacks = import ../packs {
     fftw = {
       version = "3.3.9";
       variants = {
+        openmp = true;
         precision = ["float" "double" "quad" "long_double"];
       };
     };
@@ -787,7 +788,6 @@ pkgStruct = {
     perl
     petsc
     postgresql
-    (pvfmm.withPrefs { variants = { build_type = "Release"; }; })
     qt
     { pkg = rView;
       environment = {
@@ -873,6 +873,7 @@ pkgStruct = {
         projection = "{name}/{version}-threaded";
       })
       pgplot
+      (pvfmm.withPrefs { variants = { build_type = "Release"; }; })
       ucx
     ] ++
     optMpiPkgs comp.packs;
