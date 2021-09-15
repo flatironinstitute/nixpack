@@ -37,6 +37,12 @@ import spack.main # otherwise you get recursive import errors
 import archspec.cpu
 import llnl.util.tty
 
+# spack backwards compatibility
+try:
+    import spack.target
+except ImportError:
+    spack.target = spack.architecture
+
 # monkeypatch store.layout for the few things we need
 class NixLayout():
     metadata_dir = '.spack'
@@ -242,7 +248,7 @@ class NixSpec(spack.spec.Spec):
         if self.supports_target(target):
             return
         for ancestor in target.microarchitecture.ancestors:
-            candidate = spack.architecture.Target(ancestor)
+            candidate = spack.target.Target(ancestor)
             if self.supports_target(candidate):
                 print(f"Downgrading target {target} -> {candidate} for {self.compiler}")
                 self.architecture.target = candidate

@@ -42,6 +42,7 @@ opts = {o: getOpt(o) for o in
         , b'wrap' # paths to wrap executables
         , b'copy' # paths to copy
         , b'force' # paths to process only from corresponding forcePkgs
+        , b'ignoreConflicts' # paths to ignore conflicts
         ] }
 
 maxSrcLen = max(len(p) for p in srcPaths)
@@ -409,7 +410,12 @@ def scan(node, src: int, path: Path):
         cls = Symlink
     else:
         cls = File
-    return cls(node, src, path)
+    try:
+        return cls(node, src, path)
+    except Conflict:
+        if path.opt(b'ignoreConflicts'):
+            return node
+        raise
 
 print(f"Creating view {pathstr(dstPath)} from...")
 # scan and merge all source paths

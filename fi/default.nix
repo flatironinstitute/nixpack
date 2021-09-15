@@ -18,7 +18,7 @@ corePacks = import ../packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "96c6bbddf13a97de9aa12d5c4cb3432b79f44116";
+    rev = "6456ed7be176d5ceb254b7aa932cf9b1baa9d7c0";
   };
 
   spackConfig = {
@@ -107,6 +107,10 @@ corePacks = import ../packs {
     };
     gcc = {
       version = "7";
+    };
+    gdbm = {
+      # for perl
+      version = "1.19";
     };
     /* external opengl:
     gl = {
@@ -778,6 +782,7 @@ pkgStruct = {
     lftp
     libzmq
     likwid
+    magma
     mercurial
     mplayer
     mpv
@@ -863,7 +868,7 @@ pkgStruct = {
       healpix-cxx
       hwloc
       libdrm
-      magma
+      #magma
       #mesa
       mpc
       mpfr
@@ -957,7 +962,7 @@ pkgStruct = {
     });
 
     pythons = mkPythons comp.packs (py: py // {
-      view = with py.packs.pkgs; pyView [
+      view = with py.packs.pkgs; (pyView ([
         python
         gettext
         py-astropy
@@ -973,7 +978,7 @@ pkgStruct = {
         py-deeptools
         #py-einsum2
         py-emcee
-        #py-envisage #qt
+        py-envisage #qt
         py-flask
         py-flask-socketio
         py-fusepy
@@ -990,9 +995,10 @@ pkgStruct = {
         py-ipdb
         py-ipykernel
         py-ipyparallel
+        py-ipywidgets
         py-ipython
         #py-jax
-        #py-jupyter #qt
+        py-jupyter-console
         #py-jupyter-contrib-nbextensions
         py-jupyter-server
         py-jupyterlab
@@ -1003,7 +1009,9 @@ pkgStruct = {
         #py-matlab-wrapper
         py-matplotlib
         py-netcdf4
+        py-nbconvert
         py-nose
+        py-notebook
         py-numba
         py-numpy
         py-olefile
@@ -1025,7 +1033,7 @@ pkgStruct = {
         py-pygments
         py-pylint
         py-pymc3
-        #py-pyqt5 #install broken: tries to install plugins/designer to qt
+        py-pyqt5
         #py-pyreadline
         #py-pysnmp
         #py-pystan
@@ -1033,6 +1041,7 @@ pkgStruct = {
         #py-python-gflags
         #py-python-hglib
         py-pyyaml
+        py-qtconsole
         #py-ray #needs bazel 4
         py-s3fs
         #py-scikit-cuda
@@ -1042,7 +1051,7 @@ pkgStruct = {
         py-seaborn
         py-setuptools
         py-shapely
-        py-sip
+        #py-sip
         py-sphinx
         py-sqlalchemy
         #py-statistics
@@ -1050,8 +1059,6 @@ pkgStruct = {
         #py-tensorflow
         #py-tess
         py-toml
-        py-torch
-        py-torchvision
         py-twisted
         py-virtualenv
         py-wcwidth
@@ -1059,7 +1066,12 @@ pkgStruct = {
         #py-xattr #broken: missing pip dep
         #py-yep
         py-yt
-      ];
+      ] ++ lib.optionals comp.isCore [
+        py-torch
+        py-torchvision
+      ])).overrideView {
+        ignoreConflicts = ["lib/python3.*/site-packages/PyQt5/__init__.py"];
+      };
     });
   });
 
@@ -1158,6 +1170,7 @@ pkgStruct = {
 #  triqs/...
 #  py jaxlib cuda
 #  py deadalus mpi: robert
+# remove hash on avail display
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python
