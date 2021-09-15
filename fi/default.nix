@@ -291,6 +291,13 @@ corePacks = import ../packs {
         hwloc = true;
       };
     };
+    trilinos = {
+      variants = {
+        openmp = true;
+        cuda = false;
+        cxxstd = "14";
+      };
+    };
     ucx = {
       variants = {
         thread_multiple = true;
@@ -921,6 +928,10 @@ pkgStruct = {
           osu-micro-benchmarks
         ] ++
         optMpiPkgs mpi.packs
+        ++
+        lib.optionals (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4") [
+          trilinos
+        ]
         ++
         lib.optionals mpi.isOpenmpi [
           pvfmm
