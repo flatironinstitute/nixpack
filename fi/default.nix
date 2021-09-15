@@ -796,6 +796,7 @@ pkgStruct = {
           pvfmm
           stkfmm
           trilinos
+          (trilinos.withPrefs { version = "12.18.1"; })
         ]
         ++
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
