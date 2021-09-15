@@ -1181,6 +1181,14 @@ corePacks // {
       py-mpi4py = {
         autoload = "direct";
       };
+      pvfmm = {
+        environment = {
+          set = {
+            PVFMM_DIR = "/mnt/ceph/users/scc/pvfmm";
+            pvfmm_DIR = "/mnt/ceph/users/scc/pvfmm";
+          };
+        };
+      };
       stkfmm = {
         environment = {
           prepend_path = {
