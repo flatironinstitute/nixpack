@@ -774,7 +774,7 @@ pkgStruct = {
             }
           ]
           ++
-          lib.optionals (mpi.isOpenmpi && (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4")) [
+          lib.optionals (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4") [
             { name = "openmpi-opa";
               context = {
                 short_description = "Set openmpi4 for Omnipath fabric";
