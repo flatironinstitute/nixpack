@@ -46,6 +46,7 @@ corePacks = import ../packs {
     variants = {
       mpi = false;
     };
+    /* any runtime dependencies use the current packs, others fall back to core */
     resolver = deptype:
       if isRLDep deptype
         then null else corePacks;
@@ -165,7 +166,9 @@ corePacks = import ../packs {
     mpfr = {
       version = "3.1.6";
     };
-    mpi = corePacks.pkgs.openmpi;
+    mpi = {
+      name = "openmpi";
+    };
     nccl = {
       variants = {
         inherit cuda_arch;
@@ -477,6 +480,7 @@ mkMpis = base: gen:
       };
     };
     isOpenmpi = mpi.name == "openmpi";
+    isCore = mpi == { name = "openmpi"; };
   })
   [
     { name = "openmpi"; }
@@ -792,7 +796,7 @@ pkgStruct = {
         ] ++
         optMpiPkgs mpi.packs
         ++
-        lib.optionals (mpi.isOpenmpi && (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4")) [
+        lib.optionals mpi.isCore [
           pvfmm
           stkfmm
           trilinos
@@ -814,6 +818,9 @@ pkgStruct = {
           py-mpi4py
           py-h5py
         ]; };
+        pkgs = lib.optionals (py.isCore && mpi.isCore) (with py.packs.pkgs; [
+          triqs
+        ]);
       });
     });
 
@@ -1095,12 +1102,12 @@ modPkgs = with pkgStruct;
     builtins.concatMap (mpi: with mpi;
       pkgs
       ++
-      builtins.map (py: {
+      builtins.concatMap (py: [{
         pkg = py.view;
         default = py.isCore;
         projection = "python-mpi/{^python.version}";
         #autoload = [comp.pythons[py].view]
-      }) pythons
+      }] ++ py.pkgs) pythons
     ) mpis
     ++
     builtins.concatMap (py: with py; [
