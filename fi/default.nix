@@ -916,7 +916,7 @@ pkgStruct = {
             }
           ]
           ++
-          lib.optionals (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4") [
+          lib.optionals (mpi.isOpenmpi && (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4")) [
             { name = "openmpi-opa";
               context = {
                 short_description = "Set openmpi4 for Omnipath fabric";
@@ -934,13 +934,10 @@ pkgStruct = {
         ] ++
         optMpiPkgs mpi.packs
         ++
-        lib.optionals (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4") [
-          trilinos
-        ]
-        ++
-        lib.optionals mpi.isOpenmpi [
+        lib.optionals (mpi.isOpenmpi && (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4")) [
           pvfmm
           stkfmm
+          trilinos
         ]
         ++
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
