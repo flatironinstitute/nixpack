@@ -26,6 +26,8 @@ class Triqs(CMakePackage):
     depends_on('py-mako', type=('run'))
     depends_on('py-sphinx', type=('run'))
 
+    extends('python')
+
     # def build_type(self):
     #     spec = self.spec
     #     if '+debug' in spec:
