@@ -1,0 +1,24 @@
+diff --git a/build/build.py b/build/build.py
+index 48f4532f..0c28b6fb 100755
+--- a/build/build.py
++++ b/build/build.py
+@@ -21,6 +21,7 @@ import argparse
+ import collections
+ import hashlib
+ import os
++import pickle
+ import platform
+ import re
+ import shutil
+@@ -494,8 +495,9 @@ def main():
+     f"--output_path={output_path}",
+     f"--cpu={wheel_cpu}"])
+   print(" ".join(command))
+-  shell(command)
+-  shell([bazel_path, "shutdown"])
++  with open("bazel_args.pickle", 'wb') as f:
++    args = command[1:]
++    pickle.dump(args, f)
+ 
+ 
+ if __name__ == "__main__":
