@@ -728,8 +728,8 @@ pkgStruct = {
       gsl
       gmp
       healpix-cxx
-      hwloc
-      libdrm
+      #hwloc
+      #libdrm
       #magma
       #mesa
       mpc
@@ -1023,17 +1023,55 @@ pkgStruct = {
       };
       projection = "{name}";
     }
+
+    /* disabled as reloading identical aliases triggers a bug in old lmod
+    { path = ".modulerc";
+      static =
+        let alias = {
+          "Blast" = "blast-plus";
+          "amd/aocc" = "aocc";
+          "disBatch/2.0-beta" = "disBatch/2.0-rc2";
+          "intel/mkl" = "intel-mkl";
+          "intel/mpi" = "intel-mpi";
+          "lib/arpack" = "arpack-ng";
+          "lib/boost" = "boost";
+          "lib/eigen" = "eigen";
+          "lib/fftw2" = "fftw/2";
+          "lib/fftw3" = "fftw/3";
+          "lib/gmp" = "gmp";
+          "lib/gsl" = "gsl";
+          "lib/hdf5" = "hdf5";
+          "lib/healpix" = "healpix-cxx";
+          "lib/mpc" = "mpc";
+          "lib/mpfr" = "mpfr";
+          "lib/netcdf" = "netcdf-c";
+          "lib/NFFT" = "nfft";
+          "lib/openblas" = "openblas";
+          "lib/openmm" = "openmm";
+          "nodejs" = "node-js";
+          "nvidia/nvhpc" = "nvhpc";
+          "openmpi2" = "openmpi/2";
+          "openmpi4" = "openmpi/4";
+          "perl5" = "perl/5";
+          "python3" = "python/3";
+          "qt5" = "qt/5";
+        }; in
+        builtins.concatStringsSep "" (builtins.map (n: ''
+          module_alias("${n}", "${alias.${n}}")
+        '') (builtins.attrNames alias));
+    } */
   ];
 
 };
 
-# missing things:
+# TODO:
 #  amd/aocl
 #  amd/uprof
 #  triqs/...
 #  py jaxlib cuda
 #  py deadalus mpi: robert
-# remove hash on avail display
+# remove hash on avail display?
+# make tcl -> lmod transition smoother
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python
