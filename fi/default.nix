@@ -820,6 +820,11 @@ pkgStruct = {
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore) (with py.packs.pkgs; [
           triqs
+          triqs-cthyb
+          triqs-dft-tools
+          triqs-maxent
+          triqs-omegamaxent-interface
+          triqs-tprf
         ]);
       });
     });
