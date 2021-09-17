@@ -19,6 +19,7 @@ class PyJax(PythonPackage, CudaPackage):
     depends_on('py-absl-py', type='build')
     depends_on('py-cython', type=('build'))
     depends_on('py-opt-einsum', type='build')
+    depends_on('py-wheel', type='build')
     depends_on('cudnn', type=('build', 'link', 'run'), when='+cuda')
     depends_on('bazel', type=('build'))
     patch('bazel_call.patch')
