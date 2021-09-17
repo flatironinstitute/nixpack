@@ -45,6 +45,7 @@ class PyJax(PythonPackage, CudaPackage):
         with open('.jax_configure.bazelrc', 'a') as f:
             f.write('build --action_env PYTHONPATH="{0}"\n'.format(env['PYTHONPATH']))
 
-        os.chdir('build')
-        bazelargs = pickle.load(open('bazel_args.pickle', 'rb'))
-        bazel(*bazelargs)
+        with working_dir('build'):
+            with open('bazel_args', 'r') as f:
+                bazelargs = [l.rstrip('\n') for l in f]
+            bazel(*bazelargs)
