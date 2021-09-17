@@ -1,6 +1,6 @@
 from spack import *
 import os
-import pickle
+import tempfile
 
 class PyJax(PythonPackage, CudaPackage):
     """JAX is Autograd and XLA, brought together for high-performance machine learning research."""
@@ -24,6 +24,10 @@ class PyJax(PythonPackage, CudaPackage):
     patch('bazel_call.patch')
 
     conflicts('cuda_arch=none', when='+cuda', msg='Must specify CUDA compute capabilities of your GPU, see https://developer.nvidia.com/cuda-gpus')
+
+    def setup_build_environment(self, env):
+        tmp_path = tempfile.mkdtemp(prefix='spack')
+        env.set('TEST_TMPDIR', tmp_path)
 
     def patch(self):
         capabilities = ','.join('{0:.1f}'.format(

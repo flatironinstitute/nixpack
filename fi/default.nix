@@ -367,13 +367,6 @@ corePacks = import ../packs {
         '';
       };
     };
-    py-jax = {
-      build = {
-        setup = ''
-          os.environ['TEST_TMPDIR'] = os.path.join(os.environ['TMPDIR'], 'bazel-cache')
-        '';
-      };
-    };
   };
 };
 
