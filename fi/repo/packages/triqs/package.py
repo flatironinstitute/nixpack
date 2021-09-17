@@ -8,6 +8,8 @@ class Triqs(CMakePackage):
 
     version('3.0.x', git='https://github.com/TRIQS/triqs.git', branch='3.0.x')
 
+    variant('libclang', default=True, description='Build against libclang to enable c++2py support. ')
+
     # TRIQS Dependencies
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
@@ -17,6 +19,7 @@ class Triqs(CMakePackage):
     depends_on('boost', type=('build', 'link'))
     depends_on('gmp', type=('build', 'link'))
     depends_on('hdf5', type=('build', 'link'))
+    depends_on('llvm', type=('build', 'link'), when='+libclang')
     depends_on('python@3.7:', type=('build', 'link', 'run'))
     depends_on('py-scipy', type=('run'))
     depends_on('py-numpy', type=('run'))
@@ -27,14 +30,3 @@ class Triqs(CMakePackage):
     depends_on('py-sphinx', type=('run'))
 
     extends('python')
-
-    # def build_type(self):
-    #     spec = self.spec
-    #     if '+debug' in spec:
-    #         return 'Debug'
-    #     else:
-    #         return 'Release'
-
-    # def cmake_args(self):
-    #     args = []
-    #     return args
