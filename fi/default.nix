@@ -243,6 +243,11 @@ corePacks = import ../packs {
     py-h5py = {
       version = "3.1";
     };
+    py-jax = {
+      variants = {
+        inherit cuda_arch;
+      };
+    };
     py-pybind11 = {
       version = "2.6.2";
     };
@@ -359,6 +364,13 @@ corePacks = import ../packs {
           pml=ucx
           pml_ucx_tls=any
           """)
+        '';
+      };
+    };
+    py-jax = {
+      build = {
+        setup = ''
+          os.environ['TEST_TMPDIR'] = os.path.join(os.environ['TMPDIR'], 'bazel-cache')
         '';
       };
     };
@@ -1077,6 +1089,7 @@ pkgStruct = {
 #  py deadalus mpi: robert
 # remove hash on avail display?
 # make tcl -> lmod transition smoother
+# triqs (and such) -> python dep (confict 3.9?) [lmod doesn't seem to support this fully]
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python
