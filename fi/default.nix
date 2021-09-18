@@ -18,7 +18,7 @@ corePacks = import ../packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "6456ed7be176d5ceb254b7aa932cf9b1baa9d7c0";
+    rev = "5922d4fd0283177cc61ecec5b3cbe8c16931d9ab";
   };
 
   spackConfig = {
@@ -31,7 +31,7 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     ref = "release-21.05";
-    rev = "276671abd104e83ba7cb0b26f44848489eb0306b";
+    rev = "2c75ca9c41a845ded857e0ec68948a5d6706de4d";
   };
 
   repos = [
@@ -161,6 +161,13 @@ corePacks = import ../packs {
     magma = {
       variants = {
         inherit cuda_arch;
+      };
+    };
+    mbedtls = {
+      # for libarchive
+      version = "2";
+      variants = {
+        pic = true;
       };
     };
     mpfr = {
@@ -651,8 +658,8 @@ pkgStruct = {
     likwid
     magma
     mercurial
-    mplayer
-    mpv
+    #mplayer
+    #mpv
     mupdf
     nccl
     #nix #too old/broken
@@ -662,10 +669,12 @@ pkgStruct = {
     octave
     openjdk
     openmm
+    p7zip
     #paraview #broken?
     #pdftk #needs gcc java (gcj)
     perl
     petsc
+    pixz
     postgresql
     qt
     { pkg = rView;
@@ -729,7 +738,9 @@ pkgStruct = {
       (comp.defaulting compiler)
       arpack-ng
       eigen
-      ffmpeg
+      { pkg = ffmpeg;
+        default = true;
+      }
       gsl
       gmp
       healpix-cxx
@@ -940,9 +951,11 @@ pkgStruct = {
         #py-yep
         py-yt
       ] ++ lib.optionals comp.isCore [
+        py-jax
         py-torch
         py-torchvision
       ])).overrideView {
+        # for py-pyqt/py-sip
         ignoreConflicts = ["lib/python3.*/site-packages/PyQt5/__init__.py"];
       };
     });
@@ -975,6 +988,7 @@ pkgStruct = {
     elinks
     #evince
     feh
+    ffmpeg
     #gimp
     #git
     #i3-env
@@ -983,6 +997,8 @@ pkgStruct = {
     #keepassx2
     #libreoffice
     #meshlab
+    mplayer
+    (mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
     #pass
     #pdftk
     #rxvt-unicode
@@ -1180,6 +1196,7 @@ modPkgs = with pkgStruct;
       short_description = p.meta.description or null;
       long_description = p.meta.longDescription or null;
     };
+    projection = "{name}/{version}-nix";
   })
     nixpkgs
   ++
