@@ -1,6 +1,7 @@
 from spack import *
 import os
 import tempfile
+import glob
 
 class PyJax(PythonPackage, CudaPackage):
     """JAX is Autograd and XLA, brought together for high-performance machine learning research."""
@@ -14,6 +15,7 @@ class PyJax(PythonPackage, CudaPackage):
 
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-pip', type='build')
     depends_on('py-numpy@1.18:', type=('build', 'run'))
     depends_on('py-scipy@1.2.1:', type=('build', 'run'))
     depends_on('py-absl-py', type='build')
@@ -54,3 +56,10 @@ class PyJax(PythonPackage, CudaPackage):
             with open('bazel_args', 'r') as f:
                 bazelargs = [l.rstrip('\n') for l in f]
             bazel(*bazelargs)
+
+    def install(self, spec, prefix):
+        pip = which('pip')
+        wheel = glob.glob(os.path.join('dist', 'jaxlib-*.whl'))
+        pip('install', *wheel, '--prefix={0}'.format(prefix))
+
+        super().install(spec, prefix)
