@@ -163,12 +163,30 @@ class ModSpec:
             os.symlink(bn, os.path.join(dn, "default"))
 
 specs = [ModSpec(p) for p in nixpack.getJson('pkgs')]
+spack.repo.path.provider_index # precompute
 
 print(f"Generating {len(specs)} {modtype} modules in {root}...")
-paths = set()
-for s in specs:
+def write(s):
     fn = s.filename
-    print(f"    {os.path.relpath(fn, root)}: {s}")
-    assert fn not in paths, f"Duplicate path: {fn}"
+    print(f"  {os.path.relpath(fn, root)}: {s}")
     s.write(fn)
-    paths.add(fn)
+    return fn
+
+def proc(si):
+    return write(specs[si])
+
+if nixpack.cores > 1:
+    import multiprocessing
+    pool = multiprocessing.Pool(nixpack.cores)
+    paths = pool.imap_unordered(proc, range(len(specs)))
+    pool.close()
+else:
+    pool = None
+    paths = map(write, specs)
+
+seen = set()
+assert not any(fn in seen or seen.add(fn) for fn in paths), \
+    f"Duplicate path: {fn}"
+
+if pool:
+    pool.join()
