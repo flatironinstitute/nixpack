@@ -185,8 +185,9 @@ else:
     paths = map(write, specs)
 
 seen = set()
-assert not any(fn in seen or seen.add(fn) for fn in paths), \
-    f"Duplicate path: {fn}"
+for fn in paths:
+    assert fn not in seen, f"Duplicate path: {fn}"
+    seen.add(fn)
 
 if pool:
     pool.join()
