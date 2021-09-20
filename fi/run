@@ -45,6 +45,9 @@ case "$cmd" in
 			(nix)
 				release nix -A nixpkgs.nix -A nixpkgs.git
 				;;
+			(lmod)
+				release lmod -A pkgs.lmod
+				;;
 			(modules|nixpack|"")
 				nix-build -o singularity -A pkgs.singularity $nixfile
 				for fix in singularity/bin/spack_perms_fix.sh ; do
