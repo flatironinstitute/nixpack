@@ -83,6 +83,15 @@ in
   r-credentials = tmphome;
   r-gert = tmphome;
 
+  paraview = spec: old: {
+    /* without explicit libx11 dep, ends up linking system libX11 (perhaps via system libGL) and not working */
+    depends = old.depends // {
+      libx11 = {
+        deptype = ["link"];
+      };
+    };
+  };
+
   /* some things don't use a compiler */
   intel = nocompiler;
   intel-mkl = nocompiler;

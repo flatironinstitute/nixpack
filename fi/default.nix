@@ -682,7 +682,7 @@ pkgStruct = {
     openjdk
     openmm
     p7zip
-    #paraview #broken?
+    paraview
     #pdftk #needs gcc java (gcj)
     perl
     petsc
