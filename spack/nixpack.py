@@ -58,6 +58,8 @@ class NixStore():
 spack.store.store = NixStore()
 
 spack.config.command_line_scopes = getVar('spackConfig').split()
+spack.config.config.remove_scope('system')
+spack.config.config.remove_scope('user')
 
 spack.config.set('config:build_stage', [getVar('NIX_BUILD_TOP')], 'command_line')
 cores = int(getVar('NIX_BUILD_CORES', 0))

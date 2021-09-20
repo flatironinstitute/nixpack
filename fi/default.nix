@@ -18,7 +18,7 @@ corePacks = import ../packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "5922d4fd0283177cc61ecec5b3cbe8c16931d9ab";
+    rev = "c1b73c2e0ec902ea9d3b971e0efea2681376b919";
   };
 
   spackConfig = {
@@ -31,7 +31,7 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     ref = "release-21.05";
-    rev = "2c75ca9c41a845ded857e0ec68948a5d6706de4d";
+    rev = "27885874ede276f3b7727180b8870e04c93c61db";
   };
 
   repos = [
@@ -137,6 +137,10 @@ corePacks = import ../packs {
         fortran = true;
         cxx = true;
       };
+    };
+    htslib = {
+      # for samtools/bcftools
+      version = "1.12";
     };
     intel-mpi = { # not available anymore...
       extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
@@ -296,6 +300,10 @@ corePacks = import ../packs {
         inherit cuda_arch;
         mklfft = false;
       };
+    };
+    samtools = {
+      # to match bcftools
+      version = "1.12";
     };
     shadow = {
       extern = "/usr";

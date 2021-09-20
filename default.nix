@@ -152,7 +152,7 @@ bootstrapPacks = packs.withPrefs {
     compiler = {
       name = "gcc";
       version = "4.8.5";
-      extern = "/usr";
+      extern = "/usr"; /* install prefix */
       /* can also have multiple layers of bootstrapping, where each compiler is built by another */
     };
     /* can speed up bootstrapping by providing more externs
@@ -165,4 +165,63 @@ bootstrapPacks = packs.withPrefs {
 
 in
 
-packs
+packs // {
+  mods = packs.modules {
+    /* this correspond to module config in spack */
+    /* modtype = "lua"; */
+    coreCompilers = [packs.pkgs.compiler bootstrapPacks.pkgs.compiler];
+    /*
+    config = {
+      hiearchy = ["mpi"];
+      hash_length = 0;
+      projections = {
+        # warning: order is lost
+        "package+variant" = "{name}/{version}-variant";
+      };
+      prefix_inspections = {
+        "dir" = ["VAR"];
+      };
+      all = {
+        autoload = "none";
+      };
+      package = {
+        environment = {
+          prepend_path = {
+            VAR = "{prefix}/path";
+          };
+        };
+      };
+    };
+    */
+    pkgs = with packs.pkgs; [
+      gcc
+      { pkg = gcc.withPrefs { # override package defaults
+          version = "10";
+        };
+        default = true; # set as default version
+        # extra content to append to module file
+        postscript = ''
+          LModMessage("default gcc loaded")
+        '';
+      }
+      perl
+      /*
+      { # a custom module, not from spack
+        name = "other-package";
+        version = "1.2";
+        prefix = "/opt/other";
+        # overrides for module config
+        environment = {
+          prepend_path = {
+            VAR = "{prefix}/path";
+          };
+        };
+        projection = "{name}/{version}-local";
+        context = { # other variables to set in the template
+          short_description = "Some other package";
+        };
+      }
+      */
+    ];
+  };
+}

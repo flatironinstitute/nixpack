@@ -5,14 +5,45 @@ A hybrid of the [nix package manager](https://github.com/NixOS/nix) and [spack](
 If you love nix's expressiveness and efficiency, but don't need the purity of nixpkgs (in the sense of independence from the host system)... if you like the spack packages and package.py format, but are tired of managing roots and concretizations, this may be for you.
 Nix on the outside, spack on the inside.
 
-While this is largely functional, it is still a work in progress, and you probably shouldn't touch it unless you understand both systems well.
-
 ## Usage
 
-- install and configure nix sufficient to build derivations
-- edit (or copy) [`default.nix`](default.nix) to taste (`bootstrapPacks.package.compiler` is critical)
-- run `nix-build -A pkgs.foo` to build the spack package `foo`
-- see [`fi/default.nix`](fi/default.nix) for a complete working example with views and modules: `nix-build -A mods fi`
+1. Install and configure [nix](https://nixos.org/manual/nix/stable/#chap-installation), sufficient to build derivations.
+1. Edit (or copy) [`default.nix`](default.nix).
+   - It's recommended to set `packs.spackSrc.rev` to a fixed version of spack.  Changing the spack version requires all packages to be rebuilt.  If you want to update individual packages without a rebuild, you can put them in `spack/repo/packages` (or another repo in `packs.repos`).
+   - Set `packs.os` and `packs.global.target`.
+   - Set `packs.spackConfig.config.source_cache` and add any other custom spack config you want (nixpack ignores system and user spack config for purity, but will load default and site config from the spack repo itself).
+   - Set `bootstrapPacks.package.compiler` to a pre-existing (system/external) compiler to be used to bootstrap.
+   - Set `packs.package.gcc` to choose your default compiler, or `packs.package.compiler` to use something other than gcc.
+   - Add any other package preferences to `packs.package` (versions, variants, virtual providers, etc.)
+   - See `packs.global.fixedDeps`: by default multiple different instances of any given package may be built in order to satisfy requirements, but you may prefer to force only one version of each package, which will improve performance and build times.
+1. Run `nix-build -A pkgs.foo` to build the spack package `foo`.
+1. To build modules, configure `packs.mods` and run `nix-build -A mods`.
+
+### Flatiron Specific
+
+There is Flatiron-specific configuration and repositories in [`fi`](fi/default.nix), complete with views and modules.
+These should provide examples or a template for creating full working systems.
+
+The script [`fi/run`](fi/run) can help with common tasks (some of which are more generally useful):
+```
+Usage: fi/run COMMAND
+
+Commands:
+
+  build        Build modules into result.  Takes the same arguments as
+               nix-build (-jN, --cores M, -K, ...).
+  spec [PKG]   Print the spec tree for a specific package or all modules,
+               along with the total number of unique packages.
+  gc           Cleanup any unreferenced nix stores (nix-store --gc).
+  release      Publish a release profile for...
+    modules    nixpack lmod modules (default)
+    jupyter    jupyterhub server environment
+    nix        nix build environment
+  spack ...    Run a spack command in the nixpack environment (things like list
+               and info work, but those managing packages will not)
+```
+
+You can source `fi/env` to setup a build environment.
 
 ## Compatibility
 
@@ -155,8 +186,3 @@ You could specify more extern packages in bootstrap to speed up bootstrapping.
 
 You could also add additional bootstrap layers by setting the bootstrap compiler `resolver` to a different set.
 You could also replace specific dependencies or packages from a different `packs` set to bootstrap or modify other packages.
-
-# Flatiron Specific (in `fi`)
-
-The script [`fi/run`](fi/run) can help with common tasks (and may be more generally useful).
-You can source `fi/env` to setup a build environment.
