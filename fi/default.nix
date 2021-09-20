@@ -247,6 +247,10 @@ corePacks = import ../packs {
         superlu-dist = false;
       };
     };
+    protobuf = {
+      # for py-torch
+      version = "3.17";
+    };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
     py-botocore = {
       version = "1.19.52"; # for aiobotocore
