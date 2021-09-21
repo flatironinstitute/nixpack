@@ -69,7 +69,7 @@ packs = import ./packs {
     /* set spack verbose to print build logs during spack bulids (and thus
        captured by nix).  regardless, spack also keeps logs in pkg/.spack.  */
     verbose = false;
-    /* enable tests and test deps (not fully implemented) */
+    /* enable build tests (and test deps) */
     tests = false;
     /* how to resolve dependencies, similar to concretize together or separately.
        fixedDeps = false:  Dependencies are resolved dynamically based on

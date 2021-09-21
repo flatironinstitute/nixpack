@@ -30,6 +30,7 @@ spec = nixpack.NixSpec.get(nixspec, nixpack.getVar('out'))
 spec.concretize()
 
 pkg = spec.package
+pkg.run_tests = spec.tests
 print(spec.tree(cover='edges', format=spack.spec.default_format + ' {/hash}', show_types=True))
 
 opts = {
