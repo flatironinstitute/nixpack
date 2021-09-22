@@ -386,6 +386,8 @@ lib.fix (packs: with packs; {
 
   modules = import ../spack/modules.nix packs;
 
+  lmodCache = import ./lmodCache.nix packs;
+
   /* a runnable (if only partly functional) spack binary */
   spackBin = import ../spack/bin.nix packs;
 

@@ -53,7 +53,7 @@ case "$cmd" in
 				for fix in singularity/bin/spack_perms_fix.sh ; do
 					sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
 				done
-				release nixpack -A mods
+				release nixpack -A mods modCache
 				;;
 			(jupyter)
 				release nixpack-jupyter -A jupyter

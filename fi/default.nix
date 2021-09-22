@@ -1147,7 +1147,6 @@ pkgStruct = {
       projection = "{name}";
     }
 
-    /* disabled as reloading identical aliases triggers a bug in old lmod
     { path = ".modulerc";
       static =
         let alias = {
@@ -1179,10 +1178,18 @@ pkgStruct = {
           "python3" = "python/3";
           "qt5" = "qt/5";
         }; in
+        # reloading identical aliases triggers a bug in old lmod
+        # wrap in hacky conditional (since old lmod runs modulerc without sandbox, somehow)
+        ''
+          if _VERSION == nil then
+        '' +
         builtins.concatStringsSep "" (builtins.map (n: ''
-          module_alias("${n}", "${alias.${n}}")
-        '') (builtins.attrNames alias));
-    } */
+            module_alias("${n}", "${alias.${n}}")
+        '') (builtins.attrNames alias))
+        + ''
+          end
+        '';
+    }
   ];
 
 };
@@ -1300,80 +1307,85 @@ modPkgs = with pkgStruct;
   static
 ;
 
-in
-
-corePacks // {
-  inherit pkgStruct;
-
-  mods = corePacks.modules {
-    coreCompilers = map (p: p.pkgs.compiler) [
-      corePacks
-      bootstrapPacks
-      pkgStruct.clangcpp.packs
-    ];
-    config = {
-      hierarchy = ["mpi"];
-      hash_length = 0;
-      projections = {
-        # warning: order is lost
-        "gromacs+plumed" = "{name}/{version}-plumed";
+mods = corePacks.modules {
+  coreCompilers = map (p: p.pkgs.compiler) [
+    corePacks
+    bootstrapPacks
+    pkgStruct.clangcpp.packs
+  ];
+  config = {
+    hierarchy = ["mpi"];
+    hash_length = 0;
+    projections = {
+      # warning: order is lost
+      "gromacs+plumed" = "{name}/{version}-plumed";
+    };
+    prefix_inspections = {
+      "lib" = ["LIBRARY_PATH"];
+      "lib64" = ["LIBRARY_PATH"];
+      "include" = ["C_INCLUDE_PATH" "CPLUS_INCLUDE_PATH"];
+      "" = ["{name}_ROOT" "{name}_BASE"];
+    };
+    all = {
+      autoload = "none";
+      prerequisites = "direct";
+      suffixes = {
+        "^mpi" = "mpi";
       };
-      prefix_inspections = {
-        "lib" = ["LIBRARY_PATH"];
-        "lib64" = ["LIBRARY_PATH"];
-        "include" = ["C_INCLUDE_PATH" "CPLUS_INCLUDE_PATH"];
-        "" = ["{name}_ROOT" "{name}_BASE"];
+      filter = {
+        environment_blacklist = ["CC" "FC" "CXX" "F77"];
       };
-      all = {
-        autoload = "none";
-        prerequisites = "direct";
-        suffixes = {
-          "^mpi" = "mpi";
-        };
-        filter = {
-          environment_blacklist = ["CC" "FC" "CXX" "F77"];
-        };
-      };
-      llvm = {
-        environment = {
-          prepend_path = {
-            # see pythonbind
-            PYTHONPATH = "{prefix}/lib/python3/site-packages";
-          };
-        };
-      };
-      openmpi = {
-        environment = {
-          set = {
-            OPENMPI_VERSION = "{version}";
-          };
-        };
-      };
-      py-mpi4py = {
-        autoload = "direct";
-      };
-      pvfmm = {
-        environment = {
-          set = {
-            PVFMM_DIR = "/mnt/ceph/users/scc/pvfmm";
-            pvfmm_DIR = "/mnt/ceph/users/scc/pvfmm";
-          };
-        };
-      };
-      stkfmm = {
-        environment = {
-          prepend_path = {
-            PYTHONPATH = "{prefix}/lib64/python";
-          };
+    };
+    llvm = {
+      environment = {
+        prepend_path = {
+          # see pythonbind
+          PYTHONPATH = "{prefix}/lib/python3/site-packages";
         };
       };
     };
-
-    pkgs = modPkgs;
-
+    openmpi = {
+      environment = {
+        set = {
+          OPENMPI_VERSION = "{version}";
+        };
+      };
+    };
+    py-mpi4py = {
+      autoload = "direct";
+    };
+    pvfmm = {
+      environment = {
+        set = {
+          PVFMM_DIR = "/mnt/ceph/users/scc/pvfmm";
+          pvfmm_DIR = "/mnt/ceph/users/scc/pvfmm";
+        };
+      };
+    };
+    stkfmm = {
+      environment = {
+        prepend_path = {
+          PYTHONPATH = "{prefix}/lib64/python";
+        };
+      };
+    };
   };
 
-  inherit bootstrapPacks jupyter;
+  pkgs = modPkgs;
+
+};
+
+modCache = corePacks.lmodCache mods;
+
+in
+
+corePacks // {
+  inherit
+    bootstrapPacks
+    pkgStruct
+    mods
+    modCache
+    jupyter;
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = p.pkg or p; in
