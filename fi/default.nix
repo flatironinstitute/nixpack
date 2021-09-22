@@ -715,7 +715,11 @@ pkgStruct = {
     (llvm.withPrefs { version = "11"; })
     (llvm.withPrefs { version = "12"; })
     (gcc.withPrefs { version = "11"; })
-    aocc
+    { pkg = aocc;
+      context = {
+        provides = []; # not a real compiler
+      };
+    }
     blast-plus
     cmake
     cuda
