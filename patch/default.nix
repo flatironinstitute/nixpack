@@ -101,4 +101,5 @@ in
   intel-oneapi-tbb = nocompiler;
   cuda = nocompiler;
   cudnn = nocompiler;
+  ghostscript-fonts = nocompiler;
 }

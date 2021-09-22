@@ -176,6 +176,22 @@ corePacks = import ../packs {
         cxx = true;
       };
     };
+    hdfview = {
+      depends = {
+        hdf = {
+          variants = {
+            external-xdr = false;
+            java = true;
+            shared = true;
+          };
+        };
+        hdf5 = {
+          variants = {
+            java = true;
+          };
+        };
+      };
+    };
     htslib = {
       # for samtools/bcftools
       version = "1.12";
@@ -372,6 +388,22 @@ corePacks = import ../packs {
         sysconfdir = "/cm/shared/apps/slurm/var/etc/slurm";
         pmix = true;
         hwloc = true;
+      };
+    };
+    texlive = {
+      depends = {
+        poppler = {
+          version = ":0.84";
+        };
+      };
+    };
+    texstudio = {
+      depends = {
+        poppler = {
+          variants = {
+            qt = true;
+          };
+        };
       };
     };
     trilinos = {
@@ -707,7 +739,7 @@ pkgStruct = {
     { pkg = gromacs.withPrefs { variants = { cuda = true; }; };
       projection = "{name}/{version}-singlegpu";
     }
-    (hdfview.withPrefs { fixedDeps = false; })
+    hdfview
     imagemagick
     (blasPkg intel-mkl)
     (blasPkg (intel-mkl.withPrefs { version = "2017.4.239"; }))
@@ -755,8 +787,8 @@ pkgStruct = {
     smartmontools
     subversion
     swig
-    (texlive.withPrefs { fixedDeps = false; })
-    (texstudio.withPrefs { fixedDeps = false; })
+    texlive
+    texstudio
     tmux
     udunits
     unison
