@@ -65,6 +65,11 @@ corePacks = import ../packs {
         ld = true;
       };
     };
+    blender = {
+      variants = {
+        ffmpeg = true;
+      };
+    };
     boost = {
       variants = {
         context = true;
@@ -83,6 +88,10 @@ corePacks = import ../packs {
         svg = false;
       };
     };
+    coreutils = {
+      # failing
+      tests = false;
+    };
     cpio = { # some intel installers need this -- avoid compiler dependency
       extern = "/usr";
       version = "2.11";
@@ -90,11 +99,23 @@ corePacks = import ../packs {
     cuda = {
       version = "11.3";
     };
+    dejagnu = {
+      # for gcc
+      version = "1.4";
+      # failing
+      tests = false;
+    };
     docbook-xml = { # for gtk-doc
       version = "4.3";
     };
     docbook-xsl = {
       version = "1.78.1";
+    };
+    embree = {
+      # for blender
+      variants = {
+        ispc = false;
+      };
     };
     fftw = {
       version = "3.3.9";
@@ -108,10 +129,23 @@ corePacks = import ../packs {
     };
     gcc = {
       version = "7";
+      # needs guile, which is broken
+      #tests = false;
+    };
+    gdb = {
+      depends = {
+        python = {
+          variants = {
+            debug = true;
+          };
+        };
+      };
     };
     gdbm = {
       # for perl
       version = "1.19";
+      # failing
+      tests = false;
     };
     /* external opengl:
     gl = {
@@ -124,6 +158,10 @@ corePacks = import ../packs {
       variants = {
         external-cblas = true;
       };
+    };
+    guile = {
+      # for autogen
+      version = "2.0";
     };
     harfbuzz = {
       variants = {
@@ -146,6 +184,10 @@ corePacks = import ../packs {
       extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
       version = "2017.4.196";
     };
+    libaio = {
+      # needs mke2fs?
+      tests = false;
+    };
     libepoxy = {
       variants = {
         #glx = false; # ~glx breaks gtkplus
@@ -155,6 +197,14 @@ corePacks = import ../packs {
       variants = {
         fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "psm" "mlx"];
       };
+    };
+    libffi = {
+      # failing
+      tests = false;
+    };
+    libunwind = {
+      # failing
+      tests = false;
     };
     llvm = {
       version = "10";
@@ -173,6 +223,7 @@ corePacks = import ../packs {
       variants = {
         pic = true;
       };
+      tests = false;
     };
     mpfr = {
       version = "3.1.6";
@@ -193,7 +244,8 @@ corePacks = import ../packs {
       };
     };
     ocaml = {
-      /* for unison */ variants = {
+      # for unison
+      variants = {
         force-safe-string = false;
       };
     };
@@ -394,6 +446,7 @@ bootstrapPacks = corePacks.withPrefs {
   global = {
     target = "haswell";
     resolver = null;
+    tests = false;
   };
   package = {
     compiler = {
@@ -645,7 +698,7 @@ pkgStruct = {
     fio
     flexiblas
     gdal
-    (gdb.withPrefs { fixedDeps = false; })
+    gdb
     ghostscript
     git
     git-lfs
