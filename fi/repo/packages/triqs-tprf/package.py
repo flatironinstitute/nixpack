@@ -6,6 +6,7 @@ class TriqsTprf(CMakePackage):
     homepage = "https://triqs.github.io/tprf"
     url      = "https://github.com/TRIQS/tprf/releases/download/3.0.0/tprf-3.0.0.tar.gz"
 
+    version('3.0.0', sha256='8e20620145bb8cbcc187f4637884457c0cacaed79ba6e1709a951046ee5ffc4b')
     version('3.0.x', git='https://github.com/TRIQS/tprf.git', branch='3.0.x')
 
     # TRIQS Dependencies

@@ -4,8 +4,9 @@ class TriqsOmegamaxentInterface(CMakePackage):
     """TRIQS: python interface to the maximum entropy analytic continuation program OmegaMaxEnt"""
 
     homepage = "https://triqs.github.io/omegamaent_interface"
-    url      = "https://github.com/TRIQS/omegamaxent_interface/releases/download/3.0.0/omegamaxent_interface-3.0.0.tar.gz"
+    url      = "https://github.com/TRIQS/omegamaxent_interface/archive/refs/tags/3.0.0.tar.gz"
 
+    version('3.0.0', sha256='fef80d36bea614820bdb2fa650ff545d6099cd4c478276a96d0ff30ed8844338')
     version('3.0.x', git='https://github.com/TRIQS/omegamaxent_interface.git', branch='3.0.x')
 
     # TRIQS Dependencies

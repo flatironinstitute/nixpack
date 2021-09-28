@@ -6,6 +6,7 @@ class TriqsCthyb(CMakePackage):
     homepage = "https://triqs.github.io/cthyb"
     url      = "https://github.com/TRIQS/cthyb/releases/download/3.0.0/cthyb-3.0.0.tar.gz"
 
+    version('3.0.0', sha256='64970bfc73f5be819a87044411b4cc9e1f7996d122158c5c011046b7e1aec4e5')
     version('3.0.x', git='https://github.com/TRIQS/cthyb.git', branch='3.0.x')
 
     # TRIQS Dependencies
