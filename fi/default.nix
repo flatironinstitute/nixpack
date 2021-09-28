@@ -438,6 +438,16 @@ corePacks = import ../packs {
   // blasVirtuals { name = "flexiblas"; };
 
   repoPatch = {
+    lmod = {
+      build = {
+        setup = ''
+          configure_args = pkg.configure_args()
+          configure_args.append('--with-availExtensions=no')
+          configure_args.append('--with-cachedLoads=yes')
+          pkg.configure_args = lambda: configure_args
+        '';
+      };
+    };
     openmpi = spec: {
       patches =
         lib.optionals (spec.version == "1.10.7")                  [ ./openmpi-1.10.7.PATCH ] ++
@@ -1192,6 +1202,7 @@ pkgStruct = {
         '') (builtins.attrNames alias))
         + ''
           end
+          hide_version("jupyterhub")
         '';
     }
   ];
@@ -1205,7 +1216,6 @@ pkgStruct = {
 #  py jaxlib cuda
 #  py deadalus mpi: robert
 # remove hash on avail display?
-# make tcl -> lmod transition smoother
 # triqs (and such) -> python dep (confict 3.9?) [lmod doesn't seem to support this fully]
 
 jupyterBase = pyView (with corePacks.pkgs; [
@@ -1266,6 +1276,15 @@ jupyter = jupyterBase.extendView (
   )
 );
 
+pyExtensions = view:
+  let ext = builtins.concatStringsSep ", " (map
+    # XXX these spack names don't quite match the python modules
+    (p: lib.takePrefix "py-" p.spec.name + "/" + p.spec.version)
+    (builtins.filter (p: lib.hasPrefix "py-" p.spec.name) view.pkgs));
+  in ''
+    extensions("${ext}")
+  '';
+
 modPkgs = with pkgStruct;
   pkgs
   ++
@@ -1280,12 +1299,14 @@ modPkgs = with pkgStruct;
         default = py.isCore;
         projection = "python-mpi/{^python.version}";
         #autoload = [comp.pythons[py].view]
+        postscript = pyExtensions py.view;
       }] ++ py.pkgs) pythons
     ) mpis
     ++
     builtins.concatMap (py: with py; [
       { pkg = view;
         default = isCore;
+        postscript = pyExtensions view;
       }
     ]) pythons
   ) compilers
