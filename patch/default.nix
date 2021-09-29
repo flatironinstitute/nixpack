@@ -92,6 +92,17 @@ in
     };
   };
 
+  emacs = spec: old: {
+    depends = old.depends // {
+      fontconfig = {
+        deptype = ["build" "link"];
+      };
+      libxft = {
+        deptype = ["build" "link"];
+      };
+    };
+  };
+
   /* some things don't use a compiler */
   intel = nocompiler;
   intel-mkl = nocompiler;
