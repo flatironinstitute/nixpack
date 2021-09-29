@@ -429,6 +429,11 @@ corePacks = import ../packs {
         python = false; # needs python2
       };
     };
+    vmd = {
+      depends = {
+        gcc = bootstrapPacks.pkgs.gcc;
+      };
+    };
     zstd = {
       variants = {
         multithread = false;
@@ -809,6 +814,7 @@ pkgStruct = {
     valgrind
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
     #visit #needs qt <= 5.14.2
+    vmd
     vtk
     #xscreensaver
     zsh
