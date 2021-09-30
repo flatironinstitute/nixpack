@@ -147,13 +147,13 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
-    /* external opengl:
+    /* external opengl: */
     gl = {
       name = "opengl";
     };
     glx = {
       name = "opengl";
-    }; */
+    };
     gsl = {
       variants = {
         external-cblas = true;
