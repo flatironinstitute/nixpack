@@ -18,7 +18,7 @@ corePacks = import ../packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "c1b73c2e0ec902ea9d3b971e0efea2681376b919";
+    rev = "9f277eba985f88f3b8f53a6ac048b130996dc8f4";
   };
 
   spackConfig = {
@@ -31,7 +31,7 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     ref = "release-21.05";
-    rev = "27885874ede276f3b7727180b8870e04c93c61db";
+    rev = "47bf4156ee1e96692da1680224bcc52ca5486f57";
   };
 
   repos = [
@@ -97,7 +97,7 @@ corePacks = import ../packs {
       version = "2.11";
     };
     cuda = {
-      version = "11.3";
+      version = "11.4";
     };
     dejagnu = {
       # for gcc
@@ -223,7 +223,7 @@ corePacks = import ../packs {
       tests = false;
     };
     llvm = {
-      version = "10";
+      version = "11";
       variants = {
         pythonbind = true;
       };
@@ -330,6 +330,10 @@ corePacks = import ../packs {
       variants = {
         inherit cuda_arch;
       };
+    };
+    py-numpy = {
+      # for numba
+      version = "1.20";
     };
     py-pybind11 = {
       version = "2.6.2";

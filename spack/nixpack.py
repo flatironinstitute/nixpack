@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import base64
+import re
 
 # translate from nix to spack because...
 b32trans = bytes.maketrans(b"0123456789abcdfghijklmnpqrsvwxyz", base64._b32alphabet.lower())
@@ -47,6 +48,7 @@ except ImportError:
 class NixLayout():
     metadata_dir = '.spack'
     hidden_file_paths = (metadata_dir,)
+    hidden_file_regexes = (re.escape(metadata_dir),)
     def metadata_path(self, spec):
         return os.path.join(spec.prefix, self.metadata_dir)
     def build_packages_path(self, spec):
