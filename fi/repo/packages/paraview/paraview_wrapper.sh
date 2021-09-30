@@ -22,4 +22,4 @@ EOF
 )
 fi
 
-exec paraview-real "$@"
+exec "$(dirname $(readlink -f ${BASH_SOURCE[0]}))/paraview-real"
