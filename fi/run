@@ -3,9 +3,11 @@
 fi=`dirname $0`
 . $fi/env
 nixfile=$fi
+site=fi
 
 if [[ `hostname -s` = pcn* ]] ; then
 	# popeye
+	site=popeye
 	nixfile="$nixfile --argstr target skylake --argstr cudaarch 70"
 fi
 
@@ -68,7 +70,7 @@ case "$cmd" in
 		profile=$NIX_STATE_DIR/profiles/system/$prof
 		nix-env -p $profile -i -r -f $nixfile -A $attrs
 		l=$(readlink $profile)
-		git tag fi/${l%-link} HEAD
+		git tag $site/${l%-link} HEAD
 		;;
 	(spack)
 		nix-build -o spackBin -A spackBin $nixfile
