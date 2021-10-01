@@ -719,6 +719,21 @@ optMpiPkgs = packs: with packs.pkgs; [
   fftw
 ] ++ hdf5Pkgs packs;
 
+pkgExtensions = f: pkgs:
+  let ext = builtins.concatStringsSep ", " (map
+    (p: f (p.spec.name + "/" + p.spec.version)) pkgs);
+  in ''
+    extensions("${ext}")
+  '';
+
+preExtensions = pre: view: pkgExtensions
+  (lib.takePrefix pre)
+  (builtins.filter (p: lib.hasPrefix pre p.spec.name) view.pkgs);
+
+# XXX these spack names don't quite match the modules
+pyExtensions = preExtensions "py-";
+rExtensions = preExtensions "r-";
+
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
     { pkg = slurm;
@@ -803,6 +818,7 @@ pkgStruct = {
           R_LIBS_SITE = "{prefix}/rlib/R/library";
         };
       };
+      postscript = rExtensions rView;
     }
     rclone
     rust
@@ -1285,15 +1301,6 @@ jupyter = jupyterBase.extendView (
     ]
   )
 );
-
-pyExtensions = view:
-  let ext = builtins.concatStringsSep ", " (map
-    # XXX these spack names don't quite match the python modules
-    (p: lib.takePrefix "py-" p.spec.name + "/" + p.spec.version)
-    (builtins.filter (p: lib.hasPrefix "py-" p.spec.name) view.pkgs));
-  in ''
-    extensions("${ext}")
-  '';
 
 modPkgs = with pkgStruct;
   pkgs
