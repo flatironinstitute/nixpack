@@ -3,19 +3,16 @@
 fi=`dirname $0`
 . $fi/env
 nixfile=$fi
+site=fi
 
 if [[ `hostname -s` = pcn* ]] ; then
 	# popeye
+	site=popeye
 	nixfile="$nixfile --argstr target skylake --argstr cudaarch 70"
 fi
 
 traceSpecs() {
 	nix-instantiate --eval -A "$1" $nixfile |& sed 's/^trace: //'
-}
-
-release() {
-	profile=$1 ; shift
-	nix-env -p $NIX_STATE_DIR/profiles/system/$profile -i -r -f $nixfile "$@"
 }
 
 if [[ $# -eq 0 ]] ; then
@@ -41,27 +38,39 @@ case "$cmd" in
 		exec nix-store --gc
 		;;
 	(release)
-		case "$1" in
+		if git diff-index --quiet HEAD -- ; then
+			echo "Local modifications: refusing to release"
+			exit 1
+		fi
+		prof=$1
+		case "$prof" in
 			(nix)
-				release nix -A nixpkgs.nix -A nixpkgs.git
+				attrs="nixpkgs.nix nixpkgs.git"
 				;;
 			(lmod)
-				release lmod -A pkgs.lmod
+				attrs="pkgs.lmod"
 				;;
 			(modules|nixpack|"")
+				prof=nixpack
 				nix-build -o singularity -A pkgs.singularity $nixfile
 				for fix in singularity/bin/spack_perms_fix.sh ; do
 					sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
 				done
-				release nixpack -A mods modCache
+				attrs="mods modCache"
 				;;
 			(jupyter)
-				release nixpack-jupyter -A jupyter
+				prof=nixpack-$prof
+				attrs="jupyter"
 				;;
 			(*)
 				echo "Unknown release"
+				exit 1
 				;;
 		esac
+		profile=$NIX_STATE_DIR/profiles/system/$prof
+		nix-env -p $profile -i -r -f $nixfile -A $attrs
+		l=$(readlink $profile)
+		git tag $site/${l%-link} HEAD
 		;;
 	(spack)
 		nix-build -o spackBin -A spackBin $nixfile
