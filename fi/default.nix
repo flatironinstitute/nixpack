@@ -88,6 +88,10 @@ corePacks = import ../packs {
         svg = false;
       };
     };
+    cfitsio = {
+      # for healpix-cxx
+      version = "3.49";
+    };
     coreutils = {
       # failing
       tests = false;
@@ -97,7 +101,12 @@ corePacks = import ../packs {
       version = "2.11";
     };
     cuda = {
-      version = "11.4";
+      # pytorch 1.9 needs 11.3
+      version = "11.3";
+    };
+    cudnn = {
+      # to match cuda
+      version = "8.2.0";
     };
     dejagnu = {
       # for gcc
@@ -200,6 +209,11 @@ corePacks = import ../packs {
       extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
       version = "2017.4.196";
     };
+    java = {
+      # for hdfview (weird issue with 11.0.12)
+      name = "openjdk";
+      version = "11.0.8_10";
+    };
     libaio = {
       # needs mke2fs?
       tests = false;
@@ -297,7 +311,6 @@ corePacks = import ../packs {
       };
     };
     pango = {
-      version = "1.42.0"; # newer builds are broken (meson #25355)
       variants = {
         X = true;
       };
