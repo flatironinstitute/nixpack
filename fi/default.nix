@@ -127,7 +127,6 @@ corePacks = import ../packs {
       };
     };
     fftw = {
-      version = "3.3.9";
       variants = {
         openmp = true;
         precision = ["float" "double" "quad" "long_double"];
@@ -337,7 +336,6 @@ corePacks = import ../packs {
       version = "1.19.52"; # for aiobotocore
     };
     py-h5py = {
-      version = "3.1";
     };
     py-jax = {
       variants = {
