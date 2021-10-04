@@ -1152,7 +1152,13 @@ pkgStruct = {
     #rxvt-unicode
     #sage
     slack
-    vscode
+    (vscode.overrideAttrs (old: {
+      preFixup = old.preFixup + ''
+        gappsWrapperArgs+=(
+          --add-flags --no-sandbox
+        )
+      '';
+    }))
     #wecall
     xscreensaver
   ];
