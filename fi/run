@@ -38,7 +38,7 @@ case "$cmd" in
 		exec nix-store --gc
 		;;
 	(release)
-		if git diff-index --quiet HEAD -- ; then
+		if ! git diff-index --quiet HEAD -- ; then
 			echo "Local modifications: refusing to release"
 			exit 1
 		fi
