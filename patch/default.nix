@@ -100,6 +100,9 @@ in
       libxft = {
         deptype = ["build" "link"];
       };
+      libjansson = {
+        deptype = ["build" "link"];
+      };
     };
   };
 
