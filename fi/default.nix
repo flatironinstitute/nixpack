@@ -896,9 +896,11 @@ pkgStruct = {
       #libdrm
       #magma
       #mesa
+      libxc
       mpc
       mpfr
       netcdf-c
+      netcdf-fortran
       nfft
       nlopt
       (blasPkg (openblas.withPrefs { variants = { threads = "none"; }; }) // {
