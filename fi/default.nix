@@ -1145,6 +1145,7 @@ pkgStruct = {
     #inkscape
     #jabref
     #keepassx2
+    kubectl
     #libreoffice
     #meshlab
     mplayer
