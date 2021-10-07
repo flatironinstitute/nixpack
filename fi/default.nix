@@ -1398,6 +1398,22 @@ mods = corePacks.modules {
         environment_blacklist = ["CC" "FC" "CXX" "F77"];
       };
     };
+    intel-mkl = {
+      environment = {
+        set = {
+          MKL_INTERFACE_LAYER    = "GNU,LP64";
+          MKL_THREADING_LAYER    = "GNU";
+        };
+      };
+    };
+    intel-oneapi-mkl = {
+      environment = {
+        set = {
+          MKL_INTERFACE_LAYER    = "GNU,LP64";
+          MKL_THREADING_LAYER    = "GNU";
+        };
+      };
+    };
     llvm = {
       environment = {
         prepend_path = {
