@@ -759,7 +759,11 @@ pkgStruct = {
     (llvm.withPrefs { version = "10"; })
     (llvm.withPrefs { version = "11"; })
     (llvm.withPrefs { version = "12"; })
-    (gcc.withPrefs { version = "11"; })
+    { pkg = gcc.withPrefs { version = "11"; };
+      context = {
+        unlocked_paths = ["gcc/10.2.0"]; # XXX use gcc 10 modules
+      };
+    }
     { pkg = aocc;
       context = {
         provides = []; # not a real compiler

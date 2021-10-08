@@ -100,11 +100,7 @@ class ModSpec:
         self.static = p.get('static', None)
         self.path = p.get('path', None)
         self.environment = p.get('environment', {})
-        def_context = {}
-        if self.spec in coreCompilers:
-            # messy hack to prevent core compilers from unlocking themselves (should be handled in spack)
-            def_context['unlocked_paths'] = []
-        self.context = p.get('context', def_context)
+        self.context = p.get('context', {})
         self.projection = p.get('projection')
         self.autoload = p.get('autoload', [])
         self.prerequisites = p.get('prerequisites', [])
@@ -120,6 +116,13 @@ class ModSpec:
             self._writer.conf.module = ConfigModule(self._writer.conf.module, self.projection)
             for t in ('autoload', 'prerequisites'):
                 self._writer.conf.conf[t].extend(map(nixpack.NixSpec.get, getattr(self, t)))
+            if 'unlocked_paths' in self.context:
+                for i, p in enumerate(self.context['unlocked_paths']):
+                    if not os.path.isabs(p):
+                        self.context['unlocked_paths'][i] = os.path.join(self._writer.layout.arch_dirname, p)
+            elif self.spec in coreCompilers:
+                # messy hack to prevent core compilers from unlocking themselves (should be handled in spack)
+                self.context['unlocked_paths'] = []
             for t in ('environment', 'context'):
                 spack.modules.common.update_dictionary_extending_lists(
                         self._writer.conf.conf.setdefault(t, {}),
