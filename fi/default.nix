@@ -272,6 +272,11 @@ corePacks = import ../packs {
         sandboxing = false;
       };
     };
+    nvhpc = {
+      variants = {
+        mpi = true;
+      };
+    };
     ocaml = {
       # for unison
       variants = {
