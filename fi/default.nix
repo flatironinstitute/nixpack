@@ -820,7 +820,14 @@ pkgStruct = {
     #nix #too old/broken
     node-js
     (node-js.withPrefs { version = ":12"; })
-    nvhpc
+    { pkg = nvhpc;
+      context = {
+        provides = ["mpi"]; # not a real compiler
+      };
+      postscript = ''
+        prereq("gcc")
+      '';
+    }
     octave
     openjdk
     openmm
