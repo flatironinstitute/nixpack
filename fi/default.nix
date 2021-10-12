@@ -1222,6 +1222,12 @@ pkgStruct = {
       };
       projection = "{name}";
     }
+    { name = "modules-new";
+      projection = "{name}";
+      static = ''
+        LmodError("You are already using the new modules.  You can load 'modules-traditional' to get access to the old ones.")
+      '';
+    }
 
     { path = ".modulerc";
       static =
@@ -1265,6 +1271,7 @@ pkgStruct = {
         + ''
           end
           hide_version("jupyterhub")
+          hide_version("modules-new")
         '';
     }
   ];
