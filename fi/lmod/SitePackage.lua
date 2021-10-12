@@ -35,3 +35,18 @@ local function finalize_hook(t)
 end
 
 hook.register("finalize", finalize_hook)
+
+function avail_hook(t)
+  local availStyle = masterTbl().availStyle
+  if availStyle == "grouped" then
+    for k,v in pairs(t) do
+      if k:find('^/cm/shared/sw/nix/store/.*$') then
+        t[k] = "Modules"
+      elseif k == '/cm/shared/sw/modules' then
+        t[k] = "Traditional"
+      end
+    end
+  end
+end
+
+hook.register("avail",avail_hook)
