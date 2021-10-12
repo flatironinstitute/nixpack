@@ -1,7 +1,7 @@
 packs:
 derivation {
   inherit (packs.prefs) system;
-  name = "lmodPackage";
+  name = "lmodSite";
   site = ./SitePackage.lua;
   builder = ./builder.sh;
 }

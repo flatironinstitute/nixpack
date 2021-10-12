@@ -48,7 +48,7 @@ case "$cmd" in
 				attrs="nixpkgs.nix nixpkgs.git"
 				;;
 			(lmod)
-				attrs="lmod"
+				attrs="pkgs.lmod"
 				;;
 			(modules|nixpack|"")
 				prof=nixpack
@@ -56,7 +56,7 @@ case "$cmd" in
 				for fix in singularity/bin/spack_perms_fix.sh ; do
 					sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
 				done
-				attrs="mods modCache"
+				attrs="mods modCache lmodSite"
 				;;
 			(jupyter)
 				prof=nixpack-$prof

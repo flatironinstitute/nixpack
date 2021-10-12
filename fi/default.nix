@@ -1479,9 +1479,6 @@ mods = corePacks.modules {
 modCache = corePacks.lmodCache mods;
 
 lmodSite = import ./lmod corePacks;
-lmod = corePacks.view {
-  pkgs = [corePacks.pkgs.lmod lmodSite];
-};
 
 in
 
@@ -1491,8 +1488,8 @@ corePacks // {
     pkgStruct
     mods
     modCache
-    jupyter
-    lmod;
+    lmodSite
+    jupyter;
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = p.pkg or p; in
