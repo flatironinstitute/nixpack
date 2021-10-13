@@ -776,6 +776,7 @@ pkgStruct = {
     }
     blast-plus
     cmake
+    (cmake.withPrefs { version = "3.19"; })
     cuda
     cudnn
     curl
