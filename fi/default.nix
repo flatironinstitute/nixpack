@@ -1216,17 +1216,30 @@ pkgStruct = {
       projection = "{name}";
     }
     { name = "modules-traditional";
-      context = {
-        short_description = "Make old modules available";
-        has_modulepath_modifications = true;
-        unlocked_paths = ["/cm/shared/sw/modules"];
-      };
       projection = "{name}";
+      static = ''
+        whatis("Switch to the old tcl modules")
+        local lm = loaded_modules()
+        for i = 1, #lm do
+          conflict(lm[i].fullName)
+        end
+        setenv("ENABLE_LMOD", "0")
+        unsetenv("MODULESPATH")
+        unsetenv("MODULES_NEW")
+        if mode() == "load" then
+          if myShellType() == "csh" then
+            execute {cmd="clearLmod ; source /etc/profile.d/modules.csh ;", modeA={"load"}}
+          else
+            execute {cmd="clearLmod ; . /etc/profile.d/modules.sh ;", modeA={"load"}}
+          end
+        end
+      '';
     }
     { name = "modules-new";
       projection = "{name}";
       static = ''
-        LmodError("You are already using the new modules.  You can load 'modules-traditional' to get access to the old ones.")
+        LmodMessage("You are already using the new modules.  You can load 'modules-traditional' to switch to the old ones.")
+        os.exit(1)
       '';
     }
 
