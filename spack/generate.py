@@ -272,6 +272,8 @@ for p in spack.repo.path.all_packages():
             provides[v.name].extend((c, v.versions) for c in cs)
             virtuals[v.name].add(p.name)
         desc['provides'] = {v: provide(p, c) for v, c in provides.items()}
+    if getattr(p, 'family', None) == 'compiler':
+        desc.setdefault('provides', {}).setdefault('compiler', ':')
     output(p.name, Fun('spec', desc))
     n += 1
 print(f"Generated {n} packages")

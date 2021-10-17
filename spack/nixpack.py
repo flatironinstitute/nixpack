@@ -113,6 +113,42 @@ compilerNameMap = {
         'intel-oneapi-compiler': 'oneapi'
     }
 
+class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
+    _path_keys = {'CC', 'CXX', 'F77', 'FC'}
+    _class_keys = {
+        spack.util.environment.SetEnv: 'set',
+        spack.util.environment.PushEnv: 'push',
+        spack.util.environment.UnsetEnv: 'unset',
+        spack.util.environment.PrependPath: 'prepend_path',
+        spack.util.environment.AppendPath: 'append_path',
+        spack.util.environment.RemovePath: 'remove_path',
+    }
+
+    def config(self):
+        """
+        Try to convert the set of environment modifications to json configuration.
+        This is not at all perfect, and in particular loses order, but should
+        be good enough for most compilers.
+        """
+        paths = {k.lower(): None for k in self._path_keys}
+        environment = {}
+        import spack.util.environment as env
+        for m in self:
+            try:
+                t = self._class_keys[type(m)]
+            except KeyError:
+                continue
+            if m.name in self._path_keys:
+                paths[m.name.lower()] = str(m.value) if t == 'set' else None
+            elif t == 'unset':
+                environment.setdefault(t, []).append(m.name)
+            elif t == 'remove_path':
+                # will loose multiples (but largely unused)
+                environment.setdefault(t, {})[m.name] = str(m.value)
+            else:
+                m.execute(environment.setdefault(t, {}))
+        return {'paths': paths, 'environment': environment}
+
 class NixSpec(spack.spec.Spec):
     # to re-use identical specs so id is reasonable
     specCache = dict()
@@ -260,7 +296,10 @@ class NixSpec(spack.spec.Spec):
                 return
 
     def concretize(self):
-        self.adjust_target()
+        if self._concrete:
+            return
+        if self.compiler:
+            self.adjust_target()
         spack.spec.Spec.inject_patches_variant(self)
         self._mark_concrete()
 
@@ -273,22 +312,30 @@ class NixSpec(spack.spec.Spec):
         try:
             return self._as_compiler
         except AttributeError:
-            name = compilerNameMap.get(self.name, self.name)
-            self._as_compiler = spack.spec.CompilerSpec(name, self.versions)
-            name = str(self._as_compiler)
-            if name not in self.compilers:
-                # we may have duplicate specs, but we only keep the first (topmost)
-                # as there is no way to have two compilers with the same spec
-                # (and adding something to version messes up modules)
-                self.compilers[name] = {'compiler': {
-                        'spec': name,
-                        'paths': self.paths,
-                        'modules': [],
-                        'operating_system': self.architecture.os,
-                        'target': basetarget,
-                    }}
-                spack.config.set('compilers', list(self.compilers.values()), 'command_line')
-            return self._as_compiler
+            pass
+        name = compilerNameMap.get(self.name, self.name)
+        self._as_compiler = spack.spec.CompilerSpec(name, self.versions)
+        name = str(self._as_compiler)
+        if name not in self.compilers:
+            # we may have duplicate specs, but we only keep the first (topmost)
+            # as there is no way to have two compilers with the same spec
+            # (and adding something to version messes up modules)
+            config = {
+                    'spec': name,
+                    'modules': [],
+                    'operating_system': self.architecture.os,
+                    'target': basetarget,
+                }
+            env = CompilerEnvironment()
+            self.concretize()
+            self.package.setup_run_environment(env)
+            config.update(env.config())
+            config['paths'].update(self.paths)
+            self.compilers[name] = {'compiler': config}
+            spack.config.set('compilers', list(self.compilers.values()), 'command_line')
+            # clear compilers cache since we changed config:
+            spack.compilers._cache_config_file = None
+        return self._as_compiler
 
     def dag_hash(self, length=None):
         try:

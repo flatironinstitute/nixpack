@@ -50,8 +50,6 @@ patchDesc = patch: gen:
 patchRepo = patch: repo: repo //
   builtins.mapAttrs (name: f: patchDesc f (repo.${name} or null)) patch;
 
-repoPatches = patchRepo (import ../patch lib);
-
 prefsUpdate = let
     scalar = a: b: b;
     updaters = {
@@ -173,10 +171,11 @@ lib.fix (packs: with packs; {
     , fixedDeps ? false
     , resolver ? null
     , target ? packs.target
+    , paths ? {}
     , verbose ? false # only used by builder
     }:
     {
-      inherit version variants patches depends extern tests provides fixedDeps target;
+      inherit version variants patches depends extern tests provides fixedDeps target paths;
       resolver = deptype: name: let r = lib.applyOptional (lib.applyOptional resolver deptype) name; in
         if builtins.isFunction r then r
         else (lib.coalesce r packs).getResolver name;
@@ -304,8 +303,9 @@ lib.fix (packs: with packs; {
           desc = fillDesc pname (gen spec);
           prefs = fillPrefs pprefs;
           spec = {
-            inherit (desc) name namespace provides paths;
+            inherit (desc) name namespace provides;
             inherit (prefs) extern tests target;
+            paths = desc.paths // prefs.paths;
             version = if prefs.extern != null && lib.versionIsConcrete prefs.version
                    then prefs.version
                    else resolveVersion desc.version  prefs.version;
@@ -358,7 +358,8 @@ lib.fix (packs: with packs; {
   };
 
   /* full metadata repo package descriptions */
-  repo = patchRepo repoPatch (repoPatches (import spackRepo {
+  repo = patchRepo repoPatch (patchRepo (import ../patch packs)
+    (import spackRepo {
       /* utilities needed by the repo */
       inherit (lib) when versionMatches variantMatches;
       inherit platform os target;

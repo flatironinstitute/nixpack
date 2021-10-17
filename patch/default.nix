@@ -1,5 +1,5 @@
 /* patches/additions for the repo */
-lib:
+packs:
 let
   nocompiler = spec: old: { depends = old.depends or {} // { compiler = null; }; };
   tmphome = {
@@ -20,27 +20,26 @@ in
       compiler = ":";
     };
     paths = {
-      cc = lib.when spec.variants.languages.c "bin/gcc";
-      cxx = lib.when spec.variants.languages."c++" "bin/g++";
-      f77 = lib.when spec.variants.languages.fortran "bin/gfortran";
-      fc = lib.when spec.variants.languages.fortran "bin/gfortran";
+      # gcc bin detection is non-deterministic
+      cc = packs.lib.when spec.variants.languages.c "bin/gcc";
+      cxx = packs.lib.when spec.variants.languages."c++" "bin/g++";
+      f77 = packs.lib.when spec.variants.languages.fortran "bin/gfortran";
+      fc = packs.lib.when spec.variants.languages.fortran "bin/gfortran";
     };
     depends = old.depends // {
       compiler = { deptype = ["build"]; };
     };
   };
+
   llvm = spec: old: {
-    provides = old.provides or {} // {
-      compiler = ":";
-    };
-    paths = {
-      cc = "bin/clang";
-      cxx = "bin/clang++";
-      f77 = null;
-      fc = null;
-    };
     depends = old.depends // {
       compiler = { deptype = ["build"]; };
+    };
+  };
+
+  nvhpc = spec: old: {
+    provides = old.provides or {} // {
+      compiler = ":";
     };
   };
 

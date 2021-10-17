@@ -18,7 +18,7 @@ corePacks = import ../packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "9f277eba985f88f3b8f53a6ac048b130996dc8f4";
+    rev = "2eb2ea4e78dc8e709b9460fcfc79e3925b158779";
   };
 
   spackConfig = {
@@ -31,7 +31,7 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     ref = "release-21.05";
-    rev = "47bf4156ee1e96692da1680224bcc52ca5486f57";
+    rev = "564cb4d81d4f734dd068684adec5a60077397fe9";
   };
 
   repos = [
@@ -120,6 +120,10 @@ corePacks = import ../packs {
     docbook-xsl = {
       version = "1.78.1";
     };
+    doxygen = {
+      # for openmm build failure
+      version = "1.9.1";
+    };
     embree = {
       # for blender
       variants = {
@@ -133,7 +137,7 @@ corePacks = import ../packs {
       };
     };
     freetype = { # for vtk
-      version = ":2.10.2";
+      #version = ":2.10.2";
     };
     gcc = {
       version = "7";
@@ -222,6 +226,10 @@ corePacks = import ../packs {
         #glx = false; # ~glx breaks gtkplus
       };
     };
+    libevent = {
+      # for pmix
+      version = "2.1.8";
+    };
     libfabric = {
       variants = {
         fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "psm" "mlx"];
@@ -279,6 +287,7 @@ corePacks = import ../packs {
     };
     ocaml = {
       # for unison
+      version = "4.11";
       variants = {
         force-safe-string = false;
       };
@@ -309,6 +318,7 @@ corePacks = import ../packs {
           slurm = true;
         };
         pmi = true;
+        pmix = true;
         static = false;
         thread_multiple = true;
         legacylaunchers = true;
@@ -332,20 +342,41 @@ corePacks = import ../packs {
         superlu-dist = false;
       };
     };
+    postgresql = {
+      # for py-psycopg2
+      version = ":13";
+    };
     protobuf = {
       # for py-torch
       version = "3.17";
     };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
     py-botocore = {
-      version = "1.19.52"; # for aiobotocore
+      # for aiobotocore
+      version = "1.19.52";
+    };
+    py-decorator = {
+      # for py-networkx
+      version = "4";
     };
     py-h5py = {
+    };
+    py-idna = {
+      # for py-requests
+      version = "2";
     };
     py-jax = {
       variants = {
         inherit cuda_arch;
       };
+    };
+    py-jupyter-packaging = {
+      # for py-jupyterlab-widgets
+      version = "0.7";
+    };
+    py-jupyterlab = {
+      # for py-jupyterlab-widgets
+      version = "3.0.14";
     };
     py-numpy = {
       # for numba
@@ -473,7 +504,7 @@ corePacks = import ../packs {
         '';
       };
     };
-    openmpi = spec: {
+    openmpi = spec: old: {
       patches =
         lib.optionals (spec.version == "1.10.7")                  [ ./openmpi-1.10.7.PATCH ] ++
         lib.optionals (lib.versionAtMostSpec spec.version "1.10") [ ./openmpi-1.10-gcc.PATCH ] ++
@@ -482,6 +513,8 @@ corePacks = import ../packs {
         setup = ''
           configure_args = pkg.configure_args()
           configure_args.append('CPPFLAGS=-I/usr/include/infiniband')
+          if spec.satisfies("~pmix"):
+            configure_args.remove('--without-pmix')
           pkg.configure_args = lambda: configure_args
         '';
         post = ''
@@ -598,7 +631,7 @@ mkCompilers = base: gen:
   [
     corePacks.pkgs.compiler
     (corePacks.pkgs.gcc.withPrefs { version = "10.2"; })
-    # intel?
+    #(corePacks.pkgs.gcc.withPrefs { version = "11"; })
   ];
 
 mkMpis = base: gen:
@@ -636,6 +669,7 @@ mkMpis = base: gen:
           ucx = false;
         };
         internal-hwloc = true;
+        pmix = false; # patched to mean internal
       };
     }
     { name = "openmpi";
@@ -645,6 +679,7 @@ mkMpis = base: gen:
           ucx = false;
         };
         internal-hwloc = true;
+        pmix = false;
       };
     }
     { name = "intel-oneapi-mpi"; }
@@ -776,7 +811,7 @@ pkgStruct = {
     }
     blast-plus
     cmake
-    (cmake.withPrefs { version = "3.19"; })
+    (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
     cuda
     cudnn
     curl
@@ -821,14 +856,7 @@ pkgStruct = {
     #nix #too old/broken
     node-js
     (node-js.withPrefs { version = ":12"; })
-    { pkg = nvhpc;
-      context = {
-        provides = ["mpi"]; # not a real compiler
-      };
-      postscript = ''
-        prereq("gcc")
-      '';
-    }
+    nvhpc
     octave
     openjdk
     openmm
@@ -892,7 +920,7 @@ pkgStruct = {
     }; }) [
       { version = "cluster.2017.4"; path = "2017-4"; }
       { version = "cluster.2019.0"; path = "2019"; }
-      { version = "cluster.2019.3"; path = "2019-3"; }
+      #{ version = "cluster.2019.3"; path = "2019-3"; }
       { version = "cluster.2020.0"; path = "2020"; }
       { version = "cluster.2020.4"; path = "2020-4"; }
     ]
@@ -1150,6 +1178,36 @@ pkgStruct = {
     ];
   };
 
+  nvhpc = rec {
+    packs = corePacks.withPrefs {
+      package = {
+        compiler = corePacks.pkgs.nvhpc;
+        mpi = corePacks.pkgs.nvhpc;
+        fftw = {
+          variants = {
+            precision = {
+              quad = false;
+            };
+          };
+        };
+        hdf5 = {
+          depends = {
+            cmake = {
+              # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
+              version = "3.20";
+            };
+          };
+        };
+      } // blasVirtuals corePacks.pkgs.nvhpc;
+      global = {
+        variants = {
+          mpi = true;
+        };
+      };
+    };
+    pkgs = builtins.tail (optMpiPkgs packs); /* omitting boost */
+  };
+
   nixpkgs = with corePacks.nixpkgs; [
     nix
     elinks
@@ -1359,6 +1417,8 @@ jupyter = jupyterBase.extendView (
   )
 );
 
+pkgMod = p: if p ? pkg then p else { pkg = p; };
+
 modPkgs = with pkgStruct;
   pkgs
   ++
@@ -1385,8 +1445,11 @@ modPkgs = with pkgStruct;
     ]) pythons
   ) compilers
   ++
-  map (pkg: { inherit pkg; projection = "{name}/{version}-libcpp"; })
+  map (pkg: pkgMod pkg // { projection = "{name}/{version}-libcpp"; })
     clangcpp.pkgs
+  ++
+  map (pkg: pkgMod pkg // { projection = "{name}/{version}-nvhpc"; })
+    nvhpc.pkgs
   ++
   [ { pkg = jupyter;
       projection = "jupyterhub";
