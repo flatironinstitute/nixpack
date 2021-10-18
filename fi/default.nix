@@ -1205,7 +1205,11 @@ pkgStruct = {
         };
       };
     };
-    pkgs = builtins.tail (optMpiPkgs packs); /* omitting boost */
+    pkgs = builtins.tail (optMpiPkgs packs) /* omitting boost */
+      ++
+      (with packs.pkgs; [
+        osu-micro-benchmarks
+      ]);
   };
 
   nixpkgs = with corePacks.nixpkgs; [
