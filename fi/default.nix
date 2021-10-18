@@ -856,7 +856,19 @@ pkgStruct = {
     #nix #too old/broken
     node-js
     (node-js.withPrefs { version = ":12"; })
-    nvhpc
+    { pkg = nvhpc;
+      context = {
+        unlocked_paths =
+          # XXX this is very hacky to avoid spack's all-combinations path approach as all nvhpc modules are +mpi
+          let
+            store = builtins.getEnv "NIX_STORE_DIR";
+            storelen = builtins.stringLength store;
+            hash = builtins.substring (storelen + (if builtins.substring (storelen - 1) 1 store == "/" then 0 else 1)) 7 nvhpc.outPath;
+            ver = nvhpc.spec.version;
+          in
+          ["nvhpc/${ver}-${hash}/nvhpc/${ver}"];
+      };
+    }
     octave
     openjdk
     openmm
