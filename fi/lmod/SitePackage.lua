@@ -36,15 +36,24 @@ end
 
 hook.register("finalize", finalize_hook)
 
-function avail_hook(t)
+local availRepT = {
+  trim = '%1',
+  group = 'Modules'
+}
+
+local function avail_hook(t)
   local availStyle = masterTbl().availStyle
-  if availStyle == "grouped" then
-    for k,v in pairs(t) do
-      if k:find('^/cm/shared/sw/nix/store/.*$') then
-        t[k] = "Modules"
-      elseif k == '/cm/shared/sw/modules' then
-        t[k] = "Traditional"
-      end
+  local rep = availRepT[availStyle]
+  if rep == nil then
+    return
+  end
+  for k,v in pairs(t) do
+    if k:find('^/cm/shared/sw/nix/store/[^/]*-lmod-[^/]*/lmod/lmod/modulefiles/Core$') then
+      t[k] = 'lmod'
+    elseif k == '/cm/shared/sw/modules' then
+      t[k] = "Traditional"
+    else
+      t[k] = k:gsub('^/cm/shared/sw/nix/store/[^/]*-modules/linux-[^/]*/(.*)$', rep)
     end
   end
 end
