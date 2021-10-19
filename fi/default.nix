@@ -708,6 +708,7 @@ blasPkg = pkg: {
   };
   postscript = ''
     family("blas")
+    add_property("lmod","sticky")
   '';
 };
 
@@ -795,6 +796,9 @@ pkgStruct = {
         };
       };
       projection = "{name}";
+      postscript = ''
+        add_property("lmod","sticky")
+      '';
     }
     (llvm.withPrefs { version = "10"; })
     (llvm.withPrefs { version = "11"; })
