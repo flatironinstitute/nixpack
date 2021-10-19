@@ -638,20 +638,17 @@ mkMpis = base: gen:
   builtins.map (mpi: gen {
     inherit mpi;
     packs = base.withPrefs {
-      package = {
-        inherit mpi;
-      };
       global = {
         variants = {
           mpi = true;
         };
       };
       package = {
+        inherit mpi;
         fftw = {
           variants = {
-            precision = {
-              quad = false;
-            };
+            openmp = true;
+            precision = ["float" "double" "long_double"];
           };
         };
       };
@@ -1184,6 +1181,9 @@ pkgStruct = {
         compiler = corePacks.pkgs.llvm;
         boost = {
           variants = {
+            context = true;
+            coroutine = true;
+            cxxstd = "14";
             clanglibcpp = true;
           };
         };
@@ -1201,12 +1201,17 @@ pkgStruct = {
         mpi = corePacks.pkgs.nvhpc;
         fftw = {
           variants = {
-            precision = {
-              quad = false;
-            };
+            openmp = true;
+            precision = ["float" "double" "long_double"];
           };
         };
         hdf5 = {
+          version = "1.10";
+          variants = {
+            hl = true;
+            fortran = true;
+            cxx = true;
+          };
           depends = {
             cmake = {
               # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
