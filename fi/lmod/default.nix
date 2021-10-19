@@ -1,7 +1,10 @@
-packs:
+packs: mods:
 derivation {
-  inherit (packs.prefs) system;
   name = "lmodSite";
-  site = ./SitePackage.lua;
+  inherit (mods) system;
+  lmod = packs.pkgs.lmod;
+  mods = "${mods}/${packs.platform}-${packs.os}-${packs.target}";
+  cache = packs.lmodCache mods;
+  src = ./.;
   builder = ./builder.sh;
 }

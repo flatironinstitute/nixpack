@@ -1376,7 +1376,6 @@ pkgStruct = {
 #  triqs/...
 #  py jaxlib cuda
 #  py deadalus mpi: robert
-# remove hash on avail display?
 # triqs (and such) -> python dep (confict 3.9?) [lmod doesn't seem to support this fully]
 
 jupyterBase = pyView (with corePacks.pkgs; [
@@ -1573,9 +1572,7 @@ mods = corePacks.modules {
 
 };
 
-modCache = corePacks.lmodCache mods;
-
-lmodSite = import ./lmod corePacks;
+modSite = import ./lmod corePacks mods;
 
 in
 
@@ -1584,8 +1581,7 @@ corePacks // {
     bootstrapPacks
     pkgStruct
     mods
-    modCache
-    lmodSite
+    modSite
     jupyter;
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:

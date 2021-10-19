@@ -23,7 +23,7 @@ else
 fi
 case "$cmd" in
 	(build)
-		exec nix-build --show-trace "$@" -A mods $nixfile
+		exec nix-build --show-trace "$@" -A modSite $nixfile
 		;;
 	(spec)
 		if [[ $# -eq 0 ]] ; then
@@ -47,16 +47,13 @@ case "$cmd" in
 			(nix)
 				attrs="nixpkgs.nix nixpkgs.git"
 				;;
-			(lmod)
-				attrs="pkgs.lmod"
-				;;
 			(modules|nixpack|"")
 				prof=nixpack
 				nix-build -o singularity -A pkgs.singularity $nixfile
 				for fix in singularity/bin/spack_perms_fix.sh ; do
 					sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
 				done
-				attrs="mods modCache lmodSite"
+				attrs="modSite"
 				;;
 			(jupyter)
 				prof=nixpack-$prof

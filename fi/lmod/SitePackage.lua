@@ -36,6 +36,10 @@ end
 
 hook.register("finalize", finalize_hook)
 
+local lmodRoot = '@LMOD@/lmod/lmod/modulefiles/Core'
+local lmodRootPat = '^' .. lmodRoot:gsub('[.-]', '%%%1') .. '$'
+local modRoot = '@MODS@'
+local modRootPat = '^' .. modRoot:gsub('[.-]', '%%%1') .. '/(.*)$'
 local availRepT = {
   trim = '%1',
   group = 'Modules'
@@ -48,12 +52,12 @@ local function avail_hook(t)
     return
   end
   for k,v in pairs(t) do
-    if k:find('^/cm/shared/sw/nix/store/[^/]*-lmod-[^/]*/lmod/lmod/modulefiles/Core$') then
+    if k:find(lmodRootPat) then
       t[k] = 'lmod'
     elseif k == '/cm/shared/sw/modules' then
       t[k] = "Traditional"
     else
-      t[k] = k:gsub('^/cm/shared/sw/nix/store/[^/]*-modules/linux-[^/]*/(.*)$', rep)
+      t[k] = k:gsub(modRootPat, rep)
     end
   end
 end
