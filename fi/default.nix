@@ -283,6 +283,7 @@ corePacks = import ../packs {
     nvhpc = {
       variants = {
         mpi = true;
+        stdpar = builtins.head (lib.splitRegex "," cudaarch);
       };
     };
     ocaml = {
