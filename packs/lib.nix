@@ -272,4 +272,11 @@ rec {
         (seen ++ [pkg])
         (attrNames pkg.spec.depends));
     in pkgs: length (foldl' (seen: sst seen "" null null) [] (toList pkgs));
+
+  capture = args: readFile (derivation {
+    name = "capture-${baseNameOf (head args)}";
+    system = currentSystem;
+    builder = ./capture.sh;
+    args = args;
+  });
 }

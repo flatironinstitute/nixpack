@@ -10,6 +10,9 @@ isLDep = builtins.elem "link";
 isRDep = builtins.elem "run";
 isRLDep = d: isLDep d || isRDep d;
 
+rpmVersion = pkg: lib.capture ["/bin/rpm" "-q" "--queryformat=%{VERSION}" pkg];
+rpmExtern = pkg: { extern = "/usr"; version = rpmVersion pkg; };
+
 corePacks = import ../packs {
   label = "core";
   system = builtins.currentSystem;
@@ -96,10 +99,7 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
-    cpio = { # some intel installers need this -- avoid compiler dependency
-      extern = "/usr";
-      version = "2.11";
-    };
+    cpio = rpmExtern "cpio"; # some intel installers need this -- avoid compiler dependency
     cuda = {
       # pytorch 1.9 needs 11.3
       version = "11.3";
@@ -428,13 +428,10 @@ corePacks = import ../packs {
       # to match bcftools
       version = "1.12";
     };
-    shadow = {
-      extern = "/usr";
-      version = "4.6";
-    };
-    slurm = {
+    shadow = rpmExtern "shadow-utils";
+    slurm = rec {
       extern = "/cm/shared/apps/slurm/current";
-      version = "20.02.5";
+      version = lib.capture ["/bin/readlink" "-n" extern];
       variants = {
         sysconfdir = "/cm/shared/apps/slurm/var/etc/slurm";
         pmix = true;
@@ -551,62 +548,29 @@ bootstrapPacks = corePacks.withPrefs {
   package = {
     compiler = {
       name = "gcc";
-      version = "4.8.5";
-      extern = "/usr";
-    };
+    } // rpmExtern "gcc";
 
-    autoconf = {
-      extern = "/usr";
-      version = "2.69";
-    };
-    automake = {
-      extern = "/usr";
-      version = "1.13.4";
-    };
-    bzip2 = {
-      extern = "/usr";
-      version = "1.0.6";
-    };
-    diffutils = {
-      extern = "/usr";
-      version = "3.3";
-    };
-    libtool = {
-      extern = "/usr";
-      version = "2.4.2";
-    };
-    m4 = {
-      extern = "/usr";
-      version = "1.4.16";
-    };
-    ncurses = {
-      extern = "/usr";
-      version = "5.9.20130511";
+    autoconf = rpmExtern "autoconf";
+    automake = rpmExtern "automake";
+    bzip2 = rpmExtern "bzip2";
+    diffutils = rpmExtern "diffutils";
+    libtool = rpmExtern "libtool";
+    m4 = rpmExtern "m4";
+    ncurses = rpmExtern "ncurses" // {
       variants = {
         termlib = true;
         abi = "5";
       };
     };
-    openssl = {
-      extern = "/usr";
-      version = "1.0.2k";
+    openssl = rpmExtern "openssl" // {
       variants = {
         fips = false;
       };
     };
-    perl = {
-      extern = "/usr";
-      version = "5.16.3";
-    };
-    pkgconfig = {
-      extern = "/usr";
-      version = "0.27.1";
-    };
+    perl = rpmExtern "perl";
+    pkgconfig = rpmExtern "pkgconfig";
     psm = {};
-    zlib = {
-      extern = "/usr";
-      version = "1.2.7";
-    };
+    zlib = rpmExtern "zlib";
   };
 };
 
