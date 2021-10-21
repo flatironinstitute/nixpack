@@ -129,6 +129,10 @@ corePacks = import ../packs {
       variants = {
         ispc = false;
       };
+      depends = {
+        # -mprefer-vector-width=256
+        compiler = corePacks.pkgs.gcc.withPrefs { version = "10.2"; };
+      };
     };
     fftw = {
       variants = {
@@ -776,6 +780,7 @@ pkgStruct = {
       };
     }
     blast-plus
+    blender
     cmake
     (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
     cuda
