@@ -78,6 +78,8 @@ corePacks = import ../packs {
         context = true;
         coroutine = true;
         cxxstd = "14";
+        python = true;
+        numpy = true;
       };
     };
     cairo = {
@@ -329,6 +331,11 @@ corePacks = import ../packs {
         legacylaunchers = true;
       };
     };
+    openvdb = {
+      variants = {
+        python = true;
+      };
+    };
     pango = {
       variants = {
         X = true;
@@ -496,16 +503,6 @@ corePacks = import ../packs {
   // blasVirtuals { name = "flexiblas"; };
 
   repoPatch = {
-    lmod = {
-      build = {
-        setup = ''
-          configure_args = pkg.configure_args()
-          configure_args.append('--with-availExtensions=no')
-          configure_args.append('--with-cachedLoads=yes')
-          pkg.configure_args = lambda: configure_args
-        '';
-      };
-    };
     openmpi = spec: old: {
       patches =
         lib.optionals (spec.version == "1.10.7")                  [ ./openmpi-1.10.7.PATCH ] ++
@@ -843,6 +840,7 @@ pkgStruct = {
     octave
     openjdk
     openmm
+    openvdb
     p7zip
     paraview
     #pdftk #needs gcc java (gcj)
