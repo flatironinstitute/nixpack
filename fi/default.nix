@@ -809,7 +809,9 @@ pkgStruct = {
     intel-oneapi-compilers
     (blasPkg intel-oneapi-mkl)
     intel-oneapi-mpi
+    intel-oneapi-tbb
     intel-oneapi-vtune
+    intel-tbb
     julia
     keepassxc
     lftp
@@ -840,7 +842,10 @@ pkgStruct = {
     octave
     openjdk
     openmm
-    openvdb
+    ilmbase openexr # hidden, deps of openvdb
+    { pkg = openvdb;
+      autoload = [ilmbase openexr intel-tbb];
+    }
     p7zip
     paraview
     #pdftk #needs gcc java (gcj)
@@ -1337,7 +1342,11 @@ pkgStruct = {
           end
           hide_version("jupyterhub")
           hide_version("modules-new")
-        '';
+        '' +
+        builtins.concatStringsSep "" (builtins.map (n: ''
+          hide_version("${n.spec.name}/${n.spec.version}")
+        '') (with corePacks.pkgs; [ ilmbase openexr ]))
+        ;
     }
   ];
 
