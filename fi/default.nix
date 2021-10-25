@@ -844,7 +844,7 @@ pkgStruct = {
     openmm
     ilmbase openexr # hidden, deps of openvdb
     { pkg = openvdb;
-      autoload = [ilmbase openexr intel-tbb];
+      autoload = with openvdb.spec.depends; [ilmbase openexr intel-tbb];
     }
     p7zip
     paraview
@@ -1234,6 +1234,13 @@ pkgStruct = {
           --add-flags --no-sandbox
         )
       '';
+      passthru = old.passthru // {
+        module = {
+          postscript = ''
+            depends_on("git")
+          '';
+        };
+      };
     }))
     #wecall
     xscreensaver
@@ -1464,8 +1471,7 @@ modPkgs = with pkgStruct;
       long_description = p.meta.longDescription or null;
     };
     projection = "{name}/{version}-nix";
-  })
-    nixpkgs
+  } // p.module or {}) nixpkgs
   ++
   static
 ;
