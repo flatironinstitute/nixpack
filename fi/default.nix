@@ -776,6 +776,8 @@ pkgStruct = {
         provides = []; # not a real compiler
       };
     }
+    autoconf
+    automake
     blast-plus
     blender
     cmake
