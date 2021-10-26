@@ -776,8 +776,17 @@ pkgStruct = {
         provides = []; # not a real compiler
       };
     }
-    autoconf
-    automake
+    { pkg = corePacks.view {
+        name = "autotools";
+        pkgs = [autoconf automake libtool];
+      };
+      projection = "autotools";
+      context = rec {
+        name = "autotools";
+        short_description = "GNU autotools, including ${autoconf.name}, ${automake.name}, and ${libtool.name}";
+        long_description = short_description;
+      };
+    }
     blast-plus
     blender
     cmake
@@ -817,7 +826,6 @@ pkgStruct = {
     julia
     keepassxc
     lftp
-    libtool
     libzmq
     likwid
     magma

@@ -1,6 +1,6 @@
 packs:
 packs.lib.fix (makeView:
-{ name ? (builtins.head pkgs).name + "-view"
+{ name ? meta.name + "-view"
 , pkgs /* packages to include */
 , exclude ? [] /* globs of files to exclude (all globs rooted at top) */
 , shbang ? [] /* files for which to copy and translate #! paths to new root */
