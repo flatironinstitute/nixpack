@@ -916,6 +916,7 @@ pkgStruct = {
     pkgs = with comp.packs.pkgs; [
       (comp.defaulting compiler)
       arpack-ng
+      cfitsio
       eigen
       { pkg = ffmpeg;
         default = true;
