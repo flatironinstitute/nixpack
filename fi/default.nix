@@ -1453,7 +1453,8 @@ modPkgs = with pkgStruct;
     ]) pythons
   ) compilers
   ++
-  map (pkg: pkgMod pkg // { projection = "{name}/{version}-libcpp"; })
+  map (pkg: pkgMod pkg // { projection = "{name}/{version}-libcpp";
+    autoload = [clangcpp.packs.pkgs.compiler]; })
     clangcpp.pkgs
   ++
   map (pkg: pkgMod pkg // { projection = "{name}/{version}-nvhpc"; })
