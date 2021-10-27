@@ -764,7 +764,9 @@ pkgStruct = {
       '';
     }
     (llvm.withPrefs { version = "10"; })
-    (llvm.withPrefs { version = "11"; })
+    { pkg = llvm;
+      default = true;
+    }
     (llvm.withPrefs { version = "12"; })
     { pkg = gcc.withPrefs { version = "11"; };
       context = {
