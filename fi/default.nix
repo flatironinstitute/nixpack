@@ -1455,7 +1455,11 @@ modPkgs = with pkgStruct;
         default = py.isCore;
         projection = "python-mpi/{^python.version}";
         #autoload = [comp.pythons[py].view]
-        postscript = pyExtensions py.view;
+        postscript = pyExtensions py.view +
+          # conflicts with non-mpi version
+          ''
+            conflict("hdf5/${py.packs.pkgs.hdf5.spec.version}")
+          '';
       }] ++ py.pkgs) pythons
     ) mpis
     ++
