@@ -152,7 +152,8 @@ def printNix(x, indent=0, out=sys.stdout):
         raise TypeError(x)
 
 
-def variant(p, v):
+def variant(p, entry):
+    v, when = entry
     d = str(v.default)
     if v.multi and v.values is not None:
         d = d.split(',')
@@ -261,7 +262,7 @@ for p in spack.repo.path.all_packages():
     vers.sort(reverse = True)
     desc['version'] = [str(v) for _, _, v in vers]
     if p.variants:
-        desc['variants'] = {n: variant(p, v) for n, v in p.variants.items()}
+        desc['variants'] = {n: variant(p, entry) for n, entry in p.variants.items()}
     if p.dependencies:
         desc['depends'] = {n: depend(p, d) for n, d in p.dependencies.items()}
     if p.conflicts:
