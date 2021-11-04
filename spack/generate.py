@@ -153,6 +153,9 @@ def printNix(x, indent=0, out=sys.stdout):
 
 
 def variant(p, v):
+    if type(v) is tuple:
+        # TODO: handle when conditions on variants
+        v = v[0]
     d = str(v.default)
     if v.multi and v.values is not None:
         d = d.split(',')

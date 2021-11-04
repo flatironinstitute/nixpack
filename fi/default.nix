@@ -21,7 +21,7 @@ corePacks = import ../packs {
   spackSrc = {
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "2eb2ea4e78dc8e709b9460fcfc79e3925b158779";
+    rev = "2311242d266d90726222002a262b50a165adb6bf";
   };
 
   spackConfig = {
@@ -34,7 +34,7 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     ref = "release-21.05";
-    rev = "564cb4d81d4f734dd068684adec5a60077397fe9";
+    rev = "2fd5c69fa6057870687a6589a8c95da955188f91";
   };
 
   repos = [
@@ -103,12 +103,10 @@ corePacks = import ../packs {
     };
     cpio = rpmExtern "cpio"; # some intel installers need this -- avoid compiler dependency
     cuda = {
-      # pytorch 1.9 needs 11.3
-      version = "11.3";
+      # for cudnn
+      version = "11.4";
     };
     cudnn = {
-      # to match cuda
-      version = "8.2.0";
     };
     dejagnu = {
       # for gcc
@@ -123,8 +121,8 @@ corePacks = import ../packs {
       version = "1.78.1";
     };
     doxygen = {
-      # for openmm build failure
-      version = "1.9.1";
+      # for openmm build failure, gcc conflict
+      version = "1.8";
     };
     embree = {
       # for blender
@@ -253,6 +251,7 @@ corePacks = import ../packs {
       version = "11";
       variants = {
         pythonbind = true;
+        omp_as_runtime = false;
       };
     };
     magma = {
@@ -363,13 +362,25 @@ corePacks = import ../packs {
       version = "3.17";
     };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
+    py-astroid = {
+      # for py-pylint
+      version = "2.5";
+    };
     py-botocore = {
       # for aiobotocore
       version = "1.19.52";
     };
+    py-chardet = {
+      # for py-aiohttp
+      version = "3";
+    };
     py-decorator = {
       # for py-networkx
       version = "4";
+    };
+    py-docutils = {
+      # for py-sphinx
+      version = "0.17";
     };
     py-h5py = {
     };
@@ -382,9 +393,17 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    py-jupyter-client = {
+      # for py-nest-asyncio
+      version = "6";
+    };
     py-jupyter-packaging = {
       # for py-jupyterlab-widgets
       version = "0.7";
+    };
+    py-jupyter-server = {
+      # for py-jupyterlab-widgets
+      version = "1.9";
     };
     py-jupyterlab = {
       # for py-jupyterlab-widgets
@@ -405,6 +424,10 @@ corePacks = import ../packs {
           };
         };
       };
+    };
+    py-setuptools = {
+      # for py-scipy
+      version = "57";
     };
     py-setuptools-scm = {
       variants = {

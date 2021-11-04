@@ -29,6 +29,12 @@ in
     depends = old.depends // {
       compiler = { deptype = ["build"]; };
     };
+    build = {
+      # make cc -> gcc symlink
+      post = ''
+        os.symlink('gcc', os.path.join(pkg.prefix, 'bin/cc'))
+      '';
+    };
   };
 
   llvm = spec: old: {
