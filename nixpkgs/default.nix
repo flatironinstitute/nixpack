@@ -5,11 +5,13 @@
 }:
 
 let
+# gcc arch is x64-64
+target_ = builtins.replaceStrings ["x86_64"] ["x86-64"] target;
 
 args = {
   localSystem = {
     inherit system;
-    gcc = { arch = target; };
+    gcc = { arch = target_; };
   };
   config = {
     replaceStdenv = import ./stdenv.nix;
