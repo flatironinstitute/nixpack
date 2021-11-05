@@ -163,6 +163,14 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
+    gdk-pixbuf = {
+      depends = {
+        meson = {
+          # work around undefined x11 in spack build
+          version = "0.59";
+        };
+      };
+    };
     /* external opengl: */
     gl = {
       name = "opengl";
