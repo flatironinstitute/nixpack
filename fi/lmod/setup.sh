@@ -1,5 +1,5 @@
 if [[ -z $ENABLE_LMOD ]] ; then
-  export ENABLE_LMOD=0
+  export ENABLE_LMOD=1
 fi
 
 if [[ $ENABLE_LMOD = 1 ]] ; then

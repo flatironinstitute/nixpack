@@ -1,5 +1,5 @@
 if (! ${?ENABLE_LMOD} ) then
-  setenv ENABLE_LMOD 0
+  setenv ENABLE_LMOD 1
 endif
 
 if ( $ENABLE_LMOD == 1 ) then
