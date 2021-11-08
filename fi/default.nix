@@ -1,3 +1,4 @@
+/* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
 { target ? "broadwell"
 , cudaarch ? "60,70,80"
 }:
@@ -19,6 +20,7 @@ corePacks = import ../packs {
   os = "centos7";
 
   spackSrc = {
+    /* -------- upstream spack version -------- */
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
     rev = "2311242d266d90726222002a262b50a165adb6bf";
@@ -33,6 +35,7 @@ corePacks = import ../packs {
   spackPath = "/bin:/usr/bin";
 
   nixpkgsSrc = {
+    /* -------- upstream nixpkgs version -------- */
     ref = "release-21.05";
     rev = "2fd5c69fa6057870687a6589a8c95da955188f91";
   };
@@ -57,6 +60,9 @@ corePacks = import ../packs {
   package = {
     compiler = bootstrapPacks.pkgs.gcc;
 
+    /* ---------- global package preferences ------------
+     * Default settings and versions for specific packages should be added here (in alphabetical order).
+     */
     aocc = {
       variants = {
         license-agreed = true;
@@ -361,6 +367,10 @@ corePacks = import ../packs {
         superlu-dist = false;
       };
     };
+    plumed = {
+      # for gromacs
+      version = "2.7.2";
+    };
     postgresql = {
       # for py-psycopg2
       version = ":13";
@@ -625,7 +635,7 @@ mkCompilers = base: gen:
       base.withCompiler compiler;
     defaulting = pkg: { default = isCore; inherit pkg; };
   }))
-  [
+  [ /* -------- compilers -------- */
     corePacks.pkgs.compiler
     (corePacks.pkgs.gcc.withPrefs { version = "10.2"; })
     #(corePacks.pkgs.gcc.withPrefs { version = "11"; })
@@ -653,7 +663,7 @@ mkMpis = base: gen:
     isOpenmpi = mpi.name == "openmpi";
     isCore = mpi == { name = "openmpi"; };
   })
-  [
+  [ /* -------- mpis -------- */
     { name = "openmpi"; }
     { name = "openmpi";
       version = "2.1";
@@ -737,7 +747,7 @@ mkPythons = base: gen:
     isCore = python == corePython;
     packs = withPython base python;
   }))
-  [
+  [ /* -------- pythons -------- */
     corePython
     { version = "3.9"; }
   ];
@@ -782,6 +792,7 @@ rExtensions = preExtensions "r-";
 
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
+    /* ------------ Core modules ------------ */
     { pkg = slurm;
       environment = {
         set = {
@@ -958,6 +969,7 @@ pkgStruct = {
 
   compilers = mkCompilers corePacks (comp: comp // {
     pkgs = with comp.packs.pkgs; [
+      /* ---------- compiler modules ---------- */
       (comp.defaulting compiler)
       arpack-ng
       cfitsio
@@ -1033,6 +1045,7 @@ pkgStruct = {
             }
           ])
         )
+        /* ---------- MPI modules ---------- */
         ++ [
           osu-micro-benchmarks
         ] ++
@@ -1056,6 +1069,7 @@ pkgStruct = {
         ]);
 
       pythons = mkPythons mpi.packs (py: py // {
+        /* ---------- python+mpi modules ---------- */
         view = py.packs.pythonView { pkgs = with py.packs.pkgs; [
           py-mpi4py
           py-h5py
@@ -1073,6 +1087,7 @@ pkgStruct = {
 
     pythons = mkPythons comp.packs (py: py // {
       view = with py.packs.pkgs; (pyView ([
+        /* ---------- python packages ---------- */
         python
         gettext
         py-astropy
@@ -1208,6 +1223,7 @@ pkgStruct = {
       };
     };
     pkgs = with packs.pkgs; [
+      /* -------- clang libcpp modules --------- */
       boost
     ];
   };
@@ -1252,6 +1268,7 @@ pkgStruct = {
   };
 
   nixpkgs = with corePacks.nixpkgs; [
+    /* -------- nixpkgs modules --------- */
     nix
     elinks
     #evince
@@ -1292,6 +1309,7 @@ pkgStruct = {
   ];
 
   static = [
+    /* -------- misc modules --------- */
     {
       name = "cuda-dcgm";
       prefix = "/cm/local/apps/cuda-dcgm/current";
