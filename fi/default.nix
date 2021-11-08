@@ -1333,12 +1333,11 @@ pkgStruct = {
         end
         setenv("ENABLE_LMOD", "0")
         unsetenv("MODULESPATH")
-        unsetenv("MODULES_NEW")
         if mode() == "load" then
           if myShellType() == "csh" then
-            execute {cmd="clearLmod ; source /etc/profile.d/modules.csh ;", modeA={"load"}}
+            execute {cmd="clearLmod ; setenv ENABLE_LMOD 0 ; source /etc/profile.d/modules.csh ;", modeA={"load"}}
           else
-            execute {cmd="clearLmod ; . /etc/profile.d/modules.sh ;", modeA={"load"}}
+            execute {cmd="clearLmod ; export ENABLE_LMOD=0 ; . /etc/profile.d/modules.sh ;", modeA={"load"}}
           end
         end
       '';
