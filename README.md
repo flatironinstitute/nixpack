@@ -19,31 +19,10 @@ Nix on the outside, spack on the inside.
 1. Run `nix-build -A pkgs.foo` to build the spack package `foo`.
 1. To build modules, configure `packs.mods` and run `nix-build -A mods`.
 
-### Flatiron Specific
+## Flatiron Specific
 
-There is Flatiron-specific configuration and repositories in [`fi`](fi/default.nix), complete with views and modules.
-These should provide examples or a template for creating full working systems.
-
-The script [`fi/run`](fi/run) can help with common tasks (some of which are more generally useful):
-```
-Usage: fi/run COMMAND
-
-Commands:
-
-  build        Build modules into result.  Takes the same arguments as
-               nix-build (-jN, --cores M, -K, ...).
-  spec [PKG]   Print the spec tree for a specific package or all modules,
-               along with the total number of unique packages.
-  gc           Cleanup any unreferenced nix stores (nix-store --gc).
-  release      Publish a release profile for...
-    modules    nixpack lmod modules (default)
-    jupyter    jupyterhub server environment
-    nix        nix build environment
-  spack ...    Run a spack command in the nixpack environment (things like list
-               and info work, but those managing packages will not)
-```
-
-You can source `fi/env` to setup a build environment.
+We have our local Flatiron-specific configuration and repositories in [`fi`](fi), complete with views and modules, some of which may be more generally useful or at least helpful reference or template for creating a full working system.
+See the [README](fi/README.md) in that directory for more information.
 
 ## Compatibility
 
