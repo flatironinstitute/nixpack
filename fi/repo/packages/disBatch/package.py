@@ -22,3 +22,7 @@ class Disbatch(PythonPackage):
         script_source = os.path.join(self.prefix.bin, 'disBatch.py')
         script_dest = os.path.join(self.prefix.bin, 'disBatch')
         os.symlink(script_source, script_dest)
+
+        if self.spec.satisfies('@1'):
+            script = Executable(script_source)
+            script('--fix-paths')
