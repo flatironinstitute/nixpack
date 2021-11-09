@@ -855,6 +855,7 @@ pkgStruct = {
       default = true;
     }
     (disBatch.withPrefs { version = "2"; })
+    (disBatch.withPrefs { version = "2.0-pip"; })
     distcc
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
