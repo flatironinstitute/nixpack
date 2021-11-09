@@ -903,7 +903,6 @@ pkgStruct = {
     octave
     openjdk
     openmm
-    (plumed.withPrefs { version = "2.7.2"; })
     ilmbase openexr # hidden, deps of openvdb
     { pkg = openvdb;
       autoload = with openvdb.spec.depends; [ilmbase openexr intel-tbb];
@@ -1070,6 +1069,7 @@ pkgStruct = {
           gromacs
           { pkg = gromacs.withPrefs { version = "2021:2021.0"; variants = { plumed = true; }; };
             projection = "{name}/{version}-plumed"; }
+          plumed
           relion
         ] ++ [
           ior
@@ -1561,10 +1561,6 @@ mods = corePacks.modules {
   config = {
     hierarchy = ["mpi"];
     hash_length = 0;
-    projections = {
-      # warning: order is lost
-      "gromacs+plumed" = "{name}/{version}-plumed";
-    };
     prefix_inspections = {
       "lib" = ["LIBRARY_PATH"];
       "lib64" = ["LIBRARY_PATH"];
