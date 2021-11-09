@@ -578,6 +578,19 @@ corePacks = import ../packs {
         '';
       };
     };
+    /* fix LIBRARY_PATH ordering wrt system /lib64 for libraries with different major versions */
+    boost = lib64Link;
+    fftw = lib64Link;
+    gsl = lib64Link;
+    hdf5 = lib64Link;
+  };
+};
+
+lib64Link = {
+  build = {
+    post = ''
+      os.symlink('lib', pkg.prefix.lib64)
+    '';
   };
 };
 
@@ -1382,7 +1395,7 @@ pkgStruct = {
         let alias = {
           "Blast" = "blast-plus";
           "amd/aocc" = "aocc";
-          "disBatch/2.0-beta" = "disBatch/2.0-rc2";
+          "disBatch/2.0-beta" = "disBatch/2.0-rc3";
           "intel/mkl" = "intel-mkl";
           "intel/mpi" = "intel-mpi";
           "lib/arpack" = "arpack-ng";
