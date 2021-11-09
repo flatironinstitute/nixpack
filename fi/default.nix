@@ -854,7 +854,13 @@ pkgStruct = {
     go
     gperftools
     { pkg = gromacs.withPrefs { variants = { cuda = true; }; };
-      projection = "{name}/{version}-singlegpu";
+      projection = "{name}/{version}-singlegpunode";
+      environment = {
+        set = { GMX_GPU_DD_COMMS = "true";
+                GMX_GPU_PME_PP_COMMS = "true";
+                GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
+        };
+      };
     }
     hdfview
     imagemagick
@@ -897,6 +903,7 @@ pkgStruct = {
     octave
     openjdk
     openmm
+    (plumed.withPrefs { version = "2.7.2"; })
     ilmbase openexr # hidden, deps of openvdb
     { pkg = openvdb;
       autoload = with openvdb.spec.depends; [ilmbase openexr intel-tbb];
@@ -1061,6 +1068,8 @@ pkgStruct = {
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
           # these are broken with intel...
           gromacs
+          { pkg = gromacs.withPrefs { version = "2021:2021.0"; variants = { plumed = true; }; };
+            projection = "{name}/{version}-plumed"; }
           relion
         ] ++ [
           ior
