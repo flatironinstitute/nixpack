@@ -42,7 +42,9 @@ case "$cmd" in
 			echo "Local modifications: refusing to release"
 			exit 1
 		fi
-		if [[ $* == all ]] ; then
+		if [[ $# -eq 0 ]] ; then
+			set -- modules
+		elif [[ $* == all ]] ; then
 			set -- nix modules jupyter shell
 		fi
 		for prof in "$@" ; do
@@ -50,7 +52,7 @@ case "$cmd" in
 				(nix)
 					attrs="nixpkgs.nix nixpkgs.git"
 					;;
-				(modules|nixpack|"")
+				(modules|nixpack)
 					prof=nixpack
 					nix-build -o singularity -A pkgs.singularity $nixfile
 					for fix in singularity/bin/spack_perms_fix.sh ; do
