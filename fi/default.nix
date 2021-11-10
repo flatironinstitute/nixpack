@@ -851,11 +851,8 @@ pkgStruct = {
     cuda
     cudnn
     curl
-    { pkg = disBatch.withPrefs { version = "1"; };
-      default = true;
-    }
+    (disBatch.withPrefs { version = "1"; })
     (disBatch.withPrefs { version = "2"; })
-    (disBatch.withPrefs { version = "2.0-pip"; })
     distcc
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
@@ -1396,7 +1393,6 @@ pkgStruct = {
         let alias = {
           "Blast" = "blast-plus";
           "amd/aocc" = "aocc";
-          "disBatch/2.0-beta" = "disBatch/2.0-rc3";
           "intel/mkl" = "intel-mkl";
           "intel/mpi" = "intel-mpi";
           "lib/arpack" = "arpack-ng";
