@@ -15,4 +15,13 @@ class TriqsCthyb(CMakePackage):
     depends_on('nfft', type=('build', 'link'))
     depends_on('triqs', type=('build', 'link'))
     depends_on('python@3.7:', type=('build', 'link', 'run'))
+    variant('complex', default=False, description='Build with complex number support')
     extends('python')
+
+    def cmake_args(self):
+        args = super().cmake_args()
+        if self.spec.satisfies('+complex'):
+            args.append('-DHybridisation_is_complex=ON')
+            args.append('-DLocal_hamiltonian_is_complex=ON')
+
+        return args

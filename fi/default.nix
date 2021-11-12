@@ -1097,6 +1097,8 @@ pkgStruct = {
         pkgs = lib.optionals (py.isCore && mpi.isCore) (with py.packs.pkgs; [
           triqs
           triqs-cthyb
+          { pkg = triqs-cthyb.withPrefs { variants = { complex = true; }; };
+            projection = "{name}-complex/{version}"; }
           triqs-dft-tools
           triqs-maxent
           triqs-omegamaxent-interface
