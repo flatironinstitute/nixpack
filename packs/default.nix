@@ -172,6 +172,7 @@ lib.fix (packs: with packs; {
     , resolver ? null
     , target ? packs.target
     , paths ? {}
+    , build ? {} # only used by builder
     , verbose ? false # only used by builder
     }:
     {
@@ -293,7 +294,7 @@ lib.fix (packs: with packs; {
           passAsFile = ["spec"];
           repoPkgs = map (r: let p = r + "/packages/${pname}"; in
             lib.when (builtins.pathExists p) p) repos;
-        } // desc.build) // {
+        } // desc.build // pprefs.build or {}) // {
           inherit spec;
           withPrefs = p: resolvePackage pname gen (lib.prefsUpdate pprefs p);
         };
