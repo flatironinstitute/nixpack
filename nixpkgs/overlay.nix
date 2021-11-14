@@ -28,4 +28,18 @@ with pkgs;
       done
     '';
   });
+
+  openssl_1_0_2 = openssl_1_0_2.overrideAttrs (old: {
+    postPatch = old.postPatch + ''
+      sed -i 's:define\s\+X509_CERT_FILE\s\+.*$:define X509_CERT_FILE "/etc/pki/tls/certs/ca-bundle.crt":' crypto/cryptlib.h
+    '';
+  });
+
+  openssl_1_1 = openssl_1_1.overrideAttrs (old: {
+    postPatch = old.postPatch + ''
+      sed -i 's:define\s\+X509_CERT_FILE\s\+.*$:define X509_CERT_FILE "/etc/pki/tls/certs/ca-bundle.crt":' include/internal/cryptlib.h
+    '';
+  });
+
+  openssl = self.openssl_1_1;
 }
