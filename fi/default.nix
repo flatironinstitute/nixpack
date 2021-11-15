@@ -770,8 +770,12 @@ withPython = packs: py: let
 corePython = { version = "3.8"; };
 
 mkPythons = base: gen:
-  builtins.map (python: gen (rec {
-    inherit python;
+  builtins.map (python: gen ({
+    python = python // {
+      variants = {
+        tkinter = true;
+      };
+    };
     isCore = python == corePython;
     packs = withPython base python;
   }))
