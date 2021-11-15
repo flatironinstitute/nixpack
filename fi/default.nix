@@ -23,7 +23,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "2311242d266d90726222002a262b50a165adb6bf";
+    rev = "1e32391fb75401d47206d0100eb444e3804c185a";
   };
 
   spackConfig = {
@@ -37,7 +37,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-21.05";
-    rev = "2fd5c69fa6057870687a6589a8c95da955188f91";
+    rev = "fdd594aef4376c132bde8e8ecc593b1bc8004d28";
   };
 
   repos = [
@@ -385,7 +385,7 @@ corePacks = import ../packs {
       version = "2.5";
     };
     py-botocore = {
-      # for aiobotocore
+      # for py-aiobotocore
       version = "1.19.52";
     };
     py-chardet = {
@@ -394,7 +394,7 @@ corePacks = import ../packs {
     };
     py-decorator = {
       # for py-networkx
-      version = "4";
+      #version = "4";
     };
     py-docutils = {
       # for py-sphinx
@@ -412,7 +412,7 @@ corePacks = import ../packs {
       };
     };
     py-jupyter-client = {
-      # for py-nest-asyncio
+      # for py-nest-asyncio, py-ipykernel
       version = "6";
     };
     py-jupyter-packaging = {
@@ -427,8 +427,16 @@ corePacks = import ../packs {
       # for py-jupyterlab-widgets
       version = "3.0.14";
     };
+    py-lazy-object-proxy = {
+      # to avoid py-setuptools-scm constraint
+      version = "1.4";
+    };
+    py-multidict = {
+      # for py-aiohttp
+      version = "4";
+    };
     py-numpy = {
-      # for numba
+      # for py-numba
       version = "1.20";
     };
     py-pybind11 = {
@@ -458,6 +466,10 @@ corePacks = import ../packs {
         valgrind = false;
       };
       depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
+    };
+    py-wrapt = {
+      # for py-astroid
+      version = "1.12";
     };
     python = corePython;
     qt = {
@@ -553,8 +565,6 @@ corePacks = import ../packs {
         setup = ''
           configure_args = pkg.configure_args()
           configure_args.append('CPPFLAGS=-I/usr/include/infiniband')
-          if spec.satisfies("~pmix"):
-            configure_args.remove('--without-pmix')
           pkg.configure_args = lambda: configure_args
         '';
         post = ''
