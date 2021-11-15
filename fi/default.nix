@@ -189,6 +189,11 @@ corePacks = import ../packs {
     glx = {
       name = "opengl";
     };
+    gnuplot = {
+      variants = {
+        X = true;
+      };
+    };
     gsl = {
       variants = {
         external-cblas = true;
@@ -887,7 +892,7 @@ pkgStruct = {
     git
     git-lfs
     go
-    (gnuplot.withPrefs { variants = { X = true; }; })
+    gnuplot
     gperftools
     { pkg = gromacs.withPrefs { variants = { cuda = true; }; };
       projection = "{name}/{version}-singlegpunode";
