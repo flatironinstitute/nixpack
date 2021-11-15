@@ -1,0 +1,14 @@
+diff --git a/cpp/CMakeLists.txt b/cpp/CMakeLists.txt
+index 411e10d..6d82b94 100644
+--- a/cpp/CMakeLists.txt
++++ b/cpp/CMakeLists.txt
+@@ -450,7 +450,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/weCall-userguide.pdf
+ if(${DISTRIBUTOR_ID} MATCHES "Ubuntu" OR ${DISTRIBUTOR_ID} MATCHES "Debian")
+       SET(CPACK_GENERATOR "DEB")
+ ELSEIF(${DISTRIBUTOR_ID} MATCHES "RedHat" OR ${DISTRIBUTOR_ID} MATCHES "CentOS")
+-      string(REGEX MATCH "[0-9]*" RH_VERSION ${DISTRIBUTOR_RELEASE})
++      string(REGEX MATCH "[0-9]+" RH_VERSION ${DISTRIBUTOR_RELEASE})
+       SET(DISTRIBUTION_CODENAME "el${RH_VERSION}")
+       SET(CPACK_GENERATOR "RPM")
+ ELSE()
+-- 
