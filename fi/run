@@ -80,7 +80,7 @@ case "$cmd" in
 			l=$(readlink $profile)
 			git tag $site/${l%-link} HEAD
 		done
-		;;
+		;& # fall-thru
 	(modules)
 		base=/cm/shared/sw/lmod
 		for p in $NIX_STATE_DIR/profiles/system/nixpack-[0-9]*-link ; do
