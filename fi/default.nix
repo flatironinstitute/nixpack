@@ -519,6 +519,9 @@ corePacks = import ../packs {
           version = ":0.84";
         };
       };
+      variants = {
+        scheme = "full";
+      };
     };
     texstudio = {
       depends = {
@@ -980,6 +983,7 @@ pkgStruct = {
     #visit #needs qt <= 5.14.2
     vmd
     vtk
+    wecall
     #xscreensaver
     zsh
   ]
