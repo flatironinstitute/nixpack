@@ -1441,7 +1441,6 @@ pkgStruct = {
         + ''
           end
           hide_version("jupyterhub")
-          hide_version("modules-new")
         '' +
         builtins.concatStringsSep "" (builtins.map (n: ''
           hide_version("${n.spec.name}/${n.spec.version}")
