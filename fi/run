@@ -126,8 +126,10 @@ Commands:
     modules    nixpack lmod modules (default)
     jupyter    jupyterhub server environment
     nix        nix build environment
+    lmod       lua modules environment
     shell      zsh and other shell tools
     all        all of the above
+  modules      Update meta-modules in /cm/shared/sw/lmod from releases
   spack ...    Run a spack command in the nixpack environment (things like list
 	       and info work, but those managing packages will not)
 

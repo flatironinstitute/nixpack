@@ -119,3 +119,16 @@ Commands:
 ### Environment setup
 
 You can source `env` to setup a build environment for running `nix` command-line tools (like `nix-build`).
+For example, to build a single package into `result`, run:
+```
+nix-build -A pkgs.packagename -j 1 --cores 8 fi
+```
+
+### Releases
+
+To do a release:
+
+1. `fi/run release` (or `fi/run release all` if enough has changed to affect jupyter, nix, lmod, etc., or whatever subset makes sense)
+2. Release should now show up as new `modules` version, which you can load to test.
+3. Update default symlink in /cm/shared/sw/lmod/modules/modules when ready.
+4. Run `fi/run modules` to update cache (after any change to modules).
