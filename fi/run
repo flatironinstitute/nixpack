@@ -63,6 +63,10 @@ case "$cmd" in
 					done
 					attrs="modSite"
 					;;
+				(test-modules|test)
+					prof=nixpack-test
+					attrs="modSite"
+					;;
 				(jupyter)
 					prof=nixpack-$prof
 					attrs="jupyter"
@@ -124,6 +128,7 @@ Commands:
   gc           Cleanup any unreferenced nix stores (nix-store --gc).
   release      Publish a release profile for...
     modules    nixpack lmod modules (default)
+    test       nixpack lmod modules to nixpack-test
     jupyter    jupyterhub server environment
     nix        nix build environment
     lmod       lua modules environment
