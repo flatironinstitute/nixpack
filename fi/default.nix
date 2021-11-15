@@ -140,6 +140,11 @@ corePacks = import ../packs {
         compiler = corePacks.pkgs.gcc.withPrefs { version = "10.2"; };
       };
     };
+    ffmpeg = {
+      variants = {
+        libaom = true;
+      };
+    };
     fftw = {
       variants = {
         openmp = true;
@@ -1307,7 +1312,7 @@ pkgStruct = {
     elinks
     #evince
     feh
-    ffmpeg
+    (ffmpeg.override { libaomSupport = true; })
     #gimp
     #git
     #i3-env
