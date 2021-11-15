@@ -863,7 +863,7 @@ pkgStruct = {
     git
     git-lfs
     go
-    gnuplot
+    (gnuplot.withPrefs { variants = { X = true; }; })
     gperftools
     { pkg = gromacs.withPrefs { variants = { cuda = true; }; };
       projection = "{name}/{version}-singlegpunode";
