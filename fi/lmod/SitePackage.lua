@@ -55,7 +55,9 @@ local function avail_hook(t)
     if k:find(lmodRootPat) then
       t[k] = 'lmod'
     elseif k == '/cm/shared/sw/modules' then
-      t[k] = "Traditional"
+      t[k] = 'Traditional'
+    elseif k == '/cm/shared/sw/lmod/modules' then
+      t[k] = 'Module releases'
     else
       t[k] = k:gsub(modRootPat, rep)
     end

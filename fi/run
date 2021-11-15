@@ -45,12 +45,15 @@ case "$cmd" in
 		if [[ $# -eq 0 ]] ; then
 			set -- modules
 		elif [[ $* == all ]] ; then
-			set -- nix modules jupyter shell
+			set -- nix lmod modules jupyter shell
 		fi
 		for prof in "$@" ; do
 			case "$prof" in
 				(nix)
 					attrs="nixpkgs.nix nixpkgs.git"
+					;;
+				(lmod)
+					attrs="pkgs.lmod"
 					;;
 				(modules|nixpack)
 					prof=nixpack
@@ -77,6 +80,28 @@ case "$cmd" in
 			l=$(readlink $profile)
 			git tag $site/${l%-link} HEAD
 		done
+		;;
+	(modules)
+		base=/cm/shared/sw/lmod
+		for p in $NIX_STATE_DIR/profiles/system/nixpack-[0-9]*-link ; do
+			t=$(stat -c %Z $p/)
+			b=${p#*/nixpack-}
+			b=${b%-link}
+			f=$base/modules/modules/1.$b-$(date -d @$t +%Y%m%d).lua
+			if [[ -e $f ]] ; then
+				continue
+			elif [[ -h $p/modules.lua && `readlink $p/modules.lua` = /cm/shared/sw/nix/store/*-modules.lua ]] ; then
+				echo "Linking $f"
+				ln -sf `readlink $p/modules.lua` $f
+			else
+				echo "Creating $f"
+				# generate one based on our template
+				mods=$(realpath $p/linux-centos7-x86_64)
+				date=$(date -d @$t)
+				sed "s:@MODS@:$mods:g;s!@DATE@!$date!g" $fi/lmod/modules.lua > $f
+			fi
+		done
+		$base/lmod/lmod/libexec/update_lmod_system_cache_files -d $base/cacheDir -t $base/cacheTS.txt $base/modules:$(realpath $base/lmod/lmod/modulefiles/Core)
 		;;
 	(spack)
 		nix-build -o spackBin -A spackBin $nixfile

@@ -1,6 +1,3 @@
 whatis("Use modules build release from @DATE@")
-setenv("LMOD_PACKAGE_PATH", "@SITE@/site")
-setenv("LMOD_RC", "@SITE@/lmodrc.lua")
-setenv("LMOD_SITE_MSG_FILE", "@SITE@/site_msg.lua")
-setenv("LMOD_AVAIL_STYLE", "system:<trim>:group")
+setenv("MODULEPATH_BASE", "@MODS@")
 prepend_path("MODULEPATH", "@MODS@/Core")
