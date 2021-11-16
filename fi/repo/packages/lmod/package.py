@@ -1,6 +1,8 @@
 import spack.pkg.builtin.lmod as builtin
 
 class Lmod(builtin.Lmod):
+    patch("sticky.patch")
+
     def configure_args(self):
         args = super().configure_args()
         args.append('--with-availExtensions=no')

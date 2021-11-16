@@ -94,9 +94,9 @@ case "$cmd" in
 			f=$base/modules/modules/1.$b-$(date -d @$t +%Y%m%d).lua
 			if [[ -e $f ]] ; then
 				continue
-			elif [[ -h $p/modules.lua && `readlink $p/modules.lua` = /cm/shared/sw/nix/store/*-modules.lua ]] ; then
+			elif [[ -h $p/modules.lua && `realpath $p/modules.lua` = /cm/shared/sw/nix/store/*-modules.lua ]] ; then
 				echo "Linking $f"
-				ln -sf `readlink $p/modules.lua` $f
+				ln -sf `realpath $p/modules.lua` $f
 			else
 				echo "Creating $f"
 				# generate one based on our template

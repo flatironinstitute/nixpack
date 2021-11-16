@@ -779,11 +779,7 @@ corePython = { version = "3.8"; };
 
 mkPythons = base: gen:
   builtins.map (python: gen ({
-    python = python // {
-      variants = {
-        tkinter = true;
-      };
-    };
+    python = python;
     isCore = python == corePython;
     packs = withPython base python;
   }))
@@ -857,7 +853,7 @@ pkgStruct = {
     })
     { pkg = gcc.withPrefs { version = "11"; };
       context = {
-        unlocked_paths = ["gcc/10.2.0"]; # XXX use gcc 10 modules
+        unlocked_paths = ["gcc/10.2.0" "gcc/11.2.0"]; # XXX use gcc 10 modules
       };
     }
     { pkg = aocc;
