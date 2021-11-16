@@ -16,15 +16,7 @@ coreCompilers.append(nixpack.nullCompilerSpec)
 modconf = nixpack.getJson('config')
 modconf.setdefault('core_compilers', [])
 modconf['core_compilers'].extend(str(comp.as_compiler) for comp in coreCompilers)
-config = {
-    'prefix_inspections': modconf.pop('prefix_inspections', {}),
-    name: {
-        'enable': [modtype],
-        'roots': { modtype: root },
-        modtype: modconf
-    }
-}
-spack.config.set(f'modules', config, 'command_line')
+core_specs = modconf.setdefault('core_specs', [])
 
 cls = spack.modules.module_types[modtype]
 
@@ -66,6 +58,7 @@ class FakeSpec(nixpack.NixSpec):
         return self._package
 
 class ConfigModule:
+    "Override per-package configuration normally exposed by BaseConfiguration.module.configuration"
     def __init__(self, module, projection=None):
         self.module = module
         self.projection = projection
@@ -101,6 +94,8 @@ class ModSpec:
         self.path = p.get('path', None)
         self.environment = p.get('environment', {})
         self.context = p.get('context', {})
+        if p.get('core', False):
+            core_specs.append(str(self.spec))
         self.projection = p.get('projection')
         self.autoload = p.get('autoload', [])
         self.prerequisites = p.get('prerequisites', [])
@@ -166,6 +161,16 @@ class ModSpec:
             os.symlink(bn, os.path.join(dn, "default"))
 
 specs = [ModSpec(p) for p in nixpack.getJson('pkgs')]
+
+config = {
+    'prefix_inspections': modconf.pop('prefix_inspections', {}),
+    name: {
+        'enable': [modtype],
+        'roots': { modtype: root },
+        modtype: modconf
+    }
+}
+spack.config.set('modules', config, 'command_line')
 spack.repo.path.provider_index # precompute
 
 print(f"Generating {len(specs)} {modtype} modules in {root}...")

@@ -852,11 +852,14 @@ pkgStruct = {
       default = true;
     }
     (llvm.withPrefs { version = "12"; })
-    (llvm.withPrefs { version = "13";
-      depends = {
-        compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
+    { pkg = llvm.withPrefs {
+        version = "13";
+        depends = {
+          compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
+        };
       };
-    })
+      core = true;
+    }
     { pkg = gcc.withPrefs { version = "11"; };
       context = {
         unlocked_paths = ["gcc/10.2.0" "gcc/11.2.0"]; # XXX use gcc 10 modules
