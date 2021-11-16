@@ -764,7 +764,9 @@ withPython = packs: py: let
   pyPacks = packs.withPrefs {
     label = "${packs.label}.python";
     package = {
-      python = py;
+      python = py // {
+        resolver = deptype: if isRLDep deptype then packs else corePacks;
+      };
     };
     global = {
       resolver = deptype: ifHasPy pyPacks
@@ -781,7 +783,11 @@ mkPythons = base: gen:
   builtins.map (python: gen ({
     python = python;
     isCore = python == corePython;
-    packs = withPython base python;
+    packs = withPython base (python // {
+      variants = {
+        tkinter = true;
+      };
+    });
   }))
   [ /* -------- pythons -------- */
     corePython
