@@ -110,7 +110,7 @@ archos = getVar('os')
 nullCompiler = None
 compilerNameMap = {
         'llvm': 'clang',
-        'intel-oneapi-compiler': 'oneapi'
+        'intel-oneapi-compilers': 'oneapi'
     }
 
 class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
