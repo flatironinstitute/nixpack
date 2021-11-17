@@ -12,9 +12,23 @@ let
 in
 {
   /* compiler pseudo-virtual */
-  compiler = ["gcc" "llvm"];
+  compiler = ["gcc" "llvm" "intel" "aocc" ];
 
   /* add compiler paths, providers */
+  aocc = spec: old: {
+    depends = old.depends or {} // { compiler = null; };
+    paths = {
+      # gcc bin detection is non-deterministic
+      cc  = "bin/clang";
+      cxx = "bin/clang++";
+      f77 = "bin/flang";
+      fc  = "bin/flang";
+    };
+    provides = old.provides or {} // {
+      compiler = ":";
+    };
+  };
+
   gcc = spec: old: {
     provides = old.provides or {} // {
       compiler = ":";
