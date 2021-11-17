@@ -1,6 +1,6 @@
 #!/bin/sh -eu
 render() {
-	/bin/sed "s:@LMOD@:$lmod:g;s:@MODS@:$mods:g;s:@CACHE@:$cache:g;s:@SITE@:$out:g;s!@DATE@!`/bin/date`!g" "$@"
+	/bin/sed "s:@LMOD@:$lmod:g;s:@MODS@:$mods:g;s:@CACHE@:$cache:g;s:@SITE@:$out:g;s!@DATE@!`/bin/date`!g;s:@GIT@:$git:g" "$@"
 }
 
 if [[ -z $mod ]] ; then

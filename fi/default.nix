@@ -1,6 +1,7 @@
 /* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
 { target ? "broadwell"
 , cudaarch ? "60,70,80"
+, gitrev ? null
 }:
 
 let
@@ -1658,7 +1659,7 @@ mods = corePacks.modules {
 
 };
 
-modSite = import ./lmod corePacks mods;
+modSite = import ./lmod gitrev corePacks mods;
 
 in
 

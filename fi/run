@@ -2,7 +2,8 @@
 
 fi=`dirname $0`
 . $fi/env
-nixfile=$fi
+gitrev=$(git describe --always)
+nixfile="$fi --argstr gitrev ${gitrev:-unknown}"
 site=fi
 
 if [[ `hostname -s` = pcn* ]] ; then

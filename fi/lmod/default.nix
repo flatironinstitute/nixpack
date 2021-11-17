@@ -1,4 +1,4 @@
-packs: mods:
+gitrev: packs: mods:
 let
   build = modonly: derivation {
     name = if modonly then "modules.lua" else "lmodSite";
@@ -8,6 +8,7 @@ let
     mods = "${mods}/${packs.platform}-${packs.os}-${packs.target}";
     cache = packs.lmodCache mods;
     src = ./.;
+    git = gitrev;
     builder = ./builder.sh;
   };
 in
