@@ -37,6 +37,13 @@ in
     };
   };
 
+  intel = spec: old: {
+    depends = old.depends or {} // { compiler = null; };
+    provides = old.provides or {} // {
+      compiler = ":";
+    };
+  };
+
   llvm = spec: old: {
     depends = old.depends // {
       compiler = { deptype = ["build"]; };
@@ -112,7 +119,6 @@ in
   };
 
   /* some things don't use a compiler */
-  intel = nocompiler;
   intel-mkl = nocompiler;
   intel-mpi = nocompiler;
   intel-oneapi-mkl = nocompiler;
