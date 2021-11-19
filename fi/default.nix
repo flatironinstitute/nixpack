@@ -538,6 +538,13 @@ corePacks = import ../packs {
         openmp = true;
         cuda = false;
         cxxstd = "14";
+        build_type = "Release";
+        amesos2 = true;
+        rol = true;
+        shylu = true;
+        stk = true;
+        zoltan = true;
+        zoltan2 = true;
       };
     };
     ucx = {
@@ -1111,7 +1118,7 @@ pkgStruct = {
         lib.optionals mpi.isCore [
           pvfmm
           stkfmm
-          trilinos
+          (trilinos.withPrefs { version = "13.2.0"; })
           (trilinos.withPrefs { version = "12.18.1"; })
         ]
         ++
