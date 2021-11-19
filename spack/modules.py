@@ -26,8 +26,9 @@ class FakePackage(spack.package.PackageBase):
 
 class FakeSpec(nixpack.NixSpec):
     def __init__(self, desc):
+        h = spack.util.hash.b32_hash(json.dumps(desc, sort_keys=True))
         nixspec = {
-            'name': f'static-module-{id(self)}',
+            'name': f'static-module-{h}',
             'namespace': 'dummy',
             'version': '0',
             'variants': {},
