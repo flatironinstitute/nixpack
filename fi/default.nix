@@ -541,7 +541,6 @@ corePacks = import ../packs {
         build_type = "Release";
         amesos2 = true;
         rol = true;
-        shylu = true;
         stk = true;
         zoltan = true;
         zoltan2 = true;
