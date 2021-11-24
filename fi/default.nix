@@ -934,7 +934,7 @@ pkgStruct = {
     lftp
     libzmq
     likwid
-    magma
+    #magma
     mercurial
     #mplayer
     #mpv
@@ -1045,7 +1045,7 @@ pkgStruct = {
       healpix-cxx
       #hwloc
       #libdrm
-      #magma
+      magma
       #mesa
       libxc
       mpc
@@ -1156,7 +1156,7 @@ pkgStruct = {
     });
 
     pythons = mkPythons comp.packs (py: py // {
-      view = with py.packs.pkgs; (pyView ([
+      view = with py.packs.pkgs; (pyView [
         /* ---------- python packages ---------- */
         python
         gettext
@@ -1192,7 +1192,7 @@ pkgStruct = {
         py-ipyparallel
         py-ipywidgets
         py-ipython
-        #py-jax
+        py-jax
         py-jupyter-console
         #py-jupyter-contrib-nbextensions
         py-jupyter-server
@@ -1254,6 +1254,8 @@ pkgStruct = {
         #py-tensorflow
         #py-tess
         py-toml
+        py-torch
+        py-torchvision
         py-twisted
         py-virtualenv
         py-wcwidth
@@ -1261,11 +1263,7 @@ pkgStruct = {
         #py-xattr #broken: missing pip dep
         #py-yep
         py-yt
-      ] ++ lib.optionals comp.isCore [
-        py-jax
-        py-torch
-        py-torchvision
-      ])).overrideView {
+      ]).overrideView {
         # for py-pyqt/py-sip
         ignoreConflicts = ["lib/python3.*/site-packages/PyQt5/__init__.py"];
       };
