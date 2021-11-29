@@ -1,15 +1,9 @@
 gitrev: packs: mods:
-let
-  build = modonly: derivation {
-    name = if modonly then "modules.lua" else "lmodSite";
-    inherit (mods) system;
-    mod = if modonly then null else build true;
-    lmod = packs.pkgs.lmod;
-    mods = "${mods}/${packs.platform}-${packs.os}-${packs.target}";
-    cache = packs.lmodCache mods;
-    src = ./.;
-    git = gitrev;
-    builder = ./builder.sh;
-  };
-in
-build false
+# this just wraps modules.nix in a directory/symlink layer for nix-env
+derivation {
+  name = "lmodSite";
+  inherit (mods) system;
+  mod = import ./modules.nix gitrev packs mods;
+  src = ./.;
+  builder = ./builder.sh;
+}
