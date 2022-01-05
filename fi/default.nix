@@ -585,6 +585,8 @@ corePacks = import ../packs {
         setup = ''
           configure_args = pkg.configure_args()
           configure_args.append('CPPFLAGS=-I/usr/include/infiniband')
+          # avoid openmpi1 internal hwloc libXNVCtrl link
+          configure_args.append('enable_gl=no')
           pkg.configure_args = lambda: configure_args
         '';
         post = ''
