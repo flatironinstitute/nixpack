@@ -2,7 +2,7 @@
 nix=/cm/shared/sw/nix
 nixenv=/cm/shared/sw/nix/state/profiles/system/nix
 
-export NIX_REMOTE=daemon
+export NIX_REMOTE=unix:///run/nix-daemon/socket
 export NIX_STORE_DIR=$nix/store
 export NIX_STATE_DIR=$nix/state
 export NIX_LINK=$HOME/.nix-profile
