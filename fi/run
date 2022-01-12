@@ -73,7 +73,7 @@ case "$cmd" in
 					attrs="jupyter"
 					;;
 				(shell)
-					attrs="pkgs.zsh pkgs.tmux"
+					attrs="pkgs.zsh pkgs.tmux pkgs.git"
 					;;
 				(*)
 					echo "Unknown release"

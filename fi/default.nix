@@ -1015,9 +1015,10 @@ pkgStruct = {
     #mpv
     mupdf
     nccl
+    #neovim
     #nix #too old/broken
     node-js
-    (node-js.withPrefs { version = ":12"; })
+    npm
     { pkg = nvhpc;
       context = {
         unlocked_paths =
@@ -1056,7 +1057,7 @@ pkgStruct = {
     }
     rclone
     rust
-    singularity
+    (corePacks.view { pkgs = [singularity e2fsprogs]; })
     smartmontools
     subversion
     swig
@@ -1067,7 +1068,7 @@ pkgStruct = {
     unison
     valgrind
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
-    #visit #needs qt <= 5.14.2
+    #visit #needs qt <= 5.14.2, vtk dep patches?
     vmd
     vtk
     wecall
@@ -1141,7 +1142,9 @@ pkgStruct = {
       pgplot
       ucx
     ] ++
-    optMpiPkgs comp.packs;
+    lib.optionals (!comp.isCore) [amdlibm] ++ # needs gcc > 9
+    optMpiPkgs comp.packs
+    ;
 
     mpis = mkMpis comp.packs (mpi: mpi // {
       pkgs = with mpi.packs.pkgs;
