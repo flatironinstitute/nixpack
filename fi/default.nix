@@ -1413,7 +1413,16 @@ pkgStruct = {
       ]);
   };
 
-  nixpkgs = with corePacks.nixpkgs; [
+  nixpkgs = with corePacks.nixpkgs;
+    let withGL = p: p // {
+      module = (p.module or {}) // {
+        environment = {
+          append_path = {
+            LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+          };
+        };
+      };
+    }; in [
     /* -------- nixpkgs modules --------- */
     nix
     elinks
@@ -1429,14 +1438,14 @@ pkgStruct = {
     kubectl
     #libreoffice
     #meshlab
-    mplayer
-    (mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
+    (withGL mplayer)
+    (withGL mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
     #pass
     #pdftk
     #rxvt-unicode
     #sage
-    slack
-    (vscode.overrideAttrs (old: {
+    (withGL slack)
+    (withGL (vscode.overrideAttrs (old: {
       preFixup = old.preFixup + ''
         gappsWrapperArgs+=(
           --add-flags --no-sandbox
@@ -1449,7 +1458,7 @@ pkgStruct = {
           '';
         };
       };
-    }))
+    })))
     #wecall
     xscreensaver
   ];
