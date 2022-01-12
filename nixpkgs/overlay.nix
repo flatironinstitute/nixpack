@@ -8,6 +8,10 @@ with pkgs;
     doCheck = false; # failure
   });
 
+  coreutils = coreutils.overrideAttrs (old: {
+    doCheck = false; # df/total-verify broken on ceph
+  });
+
   nix = (nix.override {
     withAWS = false;
   }).overrideAttrs (old: {
@@ -42,4 +46,8 @@ with pkgs;
   });
 
   openssl = self.openssl_1_1;
+
+  youtube-dl = youtube-dl.overrideAttrs (old: {
+    patches = []; # download patch hash wrong
+  });
 }

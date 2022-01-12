@@ -24,7 +24,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "1e32391fb75401d47206d0100eb444e3804c185a";
+    rev = "cc2eddc66e47c0a5467803eb1de36a23e416a0f8";
   };
 
   spackConfig = {
@@ -38,7 +38,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-21.05";
-    rev = "fdd594aef4376c132bde8e8ecc593b1bc8004d28";
+    rev = "df123677560db3b0db7c19d71981b11091fbeaf6";
   };
 
   repos = [
@@ -68,6 +68,9 @@ corePacks = import ../packs {
       variants = {
         license-agreed = true;
       };
+    };
+    assimp = {
+      version = "5.0";
     };
     binutils = {
       variants = {
@@ -104,16 +107,26 @@ corePacks = import ../packs {
       # for healpix-cxx
       version = "3.49";
     };
+    cli11 = {
+      # for paraview
+      version = "1.9.1";
+    };
     coreutils = {
       # failing
       tests = false;
     };
     cpio = rpmExtern "cpio"; # some intel installers need this -- avoid compiler dependency
     cuda = {
-      # for cudnn
+      # make sure this matches image driver
       version = "11.4";
     };
     cudnn = {
+      version = "8.2.4";
+    };
+    curl = {
+      variants = {
+        libidn2 = true;
+      };
     };
     dejagnu = {
       # for gcc
@@ -121,8 +134,9 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
-    docbook-xml = { # for gtk-doc
-      version = "4.3";
+    docbook-xml = {
+      # for dbus
+      version = "4.4";
     };
     docbook-xsl = {
       version = "1.78.1";
@@ -151,9 +165,6 @@ corePacks = import ../packs {
         openmp = true;
         precision = ["float" "double" "quad" "long_double"];
       };
-    };
-    freetype = { # for vtk
-      #version = ":2.10.2";
     };
     gcc = {
       version = "7";
@@ -200,6 +211,13 @@ corePacks = import ../packs {
         external-cblas = true;
       };
     };
+    gtk-doc = {
+      depends = {
+        docbook-xml = {
+          version = "4.3";
+        };
+      };
+    };
     guile = {
       # for autogen
       version = "2.0";
@@ -227,6 +245,7 @@ corePacks = import ../packs {
           };
         };
         hdf5 = {
+          version = "1.10.7";
           variants = {
             java = true;
           };
@@ -235,7 +254,7 @@ corePacks = import ../packs {
     };
     htslib = {
       # for samtools/bcftools
-      version = "1.12";
+      #version = "1.12";
     };
     intel-mpi = { # not available anymore...
       extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
@@ -303,6 +322,13 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    neovim = {
+      depends = {
+        lua = {
+          version = "5.1";
+        };
+      };
+    };
     nix = {
       variants = {
         storedir = builtins.getEnv "NIX_STORE_DIR";
@@ -366,6 +392,8 @@ corePacks = import ../packs {
       };
     };
     paraview = {
+      # 5.10.0 build failure?? graphviz geom.h POINTS_PER_INCH
+      version = "5.9.1";
       variants = {
         python3 = true;
         qt = true;
@@ -386,14 +414,26 @@ corePacks = import ../packs {
       # for py-psycopg2
       version = ":13";
     };
+    proj = {
+      # for vtk
+      version = "7";
+    };
     protobuf = {
       # for py-torch
       version = "3.17";
     };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
+    py-aiohttp = {
+      # 3.8 build broken
+      version = "3.7";
+    };
     py-astroid = {
       # for py-pylint
-      version = "2.5";
+      #version = "2.5";
+    };
+    py-async-timeout = {
+      # for py-aiohttp
+      version = "3";
     };
     py-botocore = {
       # for py-aiobotocore
@@ -401,6 +441,10 @@ corePacks = import ../packs {
     };
     py-chardet = {
       # for py-aiohttp
+      version = "3";
+    };
+    py-cryptography = {
+      # for py-oauthlib
       version = "3";
     };
     py-decorator = {
@@ -411,11 +455,22 @@ corePacks = import ../packs {
       # for py-sphinx
       version = "0.17";
     };
+    py-gevent = {
+      depends = {
+        py-cython = {
+          version = "3";
+        };
+      };
+    };
     py-h5py = {
     };
     py-idna = {
       # for py-requests
       version = "2";
+    };
+    py-importlib-metadata = {
+      # for py-backports-entry-points-selectable
+      version = ":3.8";
     };
     py-jax = {
       variants = {
@@ -424,7 +479,7 @@ corePacks = import ../packs {
     };
     py-jupyter-client = {
       # for py-nest-asyncio, py-ipykernel
-      version = "6";
+      #version = "6";
     };
     py-jupyter-packaging = {
       # for py-jupyterlab-widgets
@@ -444,13 +499,14 @@ corePacks = import ../packs {
     };
     py-multidict = {
       # for py-aiohttp
-      version = "4";
+      #version = "4";
     };
     py-numpy = {
       # for py-numba
       version = "1.20";
     };
     py-pybind11 = {
+      # for py-torch
       version = "2.6.2";
     };
     py-pyqt5 = {
@@ -459,8 +515,13 @@ corePacks = import ../packs {
           variants = {
             module = "PyQt5.sip";
           };
+          version = "4";
         };
       };
+    };
+    py-pythran = {
+      # for py-scipy
+      version = "0.9";
     };
     py-setuptools = {
       # for py-scipy
@@ -480,7 +541,7 @@ corePacks = import ../packs {
     };
     py-wrapt = {
       # for py-astroid
-      version = "1.12";
+      #version = "1.12";
     };
     python = corePython;
     qt = {
@@ -502,7 +563,7 @@ corePacks = import ../packs {
     };
     samtools = {
       # to match bcftools
-      version = "1.12";
+      #version = "1.12";
     };
     shadow = rpmExtern "shadow-utils";
     slurm = rec {
@@ -803,8 +864,11 @@ mkPythons = base: gen:
     { version = "3.9"; }
   ];
 
+pyBlacklist = [{ name = "py-cython"; version = "3"; }]; # py-gevent dep
+
 pyView = pl: corePacks.pythonView {
-  pkgs = lib.findDeps (x: lib.hasPrefix "py-" x.name) pl;
+  pkgs = builtins.filter (x: !(builtins.any (lib.specMatches x.spec) pyBlacklist))
+    (lib.findDeps (x: lib.hasPrefix "py-" x.name) pl);
 };
 
 rView = corePacks.view {
@@ -1120,7 +1184,7 @@ pkgStruct = {
           pvfmm
           stkfmm
           (trilinos.withPrefs { version = "13.2.0"; })
-          (trilinos.withPrefs { version = "12.18.1"; })
+          #(trilinos.withPrefs { version = "12.18.1"; }) # broken in spack, kokkos wrong cxx std, missing gnu14
         ]
         ++
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
@@ -1164,7 +1228,7 @@ pkgStruct = {
         gettext
         py-astropy
         py-autopep8
-        py-backports-ssl-match-hostname
+        #py-backports-ssl-match-hostname #conflicts...
         #py-backports-weakref # broken?
         py-biopython
         py-bokeh
@@ -1172,7 +1236,7 @@ pkgStruct = {
         py-cherrypy
         py-cython
         py-dask
-        py-deeptools
+        #py-deeptools #pysam broken
         #py-einsum2
         py-emcee
         py-envisage #qt
@@ -1464,12 +1528,11 @@ pkgStruct = {
 };
 
 # TODO:
-#  amd/aocl
+#  amd/aocl (amdblis, amdlibflame, amdfftw, amdlibm, aocl-sparse, amdscalapack)
 #  amd/uprof
 #  triqs/...
 #  py jaxlib cuda
 #  py deadalus mpi: robert
-# triqs (and such) -> python dep (confict 3.9?) [lmod doesn't seem to support this fully]
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python

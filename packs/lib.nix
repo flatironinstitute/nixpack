@@ -174,14 +174,16 @@ rec {
 
   /* check that a given spec conforms to the specified preferences */
   specMatches = spec:
-    { version ? null
+    { name ? null
+    , version ? null
     , variants ? {}
     , patches ? []
     , depends ? {}
     , provides ? {}
     , extern ? spec.extern
     } @ prefs:
-       versionMatches spec.version version
+       (name == null || name == spec.name)
+    && versionMatches spec.version version
     && all (name: variantMatches (spec.variants.${name} or null) variants.${name}) (attrNames variants)
     && subsetOrdered patches spec.patches
     && all (name: specMatches spec.depends.${name} depends.${name}) (attrNames depends)

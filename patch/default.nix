@@ -88,6 +88,9 @@ in
   r-credentials = tmphome;
   r-gert = tmphome;
 
+  /* creates various cache stuff */
+  npm = tmphome;
+
   paraview = spec: old: {
     /* without explicit libx11 dep, ends up linking system libX11 (perhaps via system libGL) and not working */
     depends = old.depends // {
