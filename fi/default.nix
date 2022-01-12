@@ -984,6 +984,15 @@ pkgStruct = {
         };
       };
     }
+    { pkg = gromacs.withPrefs { version = "2021:2021.0"; variants = { cuda = true; plumed = true; }; };
+      projection = "{name}/{version}-singlegpunode-plumed";
+      environment = {
+        set = { GMX_GPU_DD_COMMS = "true";
+                GMX_GPU_PME_PP_COMMS = "true";
+                GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
+        };
+      };
+    }
     hdfview
     imagemagick
     (blasPkg intel-mkl)
