@@ -13,4 +13,5 @@ class Llvm(builtin.Llvm):
         cmake_args = super().cmake_args()
         if '+pythonbind' in self.spec:
             cmake_args.append("-DCLANG_PYTHON_BINDINGS_VERSIONS=3")
+            cmake_args.append("-DLLDB_ENABLE_PYTHON:BOOL=ON")
         return cmake_args
