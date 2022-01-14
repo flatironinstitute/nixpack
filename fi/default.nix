@@ -1057,7 +1057,7 @@ pkgStruct = {
     }
     rclone
     rust
-    (corePacks.view { pkgs = [singularity e2fsprogs]; })
+    singularity
     smartmontools
     subversion
     swig
