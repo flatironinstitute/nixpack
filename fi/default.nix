@@ -1471,6 +1471,18 @@ pkgStruct = {
       projection = "{name}";
     }
     {
+      name = "disBatch";
+      version = "beta";
+      environment = {
+        prepend_path = {
+          PATH = "/mnt/home/carriero/projects/disBatch/beta/disBatch";
+        };
+        set = {
+          DISBATCH_ROOT = "/mnt/home/carriero/projects/disBatch/beta/disBatch";
+        };
+      };
+    }
+    {
       name = "fdcache";
       environment = {
         prepend_path = {
