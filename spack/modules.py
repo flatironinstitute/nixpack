@@ -96,7 +96,7 @@ class ModSpec:
         self.environment = p.get('environment', {})
         self.context = p.get('context', {})
         if p.get('core', False):
-            core_specs.append(str(self.spec))
+            core_specs.append(self.spec.format())
         self.projection = p.get('projection')
         self.autoload = p.get('autoload', [])
         self.prerequisites = p.get('prerequisites', [])
