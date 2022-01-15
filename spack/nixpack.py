@@ -117,7 +117,7 @@ class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
     _path_keys = {'CC', 'CXX', 'F77', 'FC'}
     _class_keys = {
         spack.util.environment.SetEnv: 'set',
-        spack.util.environment.PushEnv: 'push',
+        #spack.util.environment.PushEnv: 'push',
         spack.util.environment.UnsetEnv: 'unset',
         spack.util.environment.PrependPath: 'prepend_path',
         spack.util.environment.AppendPath: 'append_path',
