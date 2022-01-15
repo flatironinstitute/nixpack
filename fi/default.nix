@@ -152,7 +152,7 @@ corePacks = import ../packs {
       };
       depends = {
         # -mprefer-vector-width=256
-        compiler = corePacks.pkgs.gcc.withPrefs { version = "10.2"; };
+        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
       };
     };
     ffmpeg = {
@@ -743,8 +743,8 @@ mkCompilers = base: gen:
   }))
   [ /* -------- compilers -------- */
     corePacks.pkgs.compiler
-    (corePacks.pkgs.gcc.withPrefs { version = "10.2"; })
-    #(corePacks.pkgs.gcc.withPrefs { version = "11"; })
+    (corePacks.pkgs.gcc.withPrefs { version = "10"; })
+    (corePacks.pkgs.gcc.withPrefs { version = "11"; })
   ];
 
 mkMpis = base: gen:
@@ -932,11 +932,6 @@ pkgStruct = {
         };
       };
       core = true;
-    }
-    { pkg = gcc.withPrefs { version = "11"; };
-      context = {
-        unlocked_paths = ["gcc/10.2.0" "gcc/11.2.0"]; # XXX use gcc 10 modules
-      };
     }
     { pkg = aocc;
       context = {
@@ -1142,7 +1137,8 @@ pkgStruct = {
       pgplot
       ucx
     ] ++
-    lib.optionals (!comp.isCore) [amdlibm] ++ # needs gcc > 9
+    lib.optionals (lib.specMatches comp.compiler.spec { name = "gcc"; version = "10"; })
+      [amdlibm] ++
     optMpiPkgs comp.packs
     ;
 
@@ -1234,7 +1230,7 @@ pkgStruct = {
     });
 
     pythons = mkPythons comp.packs (py: py // {
-      view = with py.packs.pkgs; (pyView [
+      view = with py.packs.pkgs; (pyView ([
         /* ---------- python packages ---------- */
         python
         gettext
@@ -1270,7 +1266,6 @@ pkgStruct = {
         py-ipyparallel
         py-ipywidgets
         py-ipython
-        py-jax
         py-jupyter-console
         #py-jupyter-contrib-nbextensions
         py-jupyter-server
@@ -1315,7 +1310,7 @@ pkgStruct = {
         #py-python-hglib
         py-pyyaml
         py-qtconsole
-        #py-ray #needs bazel 4
+        #py-ray #needs bazel 3
         py-s3fs
         #py-scikit-cuda
         py-scikit-image
@@ -1332,8 +1327,6 @@ pkgStruct = {
         #py-tensorflow
         #py-tess
         py-toml
-        py-torch
-        py-torchvision
         py-twisted
         py-virtualenv
         py-wcwidth
@@ -1341,7 +1334,13 @@ pkgStruct = {
         #py-xattr #broken: missing pip dep
         #py-yep
         py-yt
-      ]).overrideView {
+      ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version ":10") [
+        # bazel broken with gcc 11
+        py-jax
+        py-torch
+        py-torchvision
+      ])
+      ).overrideView {
         # for py-pyqt/py-sip
         ignoreConflicts = ["lib/python3.*/site-packages/PyQt5/__init__.py"];
       };
