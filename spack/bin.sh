@@ -21,4 +21,4 @@ EOF
 
 }
 gen > $out
-/bin/chmod +x $out
+chmod +x $out

@@ -60,7 +60,7 @@ prefsUpdate = let
       spackSrc = scalar;
       spackConfig = lib.recursiveUpdate;
       spackPython = scalar;
-      spackPath = scalar;
+      spackEnv = a: b: a // b;
       nixpkgsSrc = scalar;
       verbose = scalar;
       repoPatch = a: b: a // b;
@@ -77,7 +77,9 @@ packsWithPrefs =
   , spackSrc ? {}
   , spackConfig ? {}
   , spackPython ? "/usr/bin/python3"
-  , spackPath ? "/bin:/usr/bin"
+  , spackEnv ? {
+      PATH = "/bin:/usr/bin";
+    }
   , nixpkgsSrc ? null
   , repos ? [ ../spack/repo ]
   , repoPatch ? {}
@@ -99,22 +101,21 @@ lib.fix (packs: with packs; {
 
   makeSpackConfig = import ../spack/config.nix packs;
 
-  inherit spackPython spackPath;
+  inherit spackPython spackEnv;
   spackConfig = makeSpackConfig (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
 
-  spackNixLib = derivation {
+  spackNixLib = derivation (spackEnv // {
     name = "nix-spack-py";
     inherit system;
     builder = ../spack/install.sh;
     src = ../spack/nixpack.py;
-  };
+  });
 
   /* common attributes for running spack */
-  spackBuilder = attrs: builtins.removeAttrs (derivation ({
+  spackBuilder = attrs: builtins.removeAttrs (derivation (spackEnv // {
     inherit (packs) system os spackConfig;
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
-    PATH = spackPath;
     LC_ALL = "en_US.UTF-8"; # work around spack bugs processing log files
     repos = if attrs ? withRepos
       then if attrs.withRepos

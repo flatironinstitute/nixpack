@@ -33,7 +33,9 @@ corePacks = import ../packs {
     };
   };
   spackPython = "/usr/bin/python3";
-  spackPath = "/bin:/usr/bin";
+  spackEnv = {
+    PATH = "/bin:/usr/bin";
+  };
 
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
