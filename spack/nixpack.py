@@ -108,13 +108,9 @@ basetarget, platform = system.split('-', 1)
 archos = getVar('os')
 
 nullCompiler = None
-compilerNameMap = {
-        'llvm': 'clang',
-        'intel-oneapi-compilers': 'oneapi'
-    }
 
 class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
-    _path_keys = {'CC', 'CXX', 'F77', 'FC'}
+    path_keys = {'cc', 'cxx', 'f77', 'fc'}
     _class_keys = {
         spack.util.environment.SetEnv: 'set',
         #spack.util.environment.PushEnv: 'push',
@@ -124,13 +120,18 @@ class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
         spack.util.environment.RemovePath: 'remove_path',
     }
 
+    @property
     def config(self):
         """
         Try to convert the set of environment modifications to json configuration.
         This is not at all perfect, and in particular loses order, but should
         be good enough for most compilers.
         """
-        paths = {k.lower(): None for k in self._path_keys}
+        try:
+            return self._config
+        except AttributeError:
+            pass
+        paths = {k: None for k in self.path_keys}
         environment = {}
         import spack.util.environment as env
         for m in self:
@@ -138,8 +139,9 @@ class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
                 t = self._class_keys[type(m)]
             except KeyError:
                 continue
-            if m.name in self._path_keys:
-                paths[m.name.lower()] = str(m.value) if t == 'set' else None
+            nl = m.name.lower()
+            if nl in paths:
+                paths[nl] = str(m.value) if t == 'set' else None
             elif t == 'unset':
                 environment.setdefault(t, []).append(m.name)
             elif t == 'remove_path':
@@ -147,7 +149,31 @@ class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
                 environment.setdefault(t, {})[m.name] = str(m.value)
             else:
                 m.execute(environment.setdefault(t, {}))
-        return {'paths': paths, 'environment': environment}
+        self._config = {'paths': paths, 'environment': environment}
+        self._env = dict()
+        self.apply_modifications(self._env)
+        return self._config
+
+    @property
+    def path_files(self):
+        "All files in directories in PATH environment."
+        try:
+            return self._path_files
+        except AttributeError:
+            pass
+        try:
+            path = self._env['PATH'].split(':')
+        except KeyError:
+            path = []
+        self._path_files = llnl.util.filesystem.files_in(*path)
+        return self._path_files
+
+    def find_path(self, compiler_cls, lang):
+        "Find files in PATH that match the compiler_cls patterns for lang."
+        return (full_path
+            for regexp in compiler_cls.search_regexps(lang)
+            for (file, full_path) in self.path_files
+            if regexp.match(file))
 
 class NixSpec(spack.spec.Spec):
     # to re-use identical specs so id is reasonable
@@ -313,9 +339,11 @@ class NixSpec(spack.spec.Spec):
             return self._as_compiler
         except AttributeError:
             pass
-        name = compilerNameMap.get(self.name, self.name)
-        self._as_compiler = spack.spec.CompilerSpec(name, self.versions)
+        self._as_compiler = spack.spec.CompilerSpec(self.nixspec.get('compiler_spec', self.name))
+        if self._as_compiler.versions == spack.version.VersionList(':'):
+            self._as_compiler.versions = self.versions
         name = str(self._as_compiler)
+        compiler_cls = spack.compilers.class_for_compiler_name(self._as_compiler.name)
         if name not in self.compilers:
             # we may have duplicate specs, but we only keep the first (topmost)
             # as there is no way to have two compilers with the same spec
@@ -329,8 +357,13 @@ class NixSpec(spack.spec.Spec):
             env = CompilerEnvironment()
             self.concretize()
             self.package.setup_run_environment(env)
-            config.update(env.config())
+            config.update(env.config)
             config['paths'].update(self.paths)
+            for lang in env.path_keys:
+                if config['paths'][lang] is None:
+                    opts = env.find_path(compiler_cls, lang)
+                    config['paths'][lang] = next(opts, None)
+                    assert next(opts, None) is None, f"Multiple matching paths for {name} {lang} compiler"
             self.compilers[name] = {'compiler': config}
             spack.config.set('compilers', list(self.compilers.values()), 'command_line')
             # clear compilers cache since we changed config:

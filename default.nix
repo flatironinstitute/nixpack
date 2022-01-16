@@ -16,7 +16,7 @@ packs = import ./packs {
     /* default:
     url = "git://github.com/spack/spack"; */
     ref = "develop";
-    #rev = "b4c6c11e689b2292a1411e4fc60dcd49c929246d";
+    #rev = "a5c0a4dca41d3b14c166af2ca28cb4ee7ca10ca7";
   };
   /* extra config settings for spack itself.  Can contain any standard spack
      configuration, but don't put compilers (automatically generated), packages
@@ -38,7 +38,7 @@ packs = import ./packs {
      omit to disable. */
   nixpkgsSrc = {
     #url = "git://github.com/NixOS/nixpkgs";
-    ref = "master";
+    ref = "release-21.05"; # 21.11 and later affected by #144747
     #rev = "72bab23841f015aeaf5149a4e980dc696c59d7ca";
   };
 

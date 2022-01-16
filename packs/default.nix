@@ -31,8 +31,9 @@ fillDesc = name: /* simple name of package */
   , provides ? {} /* set of provided virtuals to (version ranges or unioned list thereof) */
   , paths ? {} /* set of tools to path prefixes */
   , build ? {} /* extra build variables to set */
+  , compiler_spec ? name
   }: {
-    inherit name namespace version variants patches paths build;
+    inherit name namespace version variants patches paths build compiler_spec;
     depends = {
       compiler = {
         deptype = ["build" "link"];
@@ -173,9 +174,10 @@ lib.fix (packs: with packs; {
     , target ? packs.target
     , paths ? {}
     , build ? {} # only used by builder
+    , compiler_spec ? null
     , verbose ? false # only used by builder
-    }:
-    {
+    } @ prefs:
+    prefs // {
       inherit version variants patches depends extern tests provides fixedDeps target paths;
       resolver = deptype: name: let r = lib.applyOptional (lib.applyOptional resolver deptype) name; in
         if builtins.isFunction r then r
@@ -315,6 +317,7 @@ lib.fix (packs: with packs; {
             depends = if prefs.extern != null then {}
                   else resolveDepends  desc.depends  prefs;
             deptypes = builtins.mapAttrs (n: d: d.deptype or null) spec.depends;
+            compiler_spec = prefs.compiler_spec or desc.compiler_spec;
           };
         in
         if lib.isPkg pprefs then pprefs

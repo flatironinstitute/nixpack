@@ -12,23 +12,9 @@ let
 in
 {
   /* compiler pseudo-virtual */
-  compiler = ["gcc" "llvm" "oneapi" "intel" "aocc" ];
+  compiler = ["gcc" "llvm"];
 
   /* add compiler paths, providers */
-  aocc = spec: old: {
-    depends = old.depends or {} // { compiler = null; };
-    paths = {
-      # gcc bin detection is non-deterministic
-      cc  = "bin/clang";
-      cxx = "bin/clang++";
-      f77 = "bin/flang";
-      fc  = "bin/flang";
-    };
-    provides = old.provides or {} // {
-      compiler = ":";
-    };
-  };
-
   gcc = spec: old: {
     provides = old.provides or {} // {
       compiler = ":";
@@ -51,32 +37,11 @@ in
     };
   };
 
-  intel = spec: old: {
-    depends = old.depends or {} // { compiler = null; };
-    provides = old.provides or {} // {
-      compiler = ":";
-    };
-  };
-
-  intel-oneapi-compilers = spec: old: {
-    depends = old.depends or {} // { compiler = null; };
-    paths = {
-      # gcc bin detection is non-deterministic
-      cc  = "compiler/latest/linux/bin/icx";
-      cxx = "compiler/latest/linux/bin/icpx";
-      f77 = "compiler/latest/linux/bin/ifx";
-      fc  = "compiler/latest/linux/bin/ifx";
-    };
-    provides = old.provides or {} // {
-      compiler = ":";
-      oneapi = ":";
-    };
-  };
-
   llvm = spec: old: {
     depends = old.depends // {
       compiler = { deptype = ["build"]; };
     };
+    compiler_spec = "clang";
   };
 
   nvhpc = spec: old: {
@@ -85,7 +50,34 @@ in
     };
   };
 
-  oneapi = [ "intel-oneapi-compilers" ];
+  aocc = spec: old: {
+    paths = {
+      cc = "bin/clang";
+      cxx = "bin/clang++";
+      f77 = "bin/flang";
+      fc = "bin/flang";
+    };
+    depends = old.depends // {
+      compiler = null;
+    };
+  };
+
+  intel-oneapi-compilers = spec: old: {
+    compiler_spec = "oneapi"; # can be overridden as "intel" with prefs
+    provides = old.provides or {} // {
+      compiler = ":";
+    };
+  };
+
+  intel-parallel-studio = spec: old: {
+    compiler_spec = "intel@19.1.3.304"; # version may need correcting
+    provides = old.provides or {} // {
+      compiler = ":";
+    };
+    depends = old.depends or {} // {
+      compiler = null;
+    };
+  };
 
   openssh = {
     /* disable installing with setuid */
