@@ -90,7 +90,7 @@ rec {
       "2" = s1;
     }.${toString (versionCompare s1 s2)};
 
-  versionIsConcrete = v: v != null && match "[:,]" v == null;
+  versionIsConcrete = v: v != null && match ".*[:,].*" v == null;
 
   versionRange = v: let
       s = splitRegex ":" v;
