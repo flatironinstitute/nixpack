@@ -18,6 +18,7 @@ class Disbatch(PythonPackage):
 
     depends_on('py-setuptools', type='build', when='@2:')
     depends_on('py-kvsstcp', type='run')
+    patch('2.0-noretiregpu.patch', when='@2.0')
 
     @run_after('install')
     def create_symlink(self):

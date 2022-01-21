@@ -956,8 +956,7 @@ pkgStruct = {
     cuda
     cudnn
     curl
-    (disBatch.withPrefs { version = "1"; })
-    (disBatch.withPrefs { version = "2"; })
+    disBatch
     distcc
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
