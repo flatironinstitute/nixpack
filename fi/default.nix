@@ -69,6 +69,11 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
+    amdlibm = {
+      depends = {
+        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
+      };
+    };
     assimp = {
       version = "5.0";
     };
@@ -933,6 +938,10 @@ pkgStruct = {
       };
       core = true;
     }
+
+    { pkg = amdlibm;
+      core = true;
+    }
     { pkg = aocc;
       context = {
         provides = []; # not a real compiler
@@ -1136,8 +1145,6 @@ pkgStruct = {
       pgplot
       ucx
     ] ++
-    lib.optionals (lib.specMatches comp.compiler.spec { name = "gcc"; version = "10"; })
-      [amdlibm] ++
     optMpiPkgs comp.packs
     ;
 
