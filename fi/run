@@ -88,11 +88,15 @@ case "$cmd" in
 		;& # fall-thru
 	(modules)
 		base=/cm/shared/sw/lmod
-		for p in $NIX_STATE_DIR/profiles/system/nixpack-[0-9]*-link ; do
+		for p in $NIX_STATE_DIR/profiles/system/nixpack{,-test}-[0-9]*-link ; do
 			t=$(stat -c %Z $p/)
 			b=${p#*/nixpack-}
 			b=${b%-link}
-			f=$base/modules/modules/1.$b-$(date -d @$t +%Y%m%d).lua
+			if [[ $b == test-* ]] ; then
+				f=$base/modules/modules/$b-$(date -d @$t +%Y%m%d).lua
+			else
+				f=$base/modules/modules/1.$b-$(date -d @$t +%Y%m%d).lua
+			fi
 			if [[ -e $f ]] ; then
 				continue
 			elif [[ -h $p/modules.lua && `realpath $p/modules.lua` = /cm/shared/sw/nix/store/*-modules.lua ]] ; then
