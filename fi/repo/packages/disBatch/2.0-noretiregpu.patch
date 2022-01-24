@@ -2,12 +2,11 @@ diff --git a/disBatch.py b/disBatch.py
 index 5518f72..3f66d44 100755
 --- a/disBatch.py
 +++ b/disBatch.py
-@@ -1274,6 +1274,8 @@ if '__main__' == __name__:
+@@ -1274,6 +1274,7 @@ if '__main__' == __name__:
  
          if args.gpu:
              args.env_resource.append('CUDA_VISIBLE_DEVICES,GPU_DEVICE_ORDINAL')
-+            if args.retire_cmd is None:
-+                args.retire_cmd = ''
++            context.retireCmd = ''
          context.envres = ','.join(args.env_resource).split(',') if args.env_resource else []
  
          if args.retire_cmd is not None:
