@@ -507,7 +507,7 @@ corePacks = import ../packs {
       #version = "4";
     };
     py-numpy = {
-      # for py-numba
+      # for py-numpy
       version = "1.20";
     };
     py-pybind11 = {
