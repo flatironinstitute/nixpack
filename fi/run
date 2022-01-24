@@ -1,4 +1,5 @@
 #!/bin/sh -e
+shopt -s nullglob
 
 fi=`dirname $0`
 . $fi/env
