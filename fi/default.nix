@@ -71,6 +71,11 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
+    amdlibm = {
+      depends = {
+        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
+      };
+    };
     assimp = {
       version = "5.0";
     };
@@ -504,7 +509,7 @@ corePacks = import ../packs {
       #version = "4";
     };
     py-numpy = {
-      # for py-numba
+      # for py-numpy
       version = "1.20";
     };
     py-pybind11 = {
@@ -935,6 +940,10 @@ pkgStruct = {
       };
       core = true;
     }
+
+    { pkg = amdlibm;
+      core = true;
+    }
     { pkg = aocc;
       context = {
         provides = []; # not a real compiler
@@ -958,8 +967,7 @@ pkgStruct = {
     cuda
     cudnn
     curl
-    (disBatch.withPrefs { version = "1"; })
-    (disBatch.withPrefs { version = "2"; })
+    disBatch
     distcc
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
@@ -1139,8 +1147,6 @@ pkgStruct = {
       pgplot
       ucx
     ] ++
-    lib.optionals (lib.specMatches comp.compiler.spec { name = "gcc"; version = "10"; })
-      [amdlibm] ++
     optMpiPkgs comp.packs
     ;
 
