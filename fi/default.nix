@@ -971,7 +971,6 @@ pkgStruct = {
     distcc
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
-    flexiblas
     gdal
     gdb
     ghostscript
@@ -1121,6 +1120,7 @@ pkgStruct = {
       { pkg = ffmpeg;
         default = true;
       }
+      flexiblas
       gsl
       gmp
       healpix-cxx
