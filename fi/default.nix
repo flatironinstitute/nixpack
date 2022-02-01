@@ -1198,7 +1198,7 @@ pkgStruct = {
           pvfmm
           stkfmm
           (trilinos.withPrefs { version = "13.2.0"; })
-          (trilinos.withPrefs { version = "12.18.1"; variants = { cxxstd = "14"; }; }) # variants = { cxxstd = "11"; gotype = "int"; }; }) # broken in spack, kokkos wrong cxx std, missing gnu14
+          (trilinos.withPrefs { version = "12.18.1"; variants = { gotype = "int"; }; })
         ]
         ++
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
