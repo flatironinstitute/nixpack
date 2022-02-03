@@ -2,6 +2,7 @@ import spack.pkg.builtin.lmod as builtin
 
 class Lmod(builtin.Lmod):
     patch("sticky.patch", when='@:8.5.27')
+    patch("no-sys-tcl.patch")
 
     def configure_args(self):
         args = super().configure_args()
