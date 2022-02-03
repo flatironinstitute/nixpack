@@ -24,7 +24,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "git://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "71a7b1b5fadbe16bcdb36fb679aa828cd7d83b02";
+    rev = "0eed35b9ac5a18aca6a5180978418812797577a0";
   };
 
   spackConfig = {
@@ -133,6 +133,9 @@ corePacks = import ../packs {
     curl = {
       variants = {
         libidn2 = true;
+        libssh2 = true;
+        nghttp2 = true;
+        tls = { mbedtls = true; };
       };
     };
     dejagnu = {
@@ -276,6 +279,10 @@ corePacks = import ../packs {
       # needs mke2fs?
       tests = false;
     };
+    libblastrampoline = {
+      # for julia
+      version = "3";
+    };
     libepoxy = {
       variants = {
         #glx = false; # ~glx breaks gtkplus
@@ -293,6 +300,12 @@ corePacks = import ../packs {
     libffi = {
       # failing
       tests = false;
+    };
+    libssh2 = {
+      # for julia
+      variants = {
+        crypto = "mbedtls";
+      };
     };
     libunwind = {
       # failing
@@ -317,6 +330,9 @@ corePacks = import ../packs {
         pic = true;
       };
       tests = false;
+    };
+    mpc = {
+      version = "1.1";
     };
     mpfr = {
       version = "3.1.6";
@@ -869,6 +885,7 @@ mkPythons = base: gen:
   [ /* -------- pythons -------- */
     corePython
     { version = "3.9"; }
+    { version = "3.10"; }
   ];
 
 pyBlacklist = [{ name = "py-cython"; version = "3"; }]; # py-gevent dep
@@ -980,7 +997,7 @@ pkgStruct = {
     gnuplot
     gperftools
     { pkg = gromacs.withPrefs { variants = { cuda = true; }; };
-      projection = "{name}/{version}-singlegpunode";
+      projection = "{name}/singlegpunode/{version}";
       environment = {
         set = { GMX_GPU_DD_COMMS = "true";
                 GMX_GPU_PME_PP_COMMS = "true";
@@ -989,7 +1006,7 @@ pkgStruct = {
       };
     }
     { pkg = gromacs.withPrefs { version = "2021:2021.0"; variants = { cuda = true; plumed = true; }; };
-      projection = "{name}/{version}-singlegpunode-plumed";
+      projection = "{name}/singlegpunode-plumed/{version}";
       environment = {
         set = { GMX_GPU_DD_COMMS = "true";
                 GMX_GPU_PME_PP_COMMS = "true";
@@ -1136,13 +1153,13 @@ pkgStruct = {
       nfft
       nlopt
       (blasPkg (openblas.withPrefs { variants = { threads = "none"; }; }) // {
-        projection = "{name}/{version}-single";
+        projection = "{name}/single/{version}";
       })
       (blasPkg (openblas.withPrefs { variants = { threads = "openmp"; }; }) // {
-        projection = "{name}/{version}-openmp";
+        projection = "{name}/openmp/{version}";
       })
       (blasPkg (openblas.withPrefs { variants = { threads = "pthreads"; }; }) // {
-        projection = "{name}/{version}-threaded";
+        projection = "{name}/threaded/{version}";
       })
       pgplot
       ucx
@@ -1207,7 +1224,7 @@ pkgStruct = {
           # these are broken with intel...
           gromacs
           { pkg = gromacs.withPrefs { version = "2021:2021.0"; variants = { plumed = true; }; };
-            projection = "{name}/{version}-plumed"; }
+            projection = "{name}/plumed/{version}"; }
           plumed
           relion
         ] ++ [
@@ -1664,11 +1681,11 @@ modPkgs = with pkgStruct;
     ]) pythons
   ) compilers
   ++
-  map (pkg: pkgMod pkg // { projection = "{name}/{version}-libcpp";
+  map (pkg: pkgMod pkg // { projection = "{name}/libcpp/{version}";
     autoload = [clangcpp.packs.pkgs.compiler]; })
     clangcpp.pkgs
   ++
-  map (pkg: pkgMod pkg // { projection = "{name}/{version}-nvhpc"; })
+  map (pkg: pkgMod pkg // { projection = "{name}/nvhpc/{version}"; })
     nvhpc.pkgs
   ++
   [ { pkg = jupyter;
@@ -1703,12 +1720,13 @@ mods = corePacks.modules {
       "include" = ["C_INCLUDE_PATH" "CPLUS_INCLUDE_PATH"];
       "" = ["{name}_ROOT" "{name}_BASE"];
     };
+    projections = {
+      all = "{name}/{version}";
+      "^mpi" = "{name}/mpi/{version}";
+    };
     all = {
       autoload = "none";
       prerequisites = "direct";
-      suffixes = {
-        "^mpi" = "mpi";
-      };
       filter = {
         environment_blacklist = ["CC" "FC" "CXX" "F77"];
       };
@@ -1768,7 +1786,7 @@ mods = corePacks.modules {
 
 };
 
-modSite = import ./lmod gitrev corePacks mods;
+modsMod = import lmod/modules.nix gitrev corePacks mods;
 
 in
 
@@ -1777,7 +1795,7 @@ corePacks // {
     bootstrapPacks
     pkgStruct
     mods
-    modSite
+    modsMod
     jupyter;
 
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:

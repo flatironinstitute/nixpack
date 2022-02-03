@@ -2,7 +2,7 @@ from spack import *
 import spack.pkg.builtin.py_numpy
 
 class PyNumpy(spack.pkg.builtin.py_numpy.PyNumpy):
-    @run_before('build')
+    @run_before('install')
     def set_blas_lapack(self):
         super().set_blas_lapack()
         # Skip if no BLAS/LAPACK requested

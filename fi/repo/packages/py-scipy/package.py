@@ -2,7 +2,7 @@ from spack import *
 import spack.pkg.builtin.py_scipy
 
 class PyScipy(spack.pkg.builtin.py_scipy.PyScipy):
-    @run_before('build')
+    @run_before('install')
     def set_blas_lapack(self):
         # Skip if no BLAS/LAPACK requested
         spec = self.spec
