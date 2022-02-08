@@ -85,7 +85,12 @@ corePacks = import ../packs {
     };
     blender = {
       variants = {
+        cycles = true;
         ffmpeg = true;
+        opensubdiv = true;
+      };
+      depends = {
+        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
       };
     };
     boost = {
@@ -386,6 +391,13 @@ corePacks = import ../packs {
         legacylaunchers = true;
       };
     };
+    opensubdiv = {
+      variants = {
+        inherit cuda_arch;
+        cuda = true;
+        openmp = true;
+      };
+    };
     openvdb = {
       variants = {
         python = true;
@@ -676,6 +688,16 @@ corePacks = import ../packs {
         '';
       };
     };
+    # Blender dependency. Wants ccache and tries to build with -Werror. Override that.
+    openimageio = { build =
+      { setup = ''
+        cmakeargs = pkg.cmake_args()
+        cmakeargs.append('-DUSE_CCACHE=0')
+        cmakeargs.append('-DSTOP_ON_WARNING=0')
+        pkg.cmake_args = lambda: cmakeargs
+      '';
+      };
+    };
     /* fix LIBRARY_PATH ordering wrt system /lib64 for libraries with different major versions */
     boost = lib64Link;
     fftw = lib64Link;
@@ -938,7 +960,6 @@ pkgStruct = {
       };
       core = true;
     }
-
     { pkg = amdlibm;
       core = true;
     }
@@ -959,7 +980,9 @@ pkgStruct = {
       };
     }
     blast-plus
-    blender
+    { pkg = blender;
+      core = true;
+    }
     cmake
     (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
     cuda
