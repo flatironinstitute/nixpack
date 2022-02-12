@@ -40,8 +40,8 @@ packs = import ./packs {
      omit to disable. */
   nixpkgsSrc = {
     #url = "git://github.com/NixOS/nixpkgs";
-    ref = "release-21.05"; # 21.11 and later affected by #144747
-    #rev = "72bab23841f015aeaf5149a4e980dc696c59d7ca";
+    ref = "release-21.11";
+    #rev = "c8c5faff75fd017e468e8733312525b51cea1af2";
   };
 
   /* additional spack repos to include by path, managed by nixpack.

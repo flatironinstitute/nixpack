@@ -8,7 +8,10 @@ with pkgs;
     doCheck = false; # failure
   });
 
-  coreutils = coreutils.overrideAttrs (old: {
+  coreutils = (coreutils.override {
+    autoreconfHook = null; # workaround nixpkgs #144747
+  }).overrideAttrs (old: {
+    preBuild = "touch Makefile.in"; # avoid automake
     doCheck = false; # df/total-verify broken on ceph
   });
 
@@ -22,16 +25,6 @@ with pkgs;
   gtk3 = gtk3.override {
     trackerSupport = false;
   };
-
-  autogen = autogen.overrideAttrs (old: {
-    postInstall = old.postInstall + ''
-      # remove $TMPDIR/** from RPATHs
-      for f in "$bin"/bin/*; do
-        local nrp="$(patchelf --print-rpath "$f" | sed -E 's@(:|^)'$TMPDIR'[^:]*:@\1@g')"
-        patchelf --set-rpath "$nrp" "$f"
-      done
-    '';
-  });
 
   openssl_1_0_2 = openssl_1_0_2.overrideAttrs (old: {
     postPatch = old.postPatch + ''
@@ -47,7 +40,7 @@ with pkgs;
 
   openssl = self.openssl_1_1;
 
-  youtube-dl = youtube-dl.overrideAttrs (old: {
-    patches = []; # download patch hash wrong
+  openssh = openssh.overrideAttrs (old: {
+    doCheck = false; # strange environment mismatch
   });
 }
