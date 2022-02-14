@@ -43,4 +43,17 @@ with pkgs;
   openssh = openssh.overrideAttrs (old: {
     doCheck = false; # strange environment mismatch
   });
+
+  openimageio = openimageio.overrideAttrs (old: {
+    # avoid finding system libjpeg.so
+    cmakeFlags = old.cmakeFlags ++ ["-DJPEGTURBO_PATH=${libjpeg.out}"];
+  });
+
+  embree = embree.overrideAttrs (old: {
+    # fix build (should be dynamic based on arch? see spack)
+    cmakeFlags = old.cmakeFlags ++ [
+      "-DEMBREE_ISA_AVX=OFF"
+      "-DEMBREE_ISA_SSE2=OFF"
+      "-DEMBREE_ISA_SSE42=OFF"];
+  });
 }

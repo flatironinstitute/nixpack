@@ -1,6 +1,7 @@
 { system ? builtins.currentSystem
 , target ? builtins.head (builtins.split "-" system)
 , src ? {}
+, overlays ? []
 }:
 
 let
@@ -24,7 +25,7 @@ args = {
     allowUnfree = true;
     cudaSupport = true;
   };
-  overlays = [(import ./overlay.nix)];
+  overlays = [(import ./overlay.nix)] ++ overlays;
 };
 
 in
