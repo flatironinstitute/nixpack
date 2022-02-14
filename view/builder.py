@@ -230,6 +230,24 @@ class Path:
         while os.sendfile(self.fd, src.fd, None, z) > 0:
             pass
 
+    def compare(self, other) -> bool:
+        "compare stat and contents of two files, return true if identical"
+        sstat = self.stat()
+        if not stat.S_ISREG(sstat.st_mode):
+            return False
+        ostat = other.stat()
+        if sstat.st_mode != ostat.st_mode or sstat.st_uid != ostat.st_uid or sstat.st_gid != ostat.st_gid or sstat.st_size != ostat.st_size:
+            return False
+        with self.open(), other.open():
+            z = 65536
+            while True:
+                b1 = self.read(z)
+                b2 = other.read(z)
+                if b1 != b2:
+                    return False
+                if not b1:
+                    return True
+
     def _scandir(self):
         if self.fd is not None:
             try:
@@ -265,7 +283,7 @@ class Inode:
     def __init__(self, node: Inode, src: int, path: Path):
         self.src: Optional[int] = src # index into srcPaths
         if node is not None:
-            if self != node:
+            if not self.unify(node):
                 raise Conflict(path, self, node)
             if self.src != node.src:
                 self.src = None # set?
@@ -275,7 +293,7 @@ class Inode:
         "does this node need special processing/copying/translaton?"
         return self.src == None
 
-    def __eq__(self, other) -> bool:
+    def unify(self, other) -> bool:
         "is this node compatible with the other"
         return type(self) == type(other)
 
@@ -299,8 +317,8 @@ class Symlink(Inode):
         # for recursion -- don't bother creating directories just for symlinks
         return False
 
-    def __eq__(self, other) -> bool:
-        return super().__eq__(other) and self.targ == other.targ
+    def unify(self, other) -> bool:
+        return super().unify(other) and self.targ == other.targ
 
     def __repr__(self):
         return f'Symlink({self.src}, {self.targ!r})'
@@ -315,6 +333,7 @@ class File(Inode):
     copy = False
 
     def __init__(self, node: Inode, src: int, path: Path):
+        self.path = path
         super().__init__(node, src, path)
         if path.isexe():
             if path.opt(b'shbang'):
@@ -334,8 +353,11 @@ class File(Inode):
     def needed(self):
         return self.shbang or self.jupyter or self.wrap or self.copy
 
-    def __eq__(self, other) -> bool:
-        return super().__eq__(other) and False
+    def unify(self, other) -> bool:
+        if not super().unify(other):
+            return False
+        # allow identical files
+        return self.path.compare(other.path)
 
     def __repr__(self):
         return f'File({self.src}{", needed" if self.needed else ""})'
