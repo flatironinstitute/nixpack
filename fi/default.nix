@@ -1033,6 +1033,7 @@ pkgStruct = {
     julia
     keepassxc
     lftp
+    libffi
     libzmq
     likwid
     #magma
