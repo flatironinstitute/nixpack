@@ -1041,16 +1041,30 @@ pkgStruct = {
     imagemagick
     (blasPkg intel-mkl)
     (blasPkg (intel-mkl.withPrefs { version = "2017.4.239"; }))
-    intel-mpi
+    { pkg = intel-mpi;
+      environment = {
+        set = {
+          I_MPI_PMI_LIBRARY = "${corePacks.pkgs.slurm.out}/lib64/libpmi.so";
+        };
+      };
+    }
     intel-oneapi-compilers
     (blasPkg intel-oneapi-mkl)
-    intel-oneapi-mpi
+    {
+      pkg = intel-oneapi-mpi;
+      environment = {
+        set = {
+          I_MPI_PMI_LIBRARY = "${corePacks.pkgs.slurm.out}/lib64/libpmi2.so";
+        };
+      };
+    }
     intel-oneapi-tbb
     intel-oneapi-vtune
     intel-tbb
     julia
     keepassxc
     lftp
+    libffi
     libzmq
     likwid
     #magma
