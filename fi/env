@@ -1,5 +1,5 @@
 # setup FI environment
-nix=/cm/shared/sw/nix
+nix=/mnt/sw/nix
 nixenv=/cm/shared/sw/nix/state/profiles/system/nix
 
 export NIX_REMOTE=unix:///run/nix-daemon/socket

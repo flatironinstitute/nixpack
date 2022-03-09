@@ -4,7 +4,10 @@ shopt -s nullglob
 fi=`dirname $0`
 . $fi/env
 gitrev=$(git describe --always)
-nixfile="$fi --argstr gitrev ${gitrev:-unknown}"
+osver=$( . /etc/os-release ; echo $ID$VERSION_ID )
+os=${osver%.[0-9]*}
+arch=$(uname -m)
+nixfile="$fi --argstr gitrev ${gitrev:-unknown} --argstr os $os"
 site=fi
 
 if [[ `hostname -s` = pcn* ]] ; then
@@ -88,7 +91,7 @@ case "$cmd" in
 		done
 		;& # fall-thru
 	(modules)
-		base=/cm/shared/sw/lmod
+		base=/mnt/sw/lmod
 		for p in $NIX_STATE_DIR/profiles/system/nixpack{,-test}-[0-9]*-link ; do
 			t=$(stat -c %Z $p/)
 			b=${p#*/nixpack-}
@@ -100,13 +103,13 @@ case "$cmd" in
 			fi
 			if [[ -e $f ]] ; then
 				continue
-			elif [[ -h $p/modules.lua && `realpath $p/modules.lua` = /cm/shared/sw/nix/store/*-modules.lua ]] ; then
+			elif [[ -h $p/modules.lua && `realpath $p/modules.lua` = $NIX_STORE_DIR/*-modules.lua ]] ; then
 				echo "Linking $f"
 				ln -sf `realpath $p/modules.lua` $f
 			else
 				echo "Creating $f"
 				# generate one based on our template
-				mods=$(realpath $p/linux-centos7-x86_64)
+				mods=$(realpath $p/linux-$os-$arch)
 				date=$(date -d @$t)
 				sed "s:@MODS@:$mods:g;s!@DATE@!$date!g" $fi/lmod/modules.lua > $f
 			fi
@@ -140,7 +143,7 @@ Commands:
     lmod       lua modules environment
     shell      zsh and other shell tools
     all        all of the above
-  modules      Update meta-modules in /cm/shared/sw/lmod from releases
+  modules      Update meta-modules in /mnt/sw/lmod from releases
   spack ...    Run a spack command in the nixpack environment (things like list
 	       and info work, but those managing packages will not)
 

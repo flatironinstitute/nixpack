@@ -1,5 +1,6 @@
 /* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
-{ target ? "broadwell"
+{ os ? "centos7"
+, target ? "broadwell"
 , cudaarch ? "60,70,80"
 , gitrev ? null
 }:
@@ -18,7 +19,7 @@ rpmExtern = pkg: { extern = "/usr"; version = rpmVersion pkg; };
 corePacks = import ../packs {
   label = "core";
   system = builtins.currentSystem;
-  os = "centos7";
+  inherit os;
 
   spackSrc = {
     /* -------- upstream spack version -------- */
