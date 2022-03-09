@@ -81,6 +81,7 @@ packsWithPrefs =
       PATH = "/bin:/usr/bin";
     }
   , nixpkgsSrc ? null
+  , nixpkgsOverlays ? []
   , repos ? [ ../spack/repo ]
   , repoPatch ? {}
   , global ? {}
@@ -402,6 +403,7 @@ lib.fix (packs: with packs; {
       inherit system;
       target = global.target or target;
       src = nixpkgsSrc;
+      overlays = nixpkgsOverlays;
     });
 });
 
