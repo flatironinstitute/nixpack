@@ -248,6 +248,8 @@ class NixSpec(spack.spec.Spec):
                 for p in os.listdir(pkgdir):
                     try:
                         os.symlink(os.path.join(pkgdir, p), repo.dirname_for_package_name(p))
+                        # clear cache:
+                        repo._fast_package_checker = None
                     except FileExistsError:
                         # just trust that it should be identical
                         pass
