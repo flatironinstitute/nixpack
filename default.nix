@@ -14,7 +14,7 @@ packs = import ./packs {
      without modifying the spack repo.  */
   spackSrc = {
     /* default:
-    url = "git://github.com/spack/spack"; */
+    url = "https://github.com/spack/spack"; */
     ref = "develop";
     #rev = "a5c0a4dca41d3b14c166af2ca28cb4ee7ca10ca7";
   };
@@ -39,7 +39,7 @@ packs = import ./packs {
   /* packs can optionally include nixpkgs for additional packages or bootstrapping.
      omit to disable. */
   nixpkgsSrc = {
-    #url = "git://github.com/NixOS/nixpkgs";
+    #url = "https://github.com/NixOS/nixpkgs";
     ref = "release-21.11";
     #rev = "c8c5faff75fd017e468e8733312525b51cea1af2";
   };

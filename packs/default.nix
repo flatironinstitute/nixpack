@@ -98,7 +98,7 @@ lib.fix (packs: with packs; {
     ({ label = "withPrefs"; } // p));
 
   spack = if builtins.isString spackSrc then spackSrc else
-    builtins.fetchGit ({ name = "spack"; url = "git://github.com/spack/spack"; } // spackSrc);
+    builtins.fetchGit ({ name = "spack"; url = "https://github.com/spack/spack"; } // spackSrc);
 
   makeSpackConfig = import ../spack/config.nix packs;
 

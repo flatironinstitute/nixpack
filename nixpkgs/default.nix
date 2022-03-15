@@ -7,7 +7,7 @@
 let
 
 nixpkgs = fetchGit ({
-  url = "git://github.com/NixOS/nixpkgs";
+  url = "https://github.com/NixOS/nixpkgs";
   ref = "master";
 } // src);
 
