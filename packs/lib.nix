@@ -255,9 +255,11 @@ rec {
   /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in bredth-first order) */
   findDeps = pred:
     let
-      adddeps = s: pkgs: add s (filter
-        (p: p != null && ! (elem p s) && pred p)
-        (nub (concatMap (p: attrValues p.spec.depends) pkgs)));
+      adddeps = s: pkgs: add s 
+        (foldl' (deps: p:
+          (deps ++ filter (d: d != null && ! (elem d s) && ! (elem d deps) && pred d)
+            (attrValues p.spec.depends)))
+          [] pkgs);
       add = s: pkgs: if pkgs == [] then s else adddeps (s ++ pkgs) pkgs;
     in pkg: add [] (toList pkg);
 
