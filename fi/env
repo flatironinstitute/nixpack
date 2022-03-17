@@ -1,8 +1,8 @@
 # setup FI environment
 nix=/mnt/sw/nix
-nixenv=/cm/shared/sw/nix/state/profiles/system/nix
+nixenv=/cm/shared/sw/nix/state/profiles/system/nixsw
 
-export NIX_REMOTE=unix:///run/nix-daemon/socket
+export NIX_REMOTE=unix:///run/nixsw-daemon/socket
 export NIX_STORE_DIR=$nix/store
 export NIX_STATE_DIR=$nix/state
 export NIX_LINK=$HOME/.nix-profile
