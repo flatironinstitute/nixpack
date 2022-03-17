@@ -28,6 +28,8 @@ class PyJax(PythonPackage, CudaPackage):
 
     conflicts('cuda_arch=none', when='+cuda', msg='Must specify CUDA compute capabilities of your GPU, see https://developer.nvidia.com/cuda-gpus')
 
+    phases = ['build', 'install']
+
     def setup_build_environment(self, env):
         tmp_path = tempfile.mkdtemp(prefix='spack')
         env.set('TEST_TMPDIR', tmp_path)

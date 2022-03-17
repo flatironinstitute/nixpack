@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "0eed35b9ac5a18aca6a5180978418812797577a0";
+    rev = "92be0297aac8dfef633683a62484553bc0d9fb56";
   };
 
   spackConfig = {
@@ -41,7 +41,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-21.11";
-    rev = "c8c5faff75fd017e468e8733312525b51cea1af2";
+    rev = "021efecf9679b60cf09d2e7a77637c36b85f5722";
   };
 
   repos = [
@@ -285,6 +285,13 @@ corePacks = import ../packs {
       # needs mke2fs?
       tests = false;
     };
+    libarchive = {
+      depends = {
+        mbedtls = {
+          version = "2";
+        };
+      };
+    };
     libblastrampoline = {
       # for julia
       version = "3";
@@ -312,6 +319,11 @@ corePacks = import ../packs {
       variants = {
         crypto = "mbedtls";
       };
+      depends = {
+        mbedtls = {
+          version = "2";
+        };
+      };
     };
     libunwind = {
       # failing
@@ -330,8 +342,6 @@ corePacks = import ../packs {
       };
     };
     mbedtls = {
-      # for libarchive
-      version = "2";
       variants = {
         pic = true;
       };
@@ -379,7 +389,7 @@ corePacks = import ../packs {
       };
     };
     openblas = {
-      version = "0.3.15";
+      #version = "0.3.15";
       variants = {
         threads = "pthreads";
       };
@@ -456,12 +466,12 @@ corePacks = import ../packs {
     };
     protobuf = {
       # for py-torch
-      version = "3.17";
+      version = "3.14";
     };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
     py-aiohttp = {
       # 3.8 build broken
-      version = "3.7";
+      #version = "3.7";
     };
     py-astroid = {
       # for py-pylint
@@ -469,7 +479,14 @@ corePacks = import ../packs {
     };
     py-async-timeout = {
       # for py-aiohttp
-      version = "3";
+      #version = "3";
+    };
+    py-backports-entry-points-selectable = {
+      depends = {
+        py-importlib-metadata = {
+          version = ":3.8";
+        };
+      };
     };
     py-botocore = {
       # for py-aiobotocore
@@ -477,7 +494,7 @@ corePacks = import ../packs {
     };
     py-chardet = {
       # for py-aiohttp
-      version = "3";
+      #version = "3";
     };
     py-cryptography = {
       # for py-oauthlib
@@ -504,10 +521,6 @@ corePacks = import ../packs {
       # for py-requests
       version = "2";
     };
-    py-importlib-metadata = {
-      # for py-backports-entry-points-selectable
-      version = ":3.8";
-    };
     py-jax = {
       variants = {
         inherit cuda_arch;
@@ -519,26 +532,30 @@ corePacks = import ../packs {
     };
     py-jupyter-packaging = {
       # for py-jupyterlab-widgets
-      version = "0.7";
+      #version = "0.7";
     };
     py-jupyter-server = {
       # for py-jupyterlab-widgets
-      version = "1.9";
+      #version = "1.9";
     };
     py-jupyterlab = {
       # for py-jupyterlab-widgets
-      version = "3.0.14";
+      #version = "3.0.14";
     };
     py-lazy-object-proxy = {
       # to avoid py-setuptools-scm constraint
       version = "1.4";
+    };
+    py-mistune = {
+      # for py-nbconvert
+      version = ":1";
     };
     py-multidict = {
       # for py-aiohttp
       #version = "4";
     };
     py-numpy = {
-      # for py-numpy
+      # for py-numba
       version = "1.20";
     };
     py-pybind11 = {
@@ -557,7 +574,7 @@ corePacks = import ../packs {
     };
     py-pythran = {
       # for py-scipy
-      version = "0.9";
+      #version = "0.9";
     };
     py-setuptools = {
       # for py-scipy
@@ -566,6 +583,14 @@ corePacks = import ../packs {
     py-setuptools-scm = {
       variants = {
         toml = true;
+      };
+    };
+    py-testpath = {
+      depends = {
+        py-flit-core = {
+          # for py-testpath
+          version = "3.2";
+        };
       };
     };
     py-torch = {
@@ -750,6 +775,7 @@ bootstrapPacks = corePacks.withPrefs {
     bzip2 = rpmExtern "bzip2";
     diffutils = rpmExtern "diffutils";
     libtool = rpmExtern "libtool";
+    libuuid = rpmExtern "libuuid";
     m4 = rpmExtern "m4";
     ncurses = rpmExtern "ncurses" // {
       variants = {
@@ -765,6 +791,9 @@ bootstrapPacks = corePacks.withPrefs {
     perl = rpmExtern "perl";
     pkgconfig = rpmExtern "pkgconfig";
     psm = {};
+    uuid = {
+      name = "libuuid";
+    };
     zlib = rpmExtern "zlib";
   };
 };
@@ -908,10 +937,19 @@ mkPythons = base: gen:
   [ /* -------- pythons -------- */
     corePython
     { version = "3.9"; }
+/*
     { version = "3.10"; }
+*/
   ];
 
-pyBlacklist = [{ name = "py-cython"; version = "3"; }]; # py-gevent dep
+pyBlacklist = [
+  { name = "py-pip"; } # already in python
+  { name = "py-setuptools"; } # already in python
+  { name = "py-cython"; version = "3"; } # py-gevent dep
+  { name = "py-flit-core"; version = "3.2"; } # py-testpath dep
+  { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
+  { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
+];
 
 pyView = pl: corePacks.pythonView {
   pkgs = builtins.filter (x: !(builtins.any (lib.specMatches x.spec) pyBlacklist))
@@ -923,7 +961,10 @@ rView = corePacks.view {
 };
 
 hdf5Pkgs = packs: with packs.pkgs; [
-  (hdf5.withPrefs { version = "1.8"; })
+  (hdf5.withPrefs { version = "1.8";
+    # spack has decided that 1.8+fortran+shared is broken for some reason #29132
+    variants = { fortran = false; };
+  })
   { pkg = hdf5; # default 1.10
     default = true;
   }
@@ -1010,6 +1051,7 @@ pkgStruct = {
     curl
     disBatch
     distcc
+    doxygen
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
     gdal
@@ -1030,6 +1072,7 @@ pkgStruct = {
       };
     }
     { pkg = gromacs.withPrefs { version = "2021:2021.0"; variants = { cuda = true; plumed = true; }; };
+    # TODO remove broken?
       projection = "{name}/singlegpunode-plumed/{version}";
       environment = {
         set = { GMX_GPU_DD_COMMS = "true";
@@ -1079,6 +1122,7 @@ pkgStruct = {
     node-js
     npm
     { pkg = nvhpc;
+      # TODO: make not compiler
       context = {
         unlocked_paths =
           # XXX this is very hacky to avoid spack's all-combinations path approach as all nvhpc modules are +mpi
@@ -1179,7 +1223,8 @@ pkgStruct = {
       gsl
       gmp
       healpix-cxx
-      #hwloc
+      hwloc
+      #julia
       #libdrm
       magma
       #mesa
@@ -1255,7 +1300,7 @@ pkgStruct = {
           pvfmm
           stkfmm
           (trilinos.withPrefs { version = "13.2.0"; })
-          (trilinos.withPrefs { version = "12.18.1"; variants = { gotype = "int"; }; })
+          #(trilinos.withPrefs { version = "12.18.1"; variants = { gotype = "int"; }; })
         ]
         ++
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
@@ -1326,7 +1371,7 @@ pkgStruct = {
         py-intervaltree
         py-ipdb
         py-ipykernel
-        py-ipyparallel
+        #py-ipyparallel
         py-ipywidgets
         py-ipython
         py-jupyter-console
@@ -1343,7 +1388,6 @@ pkgStruct = {
         py-nbconvert
         py-nose
         py-notebook
-        py-numba
         py-numpy
         py-olefile
         #py-paho-mqtt
@@ -1352,11 +1396,10 @@ pkgStruct = {
         py-partd
         py-pathos
         py-pexpect
-        py-pip
+        #py-pip
         py-pkgconfig
         #py-primefac
         py-prompt-toolkit
-        py-psycopg2
         py-pybind11
         py-pycairo
         py-pycuda
@@ -1380,7 +1423,7 @@ pkgStruct = {
         py-scikit-learn
         py-scipy
         py-seaborn
-        py-setuptools
+        #py-setuptools
         py-shapely
         #py-sip
         py-sphinx
@@ -1400,8 +1443,11 @@ pkgStruct = {
       ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version ":10") [
         # bazel broken with gcc 11
         py-jax
-        py-torch
-        py-torchvision
+        #py-torch
+        #py-torchvision
+      ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
+        py-numba
+        py-psycopg2
       ])
       ).overrideView {
         # for py-pyqt/py-sip
@@ -1436,45 +1482,6 @@ pkgStruct = {
     ];
   };
 
-  nvhpc = rec {
-    packs = corePacks.withPrefs {
-      package = {
-        compiler = corePacks.pkgs.nvhpc;
-        mpi = corePacks.pkgs.nvhpc;
-        fftw = {
-          variants = {
-            openmp = true;
-            precision = ["float" "double" "long_double"];
-          };
-        };
-        hdf5 = {
-          version = "1.10";
-          variants = {
-            hl = true;
-            fortran = true;
-            cxx = true;
-          };
-          depends = {
-            cmake = {
-              # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
-              version = "3.20";
-            };
-          };
-        };
-      } // blasVirtuals corePacks.pkgs.nvhpc;
-      global = {
-        variants = {
-          mpi = true;
-        };
-      };
-    };
-    pkgs = builtins.tail (optMpiPkgs packs) /* omitting boost */
-      ++
-      (with packs.pkgs; [
-        osu-micro-benchmarks
-      ]);
-  };
-
   nixpkgs = with corePacks.nixpkgs;
     let withGL = p: p // {
       module = (p.module or {}) // {
@@ -1487,6 +1494,7 @@ pkgStruct = {
     }; in [
     /* -------- nixpkgs modules --------- */
     nix
+    blender
     elinks
     #evince
     feh

@@ -121,6 +121,10 @@ in
   /* creates various cache stuff */
   npm = tmphome;
 
+  /* uses npm */
+  py-jupyter-server = tmphome;
+  py-ipyparallel = tmphome;
+
   paraview = spec: old: {
     /* without explicit libx11 dep, ends up linking system libX11 (perhaps via system libGL) and not working */
     depends = old.depends // {
