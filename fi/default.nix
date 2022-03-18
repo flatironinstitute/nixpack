@@ -13,7 +13,7 @@ isLDep = builtins.elem "link";
 isRDep = builtins.elem "run";
 isRLDep = d: isLDep d || isRDep d;
 
-rpmVersion = pkg: lib.capture ["/bin/rpm" "-q" "--queryformat=%{VERSION}" pkg];
+rpmVersion = pkg: lib.capture ["/bin/rpm" "-q" "--queryformat=%{VERSION}" pkg] { inherit os; };
 rpmExtern = pkg: { extern = "/usr"; version = rpmVersion pkg; };
 
 corePacks = import ../packs {
@@ -41,7 +41,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-21.11";
-    rev = "021efecf9679b60cf09d2e7a77637c36b85f5722";
+    rev = "2c645230e7dcae7c8f46780dc35077887f38709c";
   };
 
   repos = [
@@ -629,7 +629,7 @@ corePacks = import ../packs {
     shadow = rpmExtern "shadow-utils";
     slurm = rec {
       extern = "/cm/shared/apps/slurm/current";
-      version = lib.capture ["/bin/readlink" "-n" extern];
+      version = lib.capture ["/bin/readlink" "-n" extern] { inherit os; };
       variants = {
         sysconfdir = "/cm/shared/apps/slurm/var/etc/slurm";
         pmix = true;
