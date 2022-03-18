@@ -84,7 +84,7 @@ case "$cmd" in
 					exit 1
 					;;
 			esac
-			profile=$NIX_STATE_DIR/profiles/system/$prof
+			profile=$NIX_STATE_DIR/profiles/$prof
 			nix-env -p $profile -i -r -f $nixfile -A $attrs
 			l=$(readlink $profile)
 			git tag $site/${l%-link} HEAD
@@ -92,7 +92,7 @@ case "$cmd" in
 		;& # fall-thru
 	(modules)
 		base=/mnt/sw/lmod
-		for p in $NIX_STATE_DIR/profiles/system/nixpack{,-test}-[0-9]*-link ; do
+		for p in $NIX_STATE_DIR/profiles/nixpack{,-test}-[0-9]*-link ; do
 			t=$(stat -c %Z $p/)
 			b=${p#*/nixpack-}
 			b=${b%-link}
