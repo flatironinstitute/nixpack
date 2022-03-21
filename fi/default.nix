@@ -103,6 +103,27 @@ corePacks = import ../packs {
         cxxstd = "14";
         python = true;
         numpy = true;
+        # for assimp (not really correct):
+        atomic = true;
+        chrono = true;
+        date_time = true;
+        exception = true;
+        filesystem = true;
+        graph = true;
+        iostreams = true;
+        locale = true;
+        log = true;
+        math = true;
+        program_options = true;
+        random = true;
+        regex = true;
+        serialization = true;
+        signals = true;
+        system = true;
+        test = true;
+        thread = true;
+        timer = true;
+        wave = true;
       };
     };
     cairo = {
@@ -739,6 +760,10 @@ corePacks = import ../packs {
           """)
         '';
       };
+    };
+    /* don't treat nvhpc as a compiler */
+    nvhpc = spec: old: {
+      provides = builtins.removeAttrs old.provides ["compiler"];
     };
     # Blender dependency. Wants ccache and tries to build with -Werror. Override that.
     openimageio = { build =
@@ -1738,9 +1763,6 @@ modPkgs = with pkgStruct;
   map (pkg: pkgMod pkg // { projection = "{name}/libcpp/{version}";
     autoload = [clangcpp.packs.pkgs.compiler]; })
     clangcpp.pkgs
-  ++
-  map (pkg: pkgMod pkg // { projection = "{name}/nvhpc/{version}"; })
-    nvhpc.pkgs
   ++
   [ { pkg = jupyter;
       projection = "jupyterhub";
