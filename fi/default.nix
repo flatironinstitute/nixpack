@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "92be0297aac8dfef633683a62484553bc0d9fb56";
+    rev = "80250bcc86d6c3f9dab808f02257a585c0a73568";
   };
 
   spackConfig = {
@@ -41,7 +41,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-21.11";
-    rev = "2c645230e7dcae7c8f46780dc35077887f38709c";
+    rev = "24dea223045d6b951de9337a72394518f361e4f4";
   };
 
   repos = [
@@ -307,7 +307,7 @@ corePacks = import ../packs {
     };
     libfabric = {
       variants = {
-        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "psm" "mlx"];
+        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2"] ++ lib.optionals (os == "centos7") ["psm"] ++ ["mlx"];
       };
     };
     libffi = {
@@ -405,7 +405,7 @@ corePacks = import ../packs {
           none = false;
           ofi = true;
           ucx = true;
-          psm = true;
+          psm = os == "centos7";
           psm2 = true;
           verbs = true;
         };
@@ -1322,7 +1322,7 @@ pkgStruct = {
           py-mpi4py
           py-h5py
         ]; };
-        pkgs = lib.optionals (py.isCore && mpi.isCore) (with py.packs.pkgs; 
+        pkgs = lib.optionals (py.isCore && mpi.isCore) (with py.packs.pkgs;
           [triqs] ++
           map (p: pkgMod p // { postscript = ''depends_on("triqs")''; }) [
             triqs-cthyb

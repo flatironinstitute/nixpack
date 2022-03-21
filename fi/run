@@ -99,7 +99,7 @@ case "$cmd" in
 			if [[ $b == test-* ]] ; then
 				f=$base/modules/modules/$b-$(date -d @$t +%Y%m%d).lua
 			else
-				f=$base/modules/modules/1.$b-$(date -d @$t +%Y%m%d).lua
+				f=$base/modules/modules/2.$b-$(date -d @$t +%Y%m%d).lua
 			fi
 			if [[ -e $f ]] ; then
 				continue
