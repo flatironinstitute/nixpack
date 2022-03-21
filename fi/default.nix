@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "80250bcc86d6c3f9dab808f02257a585c0a73568";
+    rev = "b5a0f16aca33c114a5a00ffe03cf981b8eea39cf";
   };
 
   spackConfig = {
@@ -80,6 +80,9 @@ corePacks = import ../packs {
     assimp = {
       version = "5.0";
     };
+    bazel = {
+      version = "3";
+    };
     binutils = {
       variants = {
         gold = true;
@@ -103,27 +106,9 @@ corePacks = import ../packs {
         cxxstd = "14";
         python = true;
         numpy = true;
-        # for assimp (not really correct):
-        atomic = true;
-        chrono = true;
-        date_time = true;
-        exception = true;
-        filesystem = true;
-        graph = true;
+        # for openvdb:
         iostreams = true;
-        locale = true;
-        log = true;
-        math = true;
-        program_options = true;
-        random = true;
-        regex = true;
-        serialization = true;
-        signals = true;
         system = true;
-        test = true;
-        thread = true;
-        timer = true;
-        wave = true;
       };
     };
     cairo = {
@@ -204,7 +189,7 @@ corePacks = import ../packs {
       };
     };
     gcc = {
-      version = "7";
+      version = if os == "centos7" then "7" else "10";
       # needs guile, which is broken
       #tests = false;
     };
@@ -765,7 +750,7 @@ corePacks = import ../packs {
     nvhpc = spec: old: {
       provides = builtins.removeAttrs old.provides ["compiler"];
     };
-    # Blender dependency. Wants ccache and tries to build with -Werror. Override that.
+    /* Blender dependency. Wants ccache and tries to build with -Werror. Override that. */
     openimageio = { build =
       { setup = ''
         cmakeargs = pkg.cmake_args()
@@ -773,6 +758,18 @@ corePacks = import ../packs {
         cmakeargs.append('-DSTOP_ON_WARNING=0')
         pkg.cmake_args = lambda: cmakeargs
       '';
+      };
+    };
+    /* incorrect dependency, see https://github.com/spack/spack/pull/29629 */
+    assimp = spec: old: {
+      depends = builtins.removeAttrs old.depends ["boost"];
+    };
+    /* overaggresive variants */
+    valgrind = spec: old: {
+      depends = old.depends // {
+        boost = if old.depends.boost == null then null else old.depends.boost // {
+          variants = {};
+        };
       };
     };
     /* fix LIBRARY_PATH ordering wrt system /lib64 for libraries with different major versions */
@@ -794,7 +791,7 @@ lib64Link = {
 bootstrapPacks = corePacks.withPrefs {
   label = "bootstrap";
   global = {
-    target = "haswell";
+    target = if os == "centos7" then "haswell" else target;
     resolver = null;
     tests = false;
   };
@@ -850,7 +847,7 @@ mkCompilers = base: gen:
     defaulting = pkg: { default = isCore; inherit pkg; };
   }))
   [ /* -------- compilers -------- */
-    corePacks.pkgs.compiler
+    (corePacks.pkgs.gcc.withPrefs { version = "7"; })
     (corePacks.pkgs.gcc.withPrefs { version = "10"; })
     (corePacks.pkgs.gcc.withPrefs { version = "11"; })
   ];
