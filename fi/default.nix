@@ -332,8 +332,16 @@ corePacks = import ../packs {
     llvm = {
       version = "11";
       variants = {
-        pythonbind = true;
         omp_as_runtime = false;
+      };
+      build = {
+        # install python bindings
+        setup = ''
+          cmake_args = pkg.cmake_args()
+          cmake_args.append("-DCLANG_PYTHON_BINDINGS_VERSIONS=3")
+          cmake_args.append("-DLLDB_ENABLE_PYTHON:BOOL=ON")
+          pkg.cmake_args = lambda: cmake_args
+        '';
       };
     };
     magma = {
