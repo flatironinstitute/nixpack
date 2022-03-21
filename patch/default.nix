@@ -148,6 +148,17 @@ in
     };
   };
 
+  distcc = spec: old: {
+    build = {
+      # make sure it doesn't use (system) python (really should have a proper variant and dep)
+      setup = ''
+        configure_args = pkg.configure_args()
+        configure_args.append('--disable-pump-mode')
+        pkg.configure_args = lambda: configure_args
+      '';
+    };
+  };
+
   /* some things don't use a compiler */
   intel-mkl = nocompiler;
   intel-mpi = nocompiler;
