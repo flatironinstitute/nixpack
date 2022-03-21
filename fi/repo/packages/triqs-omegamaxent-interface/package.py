@@ -14,4 +14,7 @@ class TriqsOmegamaxentInterface(CMakePackage):
     depends_on('mpi', type=('build', 'link'))
     depends_on('triqs', type=('build', 'link'))
     depends_on('python@3.7:', type=('build', 'link', 'run'))
+    depends_on('blas', type=('build', 'link', 'run'))
+    depends_on('fftw', type=('build', 'link', 'run'))
+    depends_on('gsl', type=('build', 'link', 'run'))
     extends('python')
