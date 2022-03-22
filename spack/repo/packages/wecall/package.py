@@ -12,7 +12,7 @@ class Wecall(MakefilePackage):
 
     depends_on('ncurses')
     depends_on('zlib')
-    depends_on('boost')
+    depends_on('boost+regex')
     depends_on('cmake', type='build')
     depends_on('texlive scheme=full', type='build')
     depends_on('python', type='build')

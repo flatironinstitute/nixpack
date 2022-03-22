@@ -101,14 +101,28 @@ corePacks = import ../packs {
     };
     boost = {
       variants = {
+        atomic = true;
+        chrono = true;
         context = true;
         coroutine = true;
-        cxxstd = "14";
-        python = true;
-        numpy = true;
-        # for openvdb:
+        date_time = true;
+        exception = true;
+        filesystem = true;
+        graph = true;
         iostreams = true;
+        log = true;
+        math = true;
+        numpy = true;
+        program_options = true;
+        python = true;
+        random = true;
+        regex = true;
+        serialization = true;
+        signals = true;
         system = true;
+        thread = true;
+        timer = true;
+        cxxstd = "14";
       };
     };
     cairo = {
