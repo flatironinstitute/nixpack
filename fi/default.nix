@@ -120,6 +120,7 @@ corePacks = import ../packs {
         serialization = true;
         signals = true;
         system = true;
+        test = true;
         thread = true;
         timer = true;
         cxxstd = "14";
