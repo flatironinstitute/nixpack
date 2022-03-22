@@ -1361,7 +1361,7 @@ pkgStruct = {
             }
             triqs-dft-tools
             triqs-maxent
-            triqs-omegamaxent-interface
+            #triqs-omegamaxent-interface
             triqs-tprf
         ]);
       });
