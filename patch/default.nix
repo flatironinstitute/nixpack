@@ -114,6 +114,14 @@ in
     };
   };
 
+  /* for pdflatex */
+  r = {
+    build = {
+      setup = ''
+        os.environ['TEXMFVAR'] = os.path.join(os.environ['TMPDIR'], 'texmf')
+      '';
+    };
+  };
   /* tries to set ~/.gitconfig */
   r-credentials = tmphome;
   r-gert = tmphome;
