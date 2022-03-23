@@ -196,7 +196,7 @@ def depPrefs(d):
         print(f"{d} has unsupported dependency patches", file=sys.stderr)
     return p
 
-def conditions(c, p, s):
+def conditions(c, p, s, dep=None):
     def addConditions(a, s):
         if s.versions != spack.spec._any_version:
             c.append(App("versionMatches", Expr(a+'.version'), str(s.versions)))
@@ -209,6 +209,9 @@ def conditions(c, p, s):
             if s.compiler.versions != spack.spec._any_version:
                 c.append(App("versionMatches", Expr(a+'.depends.compiler.spec.version'), str(s.compiler.versions)))
         for d in s.dependencies():
+            if dep and d.name == dep.spec.name:
+                print(f"{dep}: skipping recursive dependency conditional {d}", file=sys.stderr)
+                continue
             dp = a+'.depends.'+d.name
             c.append(Expr(dp + " or null != null", 11))
             addConditions(dp+'.spec', d)
@@ -222,15 +225,15 @@ def conditions(c, p, s):
                 c.append(Eq(Expr('target'), str(s.architecture.target).rstrip(':')))
     addConditions('spec', s)
 
-def whenCondition(p, s, a):
+def whenCondition(p, s, a, dep=None):
     c = []
-    conditions(c, p, s)
+    conditions(c, p, s, dep)
     if not c:
         return a
     return App('when', And(*c), a)
 
 def depend(p, d):
-    c = [whenCondition(p, w, depPrefs(s)) for w, s in d.items()]
+    c = [whenCondition(p, w, depPrefs(s), s) for w, s in d.items()]
     if len(c) == 1:
         return c[0]
     return List(c)
