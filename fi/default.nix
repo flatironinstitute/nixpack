@@ -160,9 +160,6 @@ corePacks = import ../packs {
     curl = {
       variants = {
         libidn2 = true;
-        libssh2 = true;
-        nghttp2 = true;
-        tls = { mbedtls = true; };
       };
     };
     dejagnu = {
@@ -313,10 +310,6 @@ corePacks = import ../packs {
         };
       };
     };
-    libblastrampoline = {
-      # for julia
-      version = "3";
-    };
     libepoxy = {
       variants = {
         #glx = false; # ~glx breaks gtkplus
@@ -335,17 +328,6 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
-    libssh2 = {
-      # for julia
-      variants = {
-        crypto = "mbedtls";
-      };
-      depends = {
-        mbedtls = {
-          version = "2";
-        };
-      };
-    };
     libunwind = {
       # failing
       tests = false;
@@ -354,6 +336,7 @@ corePacks = import ../packs {
       version = "11";
       variants = {
         omp_as_runtime = false;
+        #inherit cuda_arch;
       };
       build = {
         # install python bindings
@@ -1038,6 +1021,80 @@ preExtensions = pre: view: pkgExtensions
 pyExtensions = preExtensions "py-";
 rExtensions = preExtensions "r-";
 
+/* julia needs very specific package versions for which dependency resolution isn't enough */
+juliaPacks = corePacks.withPrefs {
+  label = "julia";
+  package = {
+    julia = {
+      patches = [
+        "${corePacks.spack}/var/spack/repos/builtin/packages/julia/fix-gfortran.patch"
+        ./julia-llvm-rpath.patch
+      ];
+    };
+    llvm = {
+      version = "12.0.1";
+      variants = {
+        internal_unwind = false;
+        llvm_dylib = true;
+        link_llvm_dylib = true;
+        targets = {
+          none = false;
+          amdgpu = true;
+          bpf = true;
+          nvptx = true;
+          webassembly = true;
+        };
+        version_suffix = "jl";
+      };
+      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch")];
+    };
+    libuv = {
+      version = "1.42.0";
+      patches = [(builtins.fetchurl "https://raw.githubusercontent.com/spack/patches/89b6d14eb1f3c3d458a06f1e06f7dda3ab67bd38/julia/libuv-1.42.0.patch")];
+    };
+    mbedtls = {
+      version = "2.24";
+      variants = {
+        libs = ["shared"];
+        pic = true;
+      };
+    };
+    curl = {
+      version = "7.78";
+    };
+    openblas = {
+      variants = {
+        ilp64 = true;
+        symbol_suffix = "64_";
+      };
+    };
+    openlibm = {
+      version = "0.7";
+    };
+    curl = {
+      variants = {
+        libssh2 = true;
+        nghttp2 = true;
+        tls = { mbedtls = true; };
+      };
+    };
+    libblastrampoline = {
+      version = "3";
+    };
+    libssh2 = {
+      variants = {
+        crypto = "mbedtls";
+      };
+    };
+    mpfr = {
+      version = "4";
+    };
+  } // blasVirtuals {
+    /* don't use flexiblas */
+    name = "openblas";
+  };
+};
+
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
     /* ------------ Core modules ------------ */
@@ -1150,7 +1207,7 @@ pkgStruct = {
     intel-oneapi-tbb
     intel-oneapi-vtune
     intel-tbb
-    julia
+    { pkg = juliaPacks.pkgs.julia; core = true; }
     keepassxc
     lftp
     libffi
