@@ -1143,9 +1143,7 @@ pkgStruct = {
       };
     }
     blast-plus
-    { pkg = blender;
-      core = true;
-    }
+    #blender
     cmake
     (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
     cuda
@@ -1326,7 +1324,6 @@ pkgStruct = {
       gmp
       healpix-cxx
       hwloc
-      #julia
       #libdrm
       magma
       #mesa
@@ -1596,7 +1593,7 @@ pkgStruct = {
     }; in [
     /* -------- nixpkgs modules --------- */
     nix
-    blender
+    (withGL blender)
     elinks
     #evince
     feh
@@ -1735,7 +1732,6 @@ pkgStruct = {
 # TODO:
 #  amd/aocl (amdblis, amdlibflame, amdfftw, amdlibm, aocl-sparse, amdscalapack)
 #  amd/uprof
-#  triqs/...
 #  py jaxlib cuda
 #  py deadalus mpi: robert
 
