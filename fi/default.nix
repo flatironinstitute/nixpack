@@ -1539,11 +1539,11 @@ pkgStruct = {
         #py-xattr #broken: missing pip dep
         #py-yep
         py-yt
-      ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version ":10") [
+      ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "10") [
         # bazel broken with gcc 11
         py-jax
-        #py-torch
-        #py-torchvision
+        py-torch
+        py-torchvision
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-numba
         py-psycopg2
