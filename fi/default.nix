@@ -750,10 +750,6 @@ corePacks = import ../packs {
         '';
       };
     };
-    /* don't treat nvhpc as a compiler */
-    nvhpc = spec: old: {
-      provides = builtins.removeAttrs old.provides ["compiler"];
-    };
     /* Blender dependency. Wants ccache and tries to build with -Werror. Override that. */
     openimageio = { build =
       { setup = ''
@@ -845,7 +841,7 @@ cuda_arch = { none = false; } // builtins.listToAttrs
 mkCompilers = base: gen:
   builtins.map (compiler: gen (rec {
     inherit compiler;
-    isCore = compiler == corePacks.pkgs.compiler;
+    isCore = compiler.name == corePacks.pkgs.compiler.name;
     packs = if isCore then base else
       base.withCompiler compiler;
     defaulting = pkg: { default = isCore; inherit pkg; };
@@ -1228,17 +1224,10 @@ pkgStruct = {
     node-js
     npm
     { pkg = nvhpc;
-      # TODO: make not compiler
       context = {
-        unlocked_paths =
-          # XXX this is very hacky to avoid spack's all-combinations path approach as all nvhpc modules are +mpi
-          let
-            store = builtins.getEnv "NIX_STORE_DIR";
-            storelen = builtins.stringLength store;
-            hash = builtins.substring (storelen + (if builtins.substring (storelen - 1) 1 store == "/" then 0 else 1)) 7 nvhpc.outPath;
-            ver = nvhpc.spec.version;
-          in
-          ["nvhpc/${ver}-${hash}/nvhpc/${ver}"];
+        # no compiler, no sub-modules
+        provides = ["mpi"];
+        unlocked_paths = [];
       };
     }
     octave
