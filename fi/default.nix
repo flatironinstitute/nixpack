@@ -1175,7 +1175,7 @@ pkgStruct = {
     gnuplot
     gperftools
     { pkg = gromacs.withPrefs { variants = { cuda = true; }; };
-      projection = "{name}/singlegpunode/{version}";
+      projection = "{name}/singlegpunode-{version}";
       environment = {
         set = { GMX_GPU_DD_COMMS = "true";
                 GMX_GPU_PME_PP_COMMS = "true";
@@ -1184,7 +1184,7 @@ pkgStruct = {
       };
     }
     { pkg = gromacs.withPrefs { version = "2021.4"; variants = { cuda = true; plumed = true; }; };
-      projection = "{name}/singlegpunode-plumed/{version}";
+      projection = "{name}/singlegpunode-plumed-{version}";
       environment = {
         set = { GMX_GPU_DD_COMMS = "true";
                 GMX_GPU_PME_PP_COMMS = "true";
@@ -1339,13 +1339,13 @@ pkgStruct = {
       nfft
       nlopt
       (blasPkg (openblas.withPrefs { variants = { threads = "none"; }; }) // {
-        projection = "{name}/single/{version}";
+        projection = "{name}/single-{version}";
       })
       (blasPkg (openblas.withPrefs { variants = { threads = "openmp"; }; }) // {
-        projection = "{name}/openmp/{version}";
+        projection = "{name}/openmp-{version}";
       })
       (blasPkg (openblas.withPrefs { variants = { threads = "pthreads"; }; }) // {
-        projection = "{name}/threaded/{version}";
+        projection = "{name}/threaded-{version}";
       })
       pgplot
       ucx
@@ -1410,7 +1410,7 @@ pkgStruct = {
           # these are broken with intel...
           gromacs
           { pkg = gromacs.withPrefs { version = "2021.4"; variants = { plumed = true; }; };
-            projection = "{name}/plumed/{version}"; }
+            projection = "{name}/plumed-{version}"; }
           plumed
           relion
         ] ++ [
@@ -1829,7 +1829,7 @@ modPkgs = with pkgStruct;
     ]) pythons
   ) compilers
   ++
-  map (pkg: pkgMod pkg // { projection = "{name}/libcpp/{version}";
+  map (pkg: pkgMod pkg // { projection = "{name}/libcpp-{version}";
     autoload = [clangcpp.packs.pkgs.compiler]; })
     clangcpp.pkgs
   ++
@@ -1867,7 +1867,7 @@ mods = corePacks.modules {
     };
     projections = {
       all = "{name}/{version}";
-      "^mpi" = "{name}/mpi/{version}";
+      "^mpi" = "{name}/mpi-{version}";
     };
     all = {
       autoload = "none";
