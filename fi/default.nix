@@ -533,6 +533,12 @@ corePacks = import ../packs {
       # for py-requests
       version = "2";
     };
+    py-ipyparallel = {
+      build = {
+        # workaround ipython/ipyparallel#675
+        IPP_DISABLE_JS = "1";
+      };
+    };
     py-jax = {
       variants = {
         inherit cuda_arch;
@@ -1470,7 +1476,7 @@ pkgStruct = {
         py-intervaltree
         py-ipdb
         py-ipykernel
-        #py-ipyparallel
+        py-ipyparallel
         py-ipywidgets
         py-ipython
         py-jupyter-console
