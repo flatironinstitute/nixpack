@@ -466,7 +466,7 @@ corePacks = import ../packs {
     };
     plumed = {
       # for gromacs
-      version = "2.7.2";
+      version = "2.8.0";
     };
     postgresql = {
       # for py-psycopg2
@@ -770,6 +770,16 @@ corePacks = import ../packs {
         boost = if old.depends.boost == null then null else old.depends.boost // {
           variants = {};
         };
+      };
+    };
+    /* messed up plumed deps */
+    gromacs = spec: old: {
+      depends = old.depends // {
+        # hack to avoid incorrect version-specific deps
+        plumed = [
+          (builtins.elemAt old.depends.plumed 0)
+          (builtins.elemAt old.depends.plumed 1)
+        ];
       };
     };
     /* fix LIBRARY_PATH ordering wrt system /lib64 for libraries with different major versions */
@@ -1173,8 +1183,7 @@ pkgStruct = {
         };
       };
     }
-    { pkg = gromacs.withPrefs { version = "2021:2021.0"; variants = { cuda = true; plumed = true; }; };
-    # TODO remove broken?
+    { pkg = gromacs.withPrefs { version = "2021.4"; variants = { cuda = true; plumed = true; }; };
       projection = "{name}/singlegpunode-plumed/{version}";
       environment = {
         set = { GMX_GPU_DD_COMMS = "true";
@@ -1400,7 +1409,7 @@ pkgStruct = {
         lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
           # these are broken with intel...
           gromacs
-          { pkg = gromacs.withPrefs { version = "2021:2021.0"; variants = { plumed = true; }; };
+          { pkg = gromacs.withPrefs { version = "2021.4"; variants = { plumed = true; }; };
             projection = "{name}/plumed/{version}"; }
           plumed
           relion
