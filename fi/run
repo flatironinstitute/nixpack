@@ -7,17 +7,19 @@ gitrev=$(git describe --always)
 osver=$( . /etc/os-release ; echo $ID$VERSION_ID )
 os=${osver%.[0-9]*}
 arch=$(uname -m)
-nixfile="$fi --argstr gitrev ${gitrev:-unknown} --argstr os $os"
+nixargs="$fi --argstr gitrev ${gitrev:-unknown} --argstr os $os"
 site=fi
+lmodbase=/mnt/sw/lmod/$arch/$os
 
 if [[ `hostname -s` = pcn* ]] ; then
 	# popeye
 	site=popeye
-	nixfile="$nixfile --argstr target skylake --argstr cudaarch 70"
+	nixargs="$nixargs --argstr target skylake --argstr cudaarch 70"
+	lmodbase=/cm/shared/sw/lmod
 fi
 
 traceSpecs() {
-	nix-instantiate --eval -A "$1" $nixfile |& sed 's/^trace: //'
+	nix-instantiate --eval -A "$1" $nixargs |& sed 's/^trace: //'
 }
 
 if [[ $# -eq 0 ]] ; then
@@ -28,7 +30,7 @@ else
 fi
 case "$cmd" in
 	(build)
-		exec nix-build --show-trace "$@" -A mods $nixfile
+		exec nix-build --show-trace "$@" -A mods $nixargs
 		;;
 	(spec)
 		if [[ $# -eq 0 ]] ; then
@@ -42,82 +44,78 @@ case "$cmd" in
 	(gc)
 		exec nix-store --gc
 		;;
-	(release)
-		if ! git diff-index --quiet HEAD -- ; then
-			echo "Local modifications: refusing to release"
-			exit 1
-		fi
+	(profile)
 		if [[ $# -eq 0 ]] ; then
-			set -- modules
+			echo "Nothing to do"
 		elif [[ $* == all ]] ; then
-			set -- nix lmod modules jupyter shell
+			set -- nix lmod jupyter shell
 		fi
 		for prof in "$@" ; do
+			prefix=
 			case "$prof" in
 				(nix)
 					attrs="nixpkgs.nix nixpkgs.git"
+					prefix=$arch/
 					;;
 				(lmod)
 					attrs="pkgs.lmod"
 					;;
-				(modules|nixpack)
-					prof=nixpack
-					nix-build -o singularity -A pkgs.singularity $nixfile
-					for fix in singularity/bin/spack_perms_fix.sh ; do
-						sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
-					done
-					attrs="modsMod"
-					;;
-				(test-modules|test)
-					prof=nixpack-test
-					attrs="modsMod"
+				(modules)
+					fixup
+					attrs="mods"
 					;;
 				(jupyter)
-					prof=nixpack-$prof
 					attrs="jupyter"
 					;;
 				(shell)
 					attrs="pkgs.zsh pkgs.tmux pkgs.git"
 					;;
 				(*)
-					echo "Unknown release"
+					echo "Unknown profile"
 					exit 1
 					;;
 			esac
-			profile=$NIX_STATE_DIR/profiles/$prof
-			nix-env -p $profile -i -r -f $nixfile -A $attrs
+			profile=$NIX_STATE_DIR/profiles/${prefix:=$arch/$os/}$prof
+			nix-env -p $profile -i -r -f $nixargs -A $attrs
 			l=$(readlink $profile)
-			git tag $site/${l%-link} HEAD
+			git tag $site/$prefix${l%-link} HEAD || true
 		done
-		;& # fall-thru
+		;;
 	(modules)
-		base=/mnt/sw/lmod
-		for p in $NIX_STATE_DIR/profiles/nixpack{,-test}-[0-9]*-link ; do
-			t=$(stat -c %Z $p/)
-			b=${p#*/nixpack-}
-			b=${b%-link}
-			if [[ $b == test-* ]] ; then
-				f=$base/modules/modules/$b-$(date -d @$t +%Y%m%d).lua
-			else
-				f=$base/modules/modules/2.$b-$(date -d @$t +%Y%m%d).lua
-			fi
-			if [[ -e $f ]] ; then
-				continue
-			elif [[ -h $p/modules.lua && `realpath $p/modules.lua` = $NIX_STORE_DIR/*-modules.lua ]] ; then
-				echo "Linking $f"
-				ln -sf `realpath $p/modules.lua` $f
-			else
-				echo "Creating $f"
-				# generate one based on our template
-				mods=$(realpath $p/linux-$os-$arch)
-				date=$(date -d @$t)
-				sed "s:@MODS@:$mods:g;s!@DATE@!$date!g" $fi/lmod/modules.lua > $f
-			fi
+		if [[ $1 == -f ]] ; then
+			shift
+		elif ! git diff-index --quiet HEAD -- ; then
+			echo "Local modifications: refusing to relase (without -f)"
+			exit 1
+		fi
+		if [[ $# -ne 1 ]] ; then
+			echo "Usage: modules NAME"
+			exit 1
+		fi
+		path=$1
+		if [[ $path != */* ]] ; then
+			path=$lmodbase/modules/modules/$path
+			tag=$path
+		fi
+		if [[ $path != *.lua ]] ; then
+			path=$path.lua
+		fi
+		# fixups
+		nix-build -o singularity -A pkgs.singularity $nixargs
+		for fix in singularity/bin/spack_perms_fix.sh ; do
+			sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
 		done
-		$base/lmod/lmod/libexec/update_lmod_system_cache_files -d $base/cacheDir -t $base/cacheTS.txt $base/modules:$(realpath $base/lmod/lmod/modulefiles/Core)
+		# release
+		nix-build -o $path -A modsMod $nixargs
+		if [[ -n $tag ]] ; then
+			git tag $site/$tag HEAD
+		fi
+		;& # fall-thru
+	(cache)
+		$lmodbase/lmod/lmod/libexec/update_lmod_system_cache_files -d $lmodbase/cacheDir -t $lmodbase/cacheTS.txt $lmodbase/modules:$(realpath $lmodbase/lmod/lmod/modulefiles/Core)
 		;;
 	(spack)
-		nix-build -o spackBin -A spackBin $nixfile
+		nix-build -o spackBin -A spackBin $nixargs
 		exec ./spackBin "$@"
 		;;
 	(*)
@@ -135,15 +133,15 @@ Commands:
   spec [PKG]   Print the spec tree for a specific package or all modules,
 	       along with the total number of unique packages.
   gc           Cleanup any unreferenced nix stores (nix-store --gc).
-  release      Publish a release profile for...
-    modules    nixpack lmod modules (default)
-    test       nixpack lmod modules to nixpack-test
+  profile      Update a nix profile for...
     jupyter    jupyterhub server environment
     nix        nix build environment
     lmod       lua modules environment
     shell      zsh and other shell tools
     all        all of the above
-  modules      Update meta-modules in /mnt/sw/lmod from releases
+    modules    nixpack lmod modules (for testing only)
+  modules NAME release nixpack lmod modules to modules/NAME
+  cache        Update lmod cache files
   spack ...    Run a spack command in the nixpack environment (things like list
 	       and info work, but those managing packages will not)
 
