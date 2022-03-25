@@ -4,8 +4,7 @@ shopt -s nullglob
 fi=`dirname $0`
 . $fi/env
 gitrev=$(git describe --always)
-osver=$( . /etc/os-release ; echo $ID$VERSION_ID )
-os=${osver%.[0-9]*}
+os=$( . /etc/os-release ; echo $ID${VERSION_ID%.[0-9]*} )
 arch=$(uname -m)
 nixargs="$fi --argstr gitrev ${gitrev:-unknown} --argstr os $os"
 site=fi
@@ -94,8 +93,8 @@ case "$cmd" in
 		fi
 		path=$1
 		if [[ $path != */* ]] ; then
-			path=$lmodbase/modules/modules/$path
 			tag=$path
+			path=$lmodbase/modules/modules/$path
 		fi
 		if [[ $path != *.lua ]] ; then
 			path=$path.lua
@@ -108,7 +107,7 @@ case "$cmd" in
 		# release
 		nix-build -o $path -A modsMod $nixargs
 		if [[ -n $tag ]] ; then
-			git tag $site/$tag HEAD
+			git tag $site/$arch/$os/$tag HEAD
 		fi
 		;& # fall-thru
 	(cache)
