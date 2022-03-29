@@ -103,6 +103,7 @@ corePacks = import ../packs {
       variants = {
         atomic = true;
         chrono = true;
+        container = true;
         context = true;
         coroutine = true;
         date_time = true;
@@ -768,6 +769,14 @@ corePacks = import ../packs {
     valgrind = spec: old: {
       depends = old.depends // {
         boost = if old.depends.boost == null then null else old.depends.boost // {
+          variants = {};
+        };
+      };
+    };
+    /* overaggresive variants */
+    cgal = spec: old: {
+      depends = old.depends // {
+        boost = old.depends.boost // {
           variants = {};
         };
       };
