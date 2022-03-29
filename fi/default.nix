@@ -1435,7 +1435,7 @@ pkgStruct = {
           py-mpi4py
           py-h5py
         ]; };
-        pkgs = lib.optionals (py.isCore && mpi.isCore) (with py.packs.pkgs;
+        pkgs = lib.optionals (py.isCore && mpi.isCore && lib.versionMatches comp.compiler.spec.version "10:") (with py.packs.pkgs;
           [triqs] ++
           map (p: pkgMod p // { postscript = ''depends_on("triqs")''; }) [
             triqs-cthyb

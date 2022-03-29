@@ -6,8 +6,8 @@ class Triqs(CMakePackage):
     homepage = "https://triqs.github.io"
     url      = "https://github.com/TRIQS/triqs/archive/refs/tags/3.0.0.tar.gz"
 
+    version('3.1.0', sha256='f1f358ec73498bc7ac3ed9665829d8605908f7f7fc876a5c2a01efe37d368f0e')
     version('3.0.1', sha256='d555a4606c7ea2dde28aa8da056c6cc1ebbdd4e11cdb50b312b8c8f821a3edd2')
-    version('3.0.x', git='https://github.com/TRIQS/triqs.git', branch='3.0.x')
 
     variant('libclang', default=True, description='Build against libclang to enable c++2py support. ')
 

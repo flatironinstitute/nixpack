@@ -6,8 +6,8 @@ class TriqsOmegamaxentInterface(CMakePackage):
     homepage = "https://triqs.github.io/omegamaent_interface"
     url      = "https://github.com/TRIQS/omegamaxent_interface/archive/refs/tags/3.0.0.tar.gz"
 
+    version('3.1.0', sha256='1a77080314a0e448379180337b572af2fb20fcb6d50312588d4532d0938f81c8')
     version('3.0.0', sha256='fef80d36bea614820bdb2fa650ff545d6099cd4c478276a96d0ff30ed8844338')
-    version('3.0.x', git='https://github.com/TRIQS/omegamaxent_interface.git', branch='3.0.x')
 
     # TRIQS Dependencies
     depends_on('cmake', type='build')
