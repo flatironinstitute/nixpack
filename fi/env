@@ -1,8 +1,14 @@
 # setup FI environment
 nix=/mnt/sw/nix
-nixenv=/mnt/sw/nix/state/profiles/nix
+daemon=nixsw
+if [[ ! -d $nix ]] ; then
+  # popeye
+  nix=/cm/shared/sw/nix
+  daemon=nix
+fi
+nixenv=$nix/state/profiles/nix
 
-export NIX_REMOTE=unix:///run/nixsw-daemon/socket
+export NIX_REMOTE=unix:///run/$daemon-daemon/socket
 export NIX_STORE_DIR=$nix/store
 export NIX_STATE_DIR=$nix/state
 export NIX_LINK=$HOME/.nix-profile
