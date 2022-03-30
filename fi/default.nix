@@ -1203,6 +1203,7 @@ pkgStruct = {
                 GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
         };
       };
+      default = true;
     }
     hdfview
     imagemagick
