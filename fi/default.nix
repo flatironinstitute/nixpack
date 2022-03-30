@@ -241,6 +241,11 @@ corePacks = import ../packs {
         X = true;
       };
     };
+    gromacs = {
+      variants = {
+        cuda = true;
+      };
+    };
     gsl = {
       variants = {
         external-cblas = true;
@@ -857,6 +862,13 @@ cuda_arch = { none = false; } // builtins.listToAttrs
   (map (a: { name = a; value = true; })
     (if builtins.isString cudaarch then lib.splitRegex "," cudaarch else cudaarch));
 
+mkSkylake = base: base.withPrefs {
+  global = {
+    target = "skylake_avx512";
+    resolver = base;
+  };
+};
+
 mkCompilers = base: gen:
   builtins.map (compiler: gen (rec {
     inherit compiler;
@@ -866,9 +878,9 @@ mkCompilers = base: gen:
     defaulting = pkg: { default = isCore; inherit pkg; };
   }))
   [ /* -------- compilers -------- */
-    (corePacks.pkgs.gcc.withPrefs { version = "7"; })
     (corePacks.pkgs.gcc.withPrefs { version = "10"; })
     (corePacks.pkgs.gcc.withPrefs { version = "11"; })
+    (corePacks.pkgs.gcc.withPrefs { version = "7"; })
   ];
 
 mkMpis = base: gen:
@@ -1183,17 +1195,8 @@ pkgStruct = {
     go
     gnuplot
     gperftools
-    { pkg = gromacs.withPrefs { variants = { cuda = true; }; };
+    { pkg = gromacs;
       projection = "{name}/singlegpunode-{version}";
-      environment = {
-        set = { GMX_GPU_DD_COMMS = "true";
-                GMX_GPU_PME_PP_COMMS = "true";
-                GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
-        };
-      };
-    }
-    { pkg = gromacs.withPrefs { version = "2021.4"; variants = { cuda = true; plumed = true; }; };
-      projection = "{name}/singlegpunode-plumed-{version}";
       environment = {
         set = { GMX_GPU_DD_COMMS = "true";
                 GMX_GPU_PME_PP_COMMS = "true";
@@ -1416,18 +1419,20 @@ pkgStruct = {
           #(trilinos.withPrefs { version = "12.18.1"; variants = { gotype = "int"; }; })
         ]
         ++
-        lib.optionals comp.isCore (lib.optionals mpi.isOpenmpi [
+        lib.optionals (comp.isCore && mpi.isCore) [
           # these are broken with intel...
           gromacs
           { pkg = gromacs.withPrefs { version = "2021.4"; variants = { plumed = true; }; };
-            projection = "{name}/plumed-{version}"; }
+            projection = "{name}/mpi-plumed-{version}"; }
           plumed
           relion
-        ] ++ [
+        ]
+        ++
+        lib.optionals comp.isCore [
           ior
           petsc
           valgrind
-        ]);
+        ];
 
       pythons = mkPythons mpi.packs (py: py // {
         /* ---------- python+mpi modules ---------- */
@@ -1592,6 +1597,28 @@ pkgStruct = {
     pkgs = with packs.pkgs; [
       /* -------- clang libcpp modules --------- */
       boost
+    ];
+  };
+
+  skylake = rec {
+    packs = mkSkylake corePacks;
+    mpiPacks = mkSkylake (builtins.head (builtins.head pkgStruct.compilers).mpis).packs;
+    pkgs = [
+      { pkg = packs.pkgs.gromacs;
+        projection = "{name}/skylake-singlegpunode-{version}";
+        environment = {
+          set = { GMX_GPU_DD_COMMS = "true";
+                  GMX_GPU_PME_PP_COMMS = "true";
+                  GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
+          };
+        };
+      }
+      { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
+        projection = "{name}/skylake-mpi-{version}";
+      }
+      { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "2021.4"; variants = { mpi = true; plumed = true; }; };
+        projection = "{name}/skylake-mpi-plumed-{version}";
+      }
     ];
   };
 
@@ -1842,6 +1869,8 @@ modPkgs = with pkgStruct;
   map (pkg: pkgMod pkg // { projection = "{name}/libcpp-{version}";
     autoload = [clangcpp.packs.pkgs.compiler]; })
     clangcpp.pkgs
+  ++
+  skylake.pkgs
   ++
   [ { pkg = jupyter;
       projection = "jupyterhub";
