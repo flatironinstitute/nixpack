@@ -878,9 +878,9 @@ mkCompilers = base: gen:
     defaulting = pkg: { default = isCore; inherit pkg; };
   }))
   [ /* -------- compilers -------- */
+    (corePacks.pkgs.gcc.withPrefs { version = "7"; })
     (corePacks.pkgs.gcc.withPrefs { version = "10"; })
     (corePacks.pkgs.gcc.withPrefs { version = "11"; })
-    (corePacks.pkgs.gcc.withPrefs { version = "7"; })
   ];
 
 mkMpis = base: gen:
@@ -946,6 +946,8 @@ flexiBlases = {
     FLEXIBLAS              = "/mkl/latest/lib/intel64/libmkl_rt.so";
   };
 };
+
+findCore = l: builtins.head (builtins.filter (x: x.isCore) l);
 
 blasPkg = pkg: {
   inherit pkg;
@@ -1603,7 +1605,7 @@ pkgStruct = {
 
   skylake = rec {
     packs = mkSkylake corePacks;
-    mpiPacks = mkSkylake (builtins.head (builtins.head pkgStruct.compilers).mpis).packs;
+    mpiPacks = mkSkylake (findCore (findCore pkgStruct.compilers).mpis).packs;
     pkgs = [
       { pkg = packs.pkgs.gromacs;
         projection = "{name}/skylake-singlegpunode-{version}";
