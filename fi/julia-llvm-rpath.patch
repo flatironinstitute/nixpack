@@ -1,0 +1,11 @@
+--- src/Makefile.orig	2022-03-23 09:10:36.751082993 -0400
++++ src/Makefile	2022-03-23 09:33:34.281780617 -0400
+@@ -371,7 +371,7 @@
+ 
+ 	# Set rpath for LLVM.so which is `$ORIGIN/../lib` moving from `../lib` to `../lib/julia`.  We only need to do this for Linux/FreeBSD
+ ifneq (,$(findstring $(OS),Linux FreeBSD))
+-	$(PATCHELF) --set-rpath '$$ORIGIN:$$ORIGIN/$(reverse_private_libdir_rel)' $(DESTDIR)$(private_libdir)/libLLVM.$(SHLIB_EXT)
++	#$(PATCHELF) --set-rpath '$$ORIGIN:$$ORIGIN/$(reverse_private_libdir_rel)' $(DESTDIR)$(private_libdir)/libLLVM.$(SHLIB_EXT)
+ endif
+ 
+ 
