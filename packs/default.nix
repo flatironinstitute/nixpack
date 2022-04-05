@@ -70,6 +70,8 @@ prefsUpdate = let
   in
   lib.mergeWithKeys (k: updaters.${k});
 
+spackTarget = builtins.replaceStrings ["-"] ["_"];
+
 packsWithPrefs = 
   { system ? builtins.currentSystem
   , os ? "unknown"
@@ -309,7 +311,8 @@ lib.fix (packs: with packs; {
           prefs = fillPrefs pprefs;
           spec = {
             inherit (desc) name namespace provides;
-            inherit (prefs) extern tests target;
+            inherit (prefs) extern tests;
+            target = spackTarget prefs.target;
             paths = desc.paths // prefs.paths;
             version = if prefs.extern != null && lib.versionIsConcrete prefs.version
                    then prefs.version
