@@ -342,7 +342,6 @@ corePacks = import ../packs {
       version = "11";
       variants = {
         omp_as_runtime = false;
-        #inherit cuda_arch;
       };
       build = {
         # install python bindings
@@ -1155,6 +1154,10 @@ pkgStruct = {
         depends = {
           compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
         };
+        /* variants = {
+          cuda = true;
+          inherit cuda_arch;
+        }; */
       };
       core = true;
     }
