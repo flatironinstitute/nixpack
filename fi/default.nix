@@ -378,6 +378,12 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    netcdf-c = {
+      variants = {
+        # jsut to force curl dep
+        dap = true;
+      };
+    };
     neovim = {
       depends = {
         lua = {
@@ -414,6 +420,14 @@ corePacks = import ../packs {
     opengl = {
       version = "4.6";
       extern = "/usr";
+    };
+    openldap = {
+      # for python-ldap
+      version = "2.4";
+      variants = {
+        tls = "openssl";
+        sasl = false;
+      };
     };
     openmpi = {
       version = "4.0";
@@ -793,6 +807,14 @@ corePacks = import ../packs {
           (builtins.elemAt old.depends.plumed 0)
           (builtins.elemAt old.depends.plumed 1)
         ];
+      };
+    };
+    /* missing openssl dep */
+    openldap = spec: old: {
+      depends = old.depends // {
+        openssl = {
+          deptype = ["build" "link"];
+        };
       };
     };
     /* fix LIBRARY_PATH ordering wrt system /lib64 for libraries with different major versions */
@@ -1366,6 +1388,7 @@ pkgStruct = {
       (blasPkg (openblas.withPrefs { variants = { threads = "pthreads"; }; }) // {
         projection = "{name}/threaded-{version}";
       })
+      openssl
       pgplot
       ucx
     ] ++
@@ -1538,6 +1561,7 @@ pkgStruct = {
         py-pytest
         #py-python-gflags
         #py-python-hglib
+        py-python-ldap
         py-pyyaml
         py-qtconsole
         #py-ray #needs bazel 3
