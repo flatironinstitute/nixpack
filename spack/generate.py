@@ -149,21 +149,32 @@ def printNix(x, indent=0, out=sys.stdout):
     elif isinstance(x, dict):
         AttrSet(x).print(indent, out)
     else:
-        raise TypeError(x)
+        raise TypeError(type(x))
 
+try:
+    VariantValue = spack.variant.Value
+except AttributeError:
+    VariantValue = None
 
 def variant(p, v):
     if type(v) is tuple:
         # TODO: handle when conditions on variants
         v = v[0]
+
+    def value(x):
+        if VariantValue and isinstance(x, VariantValue):
+            print(f"{p.name} variant {v.name}: ignoring unsupported conditional on value {x}")
+            return x.value
+        return x
+
     d = str(v.default)
     if v.multi and v.values is not None:
         d = d.split(',')
-        return {x: x in d for x in v.values}
+        return {x: x in d for x in map(value, v.values)}
     elif v.values == (True, False):
         return d.upper() == 'TRUE'
     elif v.values:
-        l = list(v.values)
+        l = list(map(value, v.values))
         try:
             l.remove(d)
             l.insert(0, d)
