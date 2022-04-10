@@ -102,6 +102,21 @@ class App(Nix):
             out.write(' ')
             self.paren(a, indent, out)
 
+class Or(Nix):
+    prec = 13
+    def __init__(self, *args):
+        self.args = args
+    def print(self, indent, out):
+        first = True
+        for a in self.args:
+            if first:
+                first = False
+            else:
+                out.write(' || ')
+            self.paren(a, indent, out)
+        if first:
+            out.write('false')
+
 class And(Nix):
     prec = 12
     def __init__(self, *args):
@@ -150,39 +165,6 @@ def printNix(x, indent=0, out=sys.stdout):
         AttrSet(x).print(indent, out)
     else:
         raise TypeError(type(x))
-
-try:
-    VariantValue = spack.variant.Value
-except AttributeError:
-    VariantValue = None
-
-def variant(p, v):
-    if type(v) is tuple:
-        # TODO: handle when conditions on variants
-        v = v[0]
-
-    def value(x):
-        if VariantValue and isinstance(x, VariantValue):
-            print(f"{p.name} variant {v.name}: ignoring unsupported conditional on value {x}")
-            return x.value
-        return x
-
-    d = str(v.default)
-    if v.multi and v.values is not None:
-        d = d.split(',')
-        return {x: x in d for x in map(value, v.values)}
-    elif v.values == (True, False):
-        return d.upper() == 'TRUE'
-    elif v.values:
-        l = list(map(value, v.values))
-        try:
-            l.remove(d)
-            l.insert(0, d)
-        except ValueError:
-            print(f"{p.name}: variant {v.name} default {v.default!r} not in {v.values!r}", file=sys.stderr)
-        return l
-    else:
-        return d
 
 def unlist(l):
     if isinstance(l, (list, tuple)) and len(l) == 1:
@@ -242,6 +224,49 @@ def whenCondition(p, s, a, dep=None):
     if not c:
         return a
     return App('when', And(*c), a)
+
+try:
+    VariantValue = spack.variant.Value
+except AttributeError:
+    VariantValue = None
+
+def variant1(p, v):
+    def value(x):
+        if VariantValue and isinstance(x, VariantValue):
+            print(f"{p.name} variant {v.name}: ignoring unsupported conditional on value {x}")
+            return x.value
+        return x
+
+    d = str(v.default)
+    if v.multi and v.values is not None:
+        d = d.split(',')
+        return {x: x in d for x in map(value, v.values)}
+    elif v.values == (True, False):
+        return d.upper() == 'TRUE'
+    elif v.values:
+        l = list(map(value, v.values))
+        try:
+            l.remove(d)
+            l.insert(0, d)
+        except ValueError:
+            print(f"{p.name}: variant {v.name} default {v.default!r} not in {v.values!r}", file=sys.stderr)
+        return l
+    else:
+        return d
+
+def variant(p, v):
+    if type(v) is tuple:
+        a = variant1(p, v[0])
+        l = []
+        for w in v[1]:
+            c = []
+            conditions(c, p, w)
+            if not c:
+                return a
+            l.append(And(*c))
+        return App('when', Or(*l), a)
+    else:
+        return variant1(p, v)
 
 def depend(p, d):
     c = [whenCondition(p, w, depPrefs(s), s) for w, s in d.items()]
