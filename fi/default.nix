@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "b5a0f16aca33c114a5a00ffe03cf981b8eea39cf";
+    rev = "0bab6ccb49ed7e2fac6cf952d3b61d007214930d";
   };
 
   spackConfig = {
@@ -41,7 +41,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-21.11";
-    rev = "24dea223045d6b951de9337a72394518f361e4f4";
+    rev = "a31e3437d3b5d8f0b4f3bbc3b097b15b10250dab";
   };
 
   repos = [
@@ -146,6 +146,10 @@ corePacks = import ../packs {
       # for paraview
       version = "1.9.1";
     };
+    cmake = {
+      # py-torch breakage
+      version = "3.22.3";
+    };
     coreutils = {
       # failing
       tests = false;
@@ -156,7 +160,7 @@ corePacks = import ../packs {
       version = "11.4";
     };
     cudnn = {
-      version = "8.2.4";
+      version = "8.2";
     };
     curl = {
       variants = {
@@ -864,7 +868,7 @@ bootstrapPacks = corePacks.withPrefs {
       };
     };
     perl = rpmExtern "perl";
-    pkgconfig = rpmExtern "pkgconfig";
+    pkgconfig = if os == "centos7" then rpmExtern "pkgconfig" else {};
     psm = {};
     uuid = {
       name = "libuuid";
@@ -1006,7 +1010,7 @@ withPython = packs: py: let
   };
   in pyPacks;
 
-corePython = { version = "3.8"; };
+corePython = { version = if os == "centos7" then "3.8" else "3.9"; };
 
 mkPythons = base: gen:
   builtins.map (python: gen ({
@@ -1019,11 +1023,9 @@ mkPythons = base: gen:
     });
   }))
   [ /* -------- pythons -------- */
-    corePython
+    { version = "3.8"; }
     { version = "3.9"; }
-/*
-    { version = "3.10"; }
-*/
+    #{ version = "3.10"; }
   ];
 
 pyBlacklist = [
@@ -1082,9 +1084,9 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
+      version = "1.7.2";
       patches = [
         "${corePacks.spack}/var/spack/repos/builtin/packages/julia/fix-gfortran.patch"
-        ./julia-llvm-rpath.patch
       ];
     };
     llvm = {
@@ -1137,7 +1139,11 @@ juliaPacks = corePacks.withPrefs {
     libblastrampoline = {
       version = "3";
     };
+    libgit2 = {
+      version = "1.1";
+    };
     libssh2 = {
+      version = "1.9";
       variants = {
         crypto = "mbedtls";
       };
@@ -1176,10 +1182,6 @@ pkgStruct = {
         depends = {
           compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
         };
-        /* variants = {
-          cuda = true;
-          inherit cuda_arch;
-        }; */
       };
       core = true;
     }
@@ -1535,6 +1537,7 @@ pkgStruct = {
         py-nbconvert
         py-nose
         py-notebook
+        py-numba
         py-numpy
         py-olefile
         #py-paho-mqtt
@@ -1594,7 +1597,6 @@ pkgStruct = {
         py-torch
         py-torchvision
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
-        py-numba
         py-psycopg2
       ])
       ).overrideView {

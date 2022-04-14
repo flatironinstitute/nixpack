@@ -233,7 +233,7 @@ except AttributeError:
 def variant1(p, v):
     def value(x):
         if VariantValue and isinstance(x, VariantValue):
-            print(f"{p.name} variant {v.name}: ignoring unsupported conditional on value {x}")
+            print(f"{p.name} variant {v.name}: ignoring unsupported conditional on value {x}", file=sys.stderr)
             return x.value
         return x
 
