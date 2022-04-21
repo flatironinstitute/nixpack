@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "0bab6ccb49ed7e2fac6cf952d3b61d007214930d";
+    rev = "8ae00bf26b2ca824970f1243f5db2d64b496f982";
   };
 
   spackConfig = {
@@ -597,7 +597,7 @@ corePacks = import ../packs {
     };
     py-numpy = {
       # for py-numba
-      version = "1.20";
+      version = "1.21";
     };
     py-pybind11 = {
       # for py-torch
@@ -723,11 +723,6 @@ corePacks = import ../packs {
     visit = {
       variants = {
         python = false; # needs python2
-      };
-    };
-    vmd = {
-      depends = {
-        gcc = bootstrapPacks.pkgs.gcc;
       };
     };
     zstd = {
@@ -1017,7 +1012,7 @@ mkPythons = base: gen:
     python = python;
     isCore = python == corePython;
     packs = withPython base (python // {
-      variants = {
+      variants = (python.variants or {}) // {
         tkinter = true;
       };
     });
@@ -1025,7 +1020,7 @@ mkPythons = base: gen:
   [ /* -------- pythons -------- */
     { version = "3.8"; }
     { version = "3.9"; }
-    #{ version = "3.10"; }
+    { version = "3.10"; }
   ];
 
 pyBlacklist = [
