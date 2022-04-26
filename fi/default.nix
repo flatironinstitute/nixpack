@@ -718,6 +718,9 @@ corePacks = import ../packs {
         ud = true;
         mlx5-dv = true;
         ib-hw-tm = true;
+        verbs = true;
+        rdmacm = true;
+        dm = true;
       };
     };
     visit = {
@@ -786,14 +789,6 @@ corePacks = import ../packs {
     valgrind = spec: old: {
       depends = old.depends // {
         boost = if old.depends.boost == null then null else old.depends.boost // {
-          variants = {};
-        };
-      };
-    };
-    /* overaggresive variants */
-    cgal = spec: old: {
-      depends = old.depends // {
-        boost = old.depends.boost // {
           variants = {};
         };
       };
