@@ -111,7 +111,6 @@
       } // args);
     };
 
-
     packages.x86_64-linux = nixosPacks "x86_64-linux";
 
     defaultPackage.x86_64-linux = inputs.self.packages.x86_64-linux.hello;
