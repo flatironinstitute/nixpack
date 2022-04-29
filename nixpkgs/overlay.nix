@@ -18,6 +18,10 @@ with pkgs;
     doCheck = false; # failure
   });
 
+  libffi = libffi.overrideAttrs (old: {
+    doCheck = false; # failure
+  });
+
   coreutils = (coreutils.override {
     autoreconfHook = null; # workaround nixpkgs #144747
   }).overrideAttrs (old: {
