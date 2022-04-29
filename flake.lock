@@ -1,0 +1,43 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1651214382,
+        "narHash": "sha256-rOpW5ZZ+RbUsYoOx8jKjcGcHllBiKqVFLTARlOu96tc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "dd956a5acab3b6ae370facb3066cf400d575ff44",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "spack": "spack"
+      }
+    },
+    "spack": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1651199899,
+        "narHash": "sha256-GSqn16+3aLGq3phHQp1kGdlQraGO2UJ12yqL5Dfr9Fs=",
+        "owner": "spack",
+        "repo": "spack",
+        "rev": "8a6b73bb2cb285904398224e743e405cea87dcce",
+        "type": "github"
+      },
+      "original": {
+        "owner": "spack",
+        "repo": "spack",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
