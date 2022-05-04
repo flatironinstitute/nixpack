@@ -248,6 +248,11 @@ corePacks = import ../packs {
         X = true;
       };
     };
+    gpu-burn = {
+      variants = {
+        inherit cuda_arch;
+      };
+    };
     gromacs = {
       variants = {
         cuda = true;
@@ -1245,6 +1250,7 @@ pkgStruct = {
     go
     gnuplot
     gperftools
+    gpu-burn
     { pkg = gromacs;
       projection = "{name}/singlegpunode-{version}";
       environment = {
