@@ -233,6 +233,9 @@ corePacks = import ../packs {
         };
       };
     };
+    gdrcopy = {
+      version = "2.3"; # match kernel module
+    };
     /* external opengl: */
     gl = {
       name = "opengl";
@@ -908,14 +911,14 @@ mkMpis = base: gen:
         };
       };
       package = {
-        inherit mpi;
+        mpi = builtins.removeAttrs mpi ["package"];
         fftw = {
           variants = {
             openmp = true;
             precision = ["float" "double" "long_double"];
           };
         };
-      };
+      } // mpi.package or {};
     };
     isOpenmpi = mpi.name == "openmpi";
     isCore = mpi == { name = "openmpi"; };
@@ -945,6 +948,34 @@ mkMpis = base: gen:
     }
     { name = "intel-oneapi-mpi"; }
     { name = "intel-mpi"; }
+    { name = "openmpi";
+      variants = {
+        cuda = true;
+      };
+      package = {
+        hwloc = {
+          variants = {
+            cuda = true;
+          };
+        };
+        ucx = {
+          variants = {
+            cuda = true;
+            gdrcopy = true;
+            thread_multiple = true;
+            cma = true;
+            rc = true;
+            dc = true;
+            ud = true;
+            mlx5-dv = true;
+            ib-hw-tm = true;
+            verbs = true;
+            rdmacm = true;
+            dm = true;
+          };
+        };
+      };
+    }
   ];
 
 flexiBlases = {
@@ -1390,7 +1421,9 @@ pkgStruct = {
     mpis = mkMpis comp.packs (mpi: mpi // {
       pkgs = with mpi.packs.pkgs;
         lib.optionals mpi.isOpenmpi ([
-          mpi.packs.pkgs.mpi # others are above, compiler-independent
+          { pkg = mpi.packs.pkgs.mpi; # others are above, compiler-independent
+            projection = if mpi.packs.pkgs.mpi.spec.variants.cuda then "{name}/cuda-{version}" else "{name}/{version}";
+          }
         ] ++
           /* static mpi env modules */
           map (p: p // {
