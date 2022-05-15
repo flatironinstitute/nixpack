@@ -2,12 +2,6 @@
 nix=/mnt/sw/nix
 daemon=nixsw
 nixenv=$nix/state/profiles/$(uname -m)/nix
-if [[ ! -d $nix ]] ; then
-  # popeye
-  nix=/cm/shared/sw/nix
-  daemon=nix
-  nixenv=$nix/state/profiles/system/nix
-fi
 
 export NIX_REMOTE=unix:///run/$daemon-daemon/socket
 export NIX_STORE_DIR=$nix/store
