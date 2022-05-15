@@ -1244,6 +1244,7 @@ pkgStruct = {
     fio
     gdal
     gdb
+    gdrcopy
     ghostscript
     git
     git-lfs
