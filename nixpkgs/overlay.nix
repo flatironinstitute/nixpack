@@ -50,10 +50,17 @@ with pkgs;
   });
 
   embree = embree.overrideAttrs (old: {
-    # fix build (should be dynamic based on arch? see spack)
-    cmakeFlags = old.cmakeFlags ++ [
-      "-DEMBREE_ISA_AVX=OFF"
-      "-DEMBREE_ISA_SSE2=OFF"
-      "-DEMBREE_ISA_SSE42=OFF"];
+    # based on spack flags
+    cmakeFlags =
+      let
+        onoff = b: if b then "ON" else "OFF";
+        isa = n: f: "-DEMBREE_ISA_${n}=${onoff (!f)}";
+      in old.cmakeFlags ++ [
+        (isa "SSE2" stdenv.hostPlatform.sse4_2Support)
+        (isa "SSE42" stdenv.hostPlatform.avxSupport)
+        (isa "AVX" stdenv.hostPlatform.avx2Support)
+        (isa "AVX2" stdenv.hostPlatform.avx512Support)
+        (isa "AVX512SKX" false)
+      ];
   });
 }
