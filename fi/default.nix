@@ -1752,6 +1752,9 @@ pkgStruct = {
         set = {
           DISBATCH_ROOT = "/mnt/home/carriero/projects/disBatch/beta/disBatch";
         };
+        prepend_path = {
+          PYTHONPATH = "/mnt/home/carriero/projects/disBatch/beta/disBatch";
+        };
       };
     }
     {
