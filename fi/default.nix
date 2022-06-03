@@ -328,6 +328,7 @@ corePacks = import ../packs {
         };
       };
     };
+    libcap = rpmExtern "libcap";
     libepoxy = {
       variants = {
         #glx = false; # ~glx breaks gtkplus
@@ -1336,6 +1337,7 @@ pkgStruct = {
     rust
     singularity
     smartmontools
+    stress-ng
     subversion
     swig
     texlive
