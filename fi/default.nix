@@ -480,6 +480,10 @@ corePacks = import ../packs {
         X = true;
       };
     };
+    papi = {
+      # last official release doesn't support zen (as of 22-06-07)
+      version = "master";
+    };
     paraview = {
       # 5.10.0 build failure?? graphviz geom.h POINTS_PER_INCH
       version = "5.9.1";
@@ -1317,6 +1321,7 @@ pkgStruct = {
       autoload = with openvdb.spec.depends; [ilmbase openexr intel-tbb];
     }
     p7zip
+    papi
     paraview
     #pdftk #needs gcc java (gcj)
     perl
