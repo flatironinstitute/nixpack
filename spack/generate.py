@@ -197,10 +197,11 @@ def conditions(c, p, s, dep=None):
             for n, v in s.variants.items():
                 c.append(App("variantMatches", Expr(a+'.variants.'+n), unlist(v.value)))
         if s.compiler:
+            notExtern = Eq(Expr(a+'.extern'), None)
             if s.compiler.name:
-                c.append(Eq(Expr(a+'.depends.compiler.spec.name'), s.compiler.name))
+                c.append(And(notExtern, Eq(Expr(a+'.depends.compiler.spec.name'), s.compiler.name)))
             if s.compiler.versions != spack.spec._any_version:
-                c.append(App("versionMatches", Expr(a+'.depends.compiler.spec.version'), str(s.compiler.versions)))
+                c.append(And(notExtern, App("versionMatches", Expr(a+'.depends.compiler.spec.version'), str(s.compiler.versions))))
         for d in s.dependencies():
             if dep and d.name == dep.spec.name:
                 print(f"{dep}: skipping recursive dependency conditional {d}", file=sys.stderr)
