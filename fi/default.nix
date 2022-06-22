@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "8ae00bf26b2ca824970f1243f5db2d64b496f982";
+    rev = "c3a69fdf2323445d72886eceebe2d88a16bf2342";
   };
 
   spackConfig = {
@@ -205,6 +205,11 @@ corePacks = import ../packs {
         precision = ["float" "double" "quad" "long_double"];
       };
     };
+    fltk = {
+      variants = {
+        xft = true;
+      };
+    };
     gcc = {
       version = if os == "centos7" then "7" else "10";
       # needs guile, which is broken
@@ -347,15 +352,16 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
+    libgit2 = {
+      # for rust
+      version = "1.3";
+    };
     libunwind = {
       # failing
       tests = false;
     };
     llvm = {
       version = "11";
-      variants = {
-        omp_as_runtime = false;
-      };
       build = {
         # install python bindings
         setup = ''
@@ -460,7 +466,6 @@ corePacks = import ../packs {
         pmi = true;
         pmix = true;
         static = false;
-        thread_multiple = true;
         legacylaunchers = true;
       };
     };
@@ -588,13 +593,17 @@ corePacks = import ../packs {
       # for py-jupyterlab-widgets
       #version = "0.7";
     };
+    py-jupyter-packaging11 = {
+      # py-setuptools dep
+      version = ":0.11";
+    };
     py-jupyter-server = {
-      # for py-jupyterlab-widgets
-      #version = "1.9";
+      # py-nbconvert dep
+      version = ":1.15";
     };
     py-jupyterlab = {
-      # for py-jupyterlab-widgets
-      #version = "3.0.14";
+      # py-jupyter-server dep
+      version = ":3.3";
     };
     py-lazy-object-proxy = {
       # to avoid py-setuptools-scm constraint
@@ -607,6 +616,14 @@ corePacks = import ../packs {
     py-multidict = {
       # for py-aiohttp
       #version = "4";
+    };
+    py-nbconvert = {
+      # py-setuptools dep
+      version = ":6.4";
+    };
+    py-nbformat = {
+      # py-setuptools dep
+      version = ":5.2";
     };
     py-numpy = {
       # for py-numba
@@ -744,6 +761,7 @@ corePacks = import ../packs {
     zstd = {
       variants = {
         multithread = false;
+        programs = true;
       };
     };
   }
@@ -944,6 +962,7 @@ mkMpis = base: gen:
         };
         internal-hwloc = true;
         pmix = false; # patched to mean internal
+        thread_multiple = true;
       };
     }
     { name = "openmpi";
@@ -954,6 +973,7 @@ mkMpis = base: gen:
         };
         internal-hwloc = true;
         pmix = false;
+        thread_multiple = true;
       };
     }
     { name = "intel-oneapi-mpi"; }
@@ -1134,6 +1154,7 @@ juliaPacks = corePacks.withPrefs {
           webassembly = true;
         };
         version_suffix = "jl";
+        omp_as_runtime = false;
       };
       patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch")];
     };
@@ -1207,11 +1228,17 @@ pkgStruct = {
     { pkg = llvm;
       default = true;
     }
-    (llvm.withPrefs { version = "12"; })
-    { pkg = llvm.withPrefs {
-        version = "13";
+    (llvm.withPrefs { version = "12";
+      variants = {
+        omp_as_runtime = false;
+      };
+    })
+    { pkg = llvm.withPrefs { version = "13";
         depends = {
           compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
+        };
+        variants = {
+          omp_as_runtime = false;
         };
       };
       core = true;
