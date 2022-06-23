@@ -20,7 +20,7 @@ core_specs = modconf.setdefault('core_specs', [])
 
 cls = spack.modules.module_types[modtype]
 
-class FakePackage(spack.package.PackageBase):
+class FakePackage(spack.package_base.PackageBase):
     extendees = ()
     provided = {}
 
