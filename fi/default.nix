@@ -207,6 +207,9 @@ corePacks = import ../packs {
     };
     gcc = {
       version = if os == "centos7" then "7" else "10";
+      variants = {
+        languages = ["c" "c++" "fortran" "jit"];
+      };
       # needs guile, which is broken
       #tests = false;
     };
