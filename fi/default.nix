@@ -486,7 +486,8 @@ corePacks = import ../packs {
     };
     papi = {
       # last official release doesn't support zen (as of 22-06-07)
-      version = "master";
+      # also we have a custom icelake patch (as of 22-06-29)
+      version = "6.0.0.1-fi";
     };
     paraview = {
       # 5.10.0 build failure?? graphviz geom.h POINTS_PER_INCH
