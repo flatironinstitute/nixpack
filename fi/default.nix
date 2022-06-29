@@ -1252,7 +1252,7 @@ pkgStruct = {
     disBatch
     distcc
     doxygen
-    (emacs.withPrefs { variants = { X = true; toolkit = "athena"; native = true; json = true; }; })
+    (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
     gdal
     gdb
