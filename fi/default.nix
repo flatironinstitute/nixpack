@@ -187,6 +187,18 @@ corePacks = import ../packs {
       # for openmm build failure, gcc conflict
       version = "1.8";
     };
+    emacs = {
+      version = "28.1";
+      variants = {
+        X = true;
+        toolkit = "athena";
+        native = true;
+        json = true;
+      };
+      depends = {
+        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
+      };
+    };
     embree = {
       # for blender
       variants = {
@@ -1252,7 +1264,9 @@ pkgStruct = {
     disBatch
     distcc
     doxygen
-    (emacs.withPrefs { variants = { X = true; toolkit = "athena"; native = true; json = true; }; })
+    { pkg = emacs;
+      core = true;
+    }
     fio
     gdal
     gdb
