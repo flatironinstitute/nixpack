@@ -197,6 +197,7 @@ corePacks = import ../packs {
       };
       depends = {
         compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
+        gcc = corePacks.pkgs.gcc.withPrefs { version = "10"; };
       };
     };
     embree = {
