@@ -158,6 +158,9 @@ corePacks = import ../packs {
     cuda = {
       # make sure this matches image driver
       version = "11.4";
+      depends = {
+        libxml2 = rpmExtern "libxml2";
+      };
     };
     cudnn = {
       version = "8.2";
