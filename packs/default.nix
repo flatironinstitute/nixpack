@@ -124,7 +124,7 @@ lib.fix (packs: with packs; {
       then if attrs.withRepos
         then repos
         else null
-      else map (r: r + "/repo.yaml") repos;
+      else map (r: (builtins.path { path=r + "/repo.yaml";})) repos;
     spackCache = if attrs.withRepos or false then spackCacheRepos else spackCache;
   } // attrs)) ["PYTHONPATH" "PATH" "LC_ALL" "spackConfig" "spackCache" "passAsFile"];
 
@@ -299,7 +299,7 @@ lib.fix (packs: with packs; {
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
           repoPkgs = map (r: let p = r + "/packages/${pname}"; in
-            lib.when (builtins.pathExists p) p) repos;
+            lib.when (builtins.pathExists p) (builtins.path { name="repo-pkgs-${pname}"; path=p; })) repos;
         } // desc.build // pprefs.build or {}) // {
           inherit spec;
           withPrefs = p: resolvePackage pname gen (lib.prefsUpdate pprefs p);
