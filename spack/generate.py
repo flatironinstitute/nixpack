@@ -296,7 +296,7 @@ def output(k, v):
 
 virtuals = defaultdict(set)
 n = 0
-for p in spack.repo.path.all_packages():
+for p in spack.repo.path.all_package_classes():
     desc = dict()
     desc['namespace'] = p.namespace;
     vers = [(i.get('preferred',False), not (v.isdevelop() or i.get('deprecated',False)), v)
