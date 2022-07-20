@@ -28,7 +28,10 @@ else
 fi
 case "$cmd" in
 	(build)
-		exec nix-build --show-trace "$@" -A mods $nixargs
+		if [[ "$*" != *" -A "* ]] ; then
+			set -- "$@" -A mods
+		fi
+		exec nix-build --show-trace "$@" $nixargs
 		;;
 	(spec)
 		if [[ $# -eq 0 ]] ; then
