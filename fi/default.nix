@@ -41,7 +41,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-21.11";
-    rev = "a31e3437d3b5d8f0b4f3bbc3b097b15b10250dab";
+    rev = "46af3303651699dc58cfc251d9b18c0f59d857da";
   };
 
   repos = [
@@ -158,6 +158,9 @@ corePacks = import ../packs {
     cuda = {
       # make sure this matches image driver
       version = "11.4";
+      depends = {
+        libxml2 = rpmExtern "libxml2";
+      };
     };
     cudnn = {
       version = "8.2";
@@ -212,6 +215,9 @@ corePacks = import ../packs {
     };
     gcc = {
       version = if os == "centos7" then "7" else "10";
+      variants = {
+        languages = ["c" "c++" "fortran" "jit"];
+      };
       # needs guile, which is broken
       #tests = false;
     };
@@ -488,7 +494,8 @@ corePacks = import ../packs {
     };
     papi = {
       # last official release doesn't support zen (as of 22-06-07)
-      version = "master";
+      # also we have a custom icelake patch (as of 22-06-29)
+      version = "6.0.0.1-fi";
     };
     paraview = {
       # 5.10.0 build failure?? graphviz geom.h POINTS_PER_INCH
