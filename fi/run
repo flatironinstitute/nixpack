@@ -58,10 +58,6 @@ case "$cmd" in
 				(lmod)
 					attrs="pkgs.lmod"
 					;;
-				(modules)
-					fixup
-					attrs="mods"
-					;;
 				(jupyter)
 					attrs="jupyter"
 					;;
