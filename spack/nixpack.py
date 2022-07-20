@@ -258,7 +258,7 @@ class NixSpec(spack.spec.Spec):
 
         variants = nixspec['variants']
         if not self.external:
-            assert variants.keys() == self.package.variants.keys(), f"{self.name} has mismatching variants {variants.keys()} vs. {self.packages.variants.keys()}"
+            assert variants.keys() == self.package_class.variants.keys(), f"{self.name} has mismatching variants {variants.keys()} vs. {self.package_class.variants.keys()}"
         for n, s in variants.items():
             if isinstance(s, bool):
                 v = spack.variant.BoolValuedVariant(n, s)
@@ -306,9 +306,9 @@ class NixSpec(spack.spec.Spec):
             self.compiler_flags[f] = []
 
         if nixspec['patches']:
-            patches = self.package.patches.setdefault(spack.directives.make_when_spec(True), [])
+            patches = self.package_class.patches.setdefault(spack.directives.make_when_spec(True), [])
             for i, p in enumerate(nixspec['patches']):
-                patches.append(spack.patch.FilePatch(self.package, p, 1, '.', ordering_key = ('~nixpack', i)))
+                patches.append(spack.patch.FilePatch(self.package_class, p, 1, '.', ordering_key = ('~nixpack', i)))
             spack.repo.path.patch_index.update_package(self.fullname)
 
     def supports_target(self, target):
