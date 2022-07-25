@@ -775,6 +775,9 @@ corePacks = import ../packs {
   // blasVirtuals { name = "flexiblas"; };
 
   repoPatch = {
+    python = spec: old: {
+      patches = [./python-ncursesw.patch];
+    };
     openmpi = spec: old: {
       patches =
         lib.optionals (spec.version == "1.10.7")                  [ ./openmpi-1.10.7.PATCH ] ++
