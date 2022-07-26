@@ -40,8 +40,8 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
-    ref = "release-21.11";
-    rev = "46af3303651699dc58cfc251d9b18c0f59d857da";
+    ref = "release-22.05";
+    rev = "d3c953af9abee6110fcc71514f4ca2f44a9deb39";
   };
 
   repos = [

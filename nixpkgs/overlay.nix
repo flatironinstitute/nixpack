@@ -10,10 +10,14 @@ with pkgs;
 
   coreutils = (coreutils.override {
     autoreconfHook = null; # workaround nixpkgs #144747
+    texinfo = null;
   }).overrideAttrs (old: {
     preBuild = "touch Makefile.in"; # avoid automake
     doCheck = false; # df/total-verify broken on ceph
   });
+  perl = perl.override {
+    zlib = buildPackages.zlib.override { fetchurl = stdenv.fetchurlBoot; };
+  };
 
   nix = (nix.override {
     withAWS = false;
