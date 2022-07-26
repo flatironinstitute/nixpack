@@ -967,6 +967,7 @@ mkMpis = base: gen:
   })
   [ /* -------- mpis -------- */
     { name = "openmpi"; }
+    /*
     { name = "openmpi";
       version = "2.1";
       variants = {
@@ -990,8 +991,9 @@ mkMpis = base: gen:
         thread_multiple = true;
       };
     }
+    */
     { name = "intel-oneapi-mpi"; }
-    { name = "intel-mpi"; }
+    /* { name = "intel-mpi"; } */
     { name = "openmpi";
       variants = {
         cuda = true;
@@ -1439,9 +1441,7 @@ pkgStruct = {
       cfitsio
       cgal
       eigen
-      { pkg = ffmpeg;
-        default = true;
-      }
+      ffmpeg
       flexiblas
       gsl
       gmp
