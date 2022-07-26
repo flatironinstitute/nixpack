@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "c3a69fdf2323445d72886eceebe2d88a16bf2342";
+    rev = "deaa76da45df5aa74f77de3d3e89cbb25a54e0b5";
   };
 
   spackConfig = {
@@ -623,6 +623,10 @@ corePacks = import ../packs {
     py-multidict = {
       # for py-aiohttp
       #version = "4";
+    };
+    py-nbclient = {
+      # for py-nbconvert
+      version = "0.5";
     };
     py-nbconvert = {
       # py-setuptools dep
