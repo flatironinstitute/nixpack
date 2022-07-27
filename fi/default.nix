@@ -319,9 +319,10 @@ corePacks = import ../packs {
       # for samtools/bcftools
       #version = "1.12";
     };
-    intel-mpi = { # not available anymore...
-      extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/2017-4/compilers_and_libraries_2017.4.196/linux/mpi";
-      version = "2017.4.196";
+    intel-parallel-studio = {
+      build = {
+        INTEL_LICENSE_FILE = "28518@lic1.flatironinstitute.org";
+      };
     };
     java = {
       # for hdfview (weird issue with 11.0.12)
@@ -1314,26 +1315,13 @@ pkgStruct = {
     imagemagick
     (blasPkg intel-mkl)
     (blasPkg (intel-mkl.withPrefs { version = "2017.4.239"; }))
-    { pkg = intel-mpi;
-      environment = {
-        set = {
-          I_MPI_PMI_LIBRARY = "${corePacks.pkgs.slurm.out}/lib64/libpmi.so";
-        };
-      };
-    }
+    intel-tbb
+    intel-parallel-studio
     intel-oneapi-compilers
     (blasPkg intel-oneapi-mkl)
-    {
-      pkg = intel-oneapi-mpi;
-      environment = {
-        set = {
-          I_MPI_PMI_LIBRARY = "${corePacks.pkgs.slurm.out}/lib64/libpmi2.so";
-        };
-      };
-    }
+    intel-oneapi-mpi
     intel-oneapi-tbb
     intel-oneapi-vtune
-    intel-tbb
     { pkg = juliaPacks.pkgs.julia; core = true; }
     keepassxc
     lftp
@@ -1416,6 +1404,7 @@ pkgStruct = {
       };
     };
   }) ["R2018a" "R2018b" "R2020a" "R2021a"]
+  /*
   ++
   map (v: {
     pkg = intel-parallel-studio.withPrefs
@@ -1431,6 +1420,7 @@ pkgStruct = {
       { version = "cluster.2020.0"; path = "2020"; }
       { version = "cluster.2020.4"; path = "2020-4"; }
     ]
+    */
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
@@ -1838,7 +1828,6 @@ pkgStruct = {
           "Blast" = "blast-plus";
           "amd/aocc" = "aocc";
           "intel/mkl" = "intel-mkl";
-          "intel/mpi" = "intel-mpi";
           "lib/arpack" = "arpack-ng";
           "lib/boost" = "boost";
           "lib/eigen" = "eigen";
@@ -2041,6 +2030,20 @@ mods = corePacks.modules {
         set = {
           MKL_INTERFACE_LAYER    = "GNU,LP64";
           MKL_THREADING_LAYER    = "GNU";
+        };
+      };
+    };
+    intel-oneapi-mpi = {
+      environment = {
+        set = {
+          I_MPI_PMI_LIBRARY = "${corePacks.pkgs.slurm.out}/lib64/libpmi2.so";
+        };
+      };
+    };
+    intel-parallel-studio = {
+      environment = {
+        set = {
+          INTEL_LICENSE_FILE = "28518@lic1.flatironinstitute.org";
         };
       };
     };
