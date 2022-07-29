@@ -1775,53 +1775,6 @@ pkgStruct = {
 
   static = [
     /* -------- misc modules --------- */
-    {
-      name = "cuda-dcgm";
-      prefix = "/cm/local/apps/cuda-dcgm/current";
-      projection = "{name}";
-    }
-    {
-      name = "disBatch";
-      version = "beta";
-      environment = {
-        prepend_path = {
-          PATH = "/mnt/home/carriero/projects/disBatch/beta/disBatch";
-        };
-        set = {
-          DISBATCH_ROOT = "/mnt/home/carriero/projects/disBatch/beta/disBatch";
-        };
-        prepend_path = {
-          PYTHONPATH = "/mnt/home/carriero/projects/disBatch/beta/disBatch";
-        };
-      };
-    }
-    {
-      name = "fdcache";
-      environment = {
-        prepend_path = {
-          LD_PRELOAD = "/cm/shared/sw/pkg/flatiron/fdcache/src/libfdcache.so";
-        };
-      };
-      projection = "{name}";
-    }
-    {
-      name = "gpfs";
-      prefix = "/usr/lpp/mmfs";
-      projection = "{name}";
-    }
-    { name = "jupyter-kernels";
-      prefix = "/cm/shared/sw/pkg/flatiron/jupyter-kernels";
-      environment = {
-        prepend_path = {
-          PYTHONPATH = "{prefix}/bin";
-        };
-      };
-      context = {
-        short_description = "Tools to manage custom jupyter kernels";
-      };
-      projection = "{name}";
-    }
-
     { path = ".modulerc";
       static =
         let alias = {
