@@ -217,6 +217,10 @@ def conditions(c, p, s, dep=None):
             if s.architecture.target:
                 # this isn't actually correct due to fancy targets but good enough for this
                 c.append(Eq(Expr('target'), str(s.architecture.target).rstrip(':')))
+    if s.name is not None and s.name != p.name:
+        # spack interprets this to mean p provides a virtual of s.name, but in practice this is seldom used
+        print(f"{p.name}: ignoring likely erroneous mismatching condition {s}")
+        c.append(False)
     addConditions('spec', s)
 
 def whenCondition(p, s, a, dep=None):
