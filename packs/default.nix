@@ -171,6 +171,7 @@ lib.fix (packs: with packs; {
     , patches ? []
     , depends ? {}
     , extern ? null
+    , modules ? null
     , provides ? {}
     , tests ? false
     , fixedDeps ? false
@@ -182,7 +183,7 @@ lib.fix (packs: with packs; {
     , verbose ? false # only used by builder
     } @ prefs:
     prefs // {
-      inherit version variants patches depends extern tests provides fixedDeps target paths;
+      inherit version variants patches depends extern modules tests provides fixedDeps target paths;
       resolver = deptype: name: let r = lib.applyOptional (lib.applyOptional resolver deptype) name; in
         if builtins.isFunction r then r
         else (lib.coalesce r packs).getResolver name;
@@ -311,7 +312,7 @@ lib.fix (packs: with packs; {
           prefs = fillPrefs pprefs;
           spec = {
             inherit (desc) name namespace provides;
-            inherit (prefs) extern tests;
+            inherit (prefs) extern modules tests;
             target = spackTarget prefs.target;
             paths = desc.paths // prefs.paths;
             version = if prefs.extern != null && lib.versionIsConcrete prefs.version

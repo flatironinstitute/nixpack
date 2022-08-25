@@ -230,6 +230,7 @@ class NixSpec(spack.spec.Spec):
         self._set_architecture(target=nixspec.get('target', basetarget), platform=platform, os=archos)
         self.prefix = prefix
         self.external_path = nixspec['extern']
+        self.external_modules = nixspec.get('modules',None)
         if self.external_path:
             assert self.external_path == prefix, f"{self.name} extern {nixspec['extern']} doesn't match prefix {prefix}"
         else:
