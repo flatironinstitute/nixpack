@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "deaa76da45df5aa74f77de3d3e89cbb25a54e0b5";
+    rev = "e64de4f3ba8b216cdf511c01ab51733aadd6c5d8";
   };
 
   spackConfig = {
@@ -41,7 +41,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-22.05";
-    rev = "d3c953af9abee6110fcc71514f4ca2f44a9deb39";
+    rev = "580d1ea22a647908f159fb6b138083dfe5c8c7b0";
   };
 
   repos = [
@@ -157,13 +157,13 @@ corePacks = import ../packs {
     cpio = rpmExtern "cpio"; # some intel installers need this -- avoid compiler dependency
     cuda = {
       # make sure this matches image driver
-      version = "11.4";
+      version = "11.6";
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
     };
     cudnn = {
-      version = "8.2";
+      version = "8.4";
     };
     curl = {
       variants = {
@@ -221,6 +221,11 @@ corePacks = import ../packs {
       # needs guile, which is broken
       #tests = false;
     };
+    gdal = {
+      variants = {
+        lerc = false; # spack bug finding libLerc.so
+      };
+    };
     gdb = {
       depends = {
         python = {
@@ -246,13 +251,6 @@ corePacks = import ../packs {
     };
     gdrcopy = {
       version = "2.3"; # match kernel module
-    };
-    /* external opengl: */
-    gl = {
-      name = "opengl";
-    };
-    glx = {
-      name = "opengl";
     };
     gnuplot = {
       variants = {
@@ -362,6 +360,9 @@ corePacks = import ../packs {
     libgit2 = {
       # for rust
       version = "1.3";
+    };
+    libglx = {
+      name = "opengl";
     };
     libunwind = {
       # failing
@@ -487,6 +488,12 @@ corePacks = import ../packs {
       variants = {
         python = true;
       };
+      depends = {
+        intel-tbb = {
+          # doesn't support 2021 (missing headers)
+          version = "2020";
+        };
+      };
     };
     pango = {
       variants = {
@@ -500,10 +507,11 @@ corePacks = import ../packs {
     };
     paraview = {
       # 5.10.0 build failure?? graphviz geom.h POINTS_PER_INCH
-      version = "5.9.1";
+      #version = "5.9.1";
       variants = {
         python3 = true;
         qt = true;
+        osmesa = false;
       };
     };
     petsc = {
@@ -655,15 +663,17 @@ corePacks = import ../packs {
         };
       };
     };
-    py-pythran = {
-      # for py-scipy
-      #version = "0.9";
-    };
     py-setuptools = {
-      # for py-scipy
+      # for py-blessings (59 for numpy)
       version = "57";
     };
+    py-setuptools-rust = {
+      # py-setuptools dep
+      version = "1.2.0";
+    };
     py-setuptools-scm = {
+      # for py-matplotlib
+      version = "6";
       variants = {
         toml = true;
       };
@@ -704,6 +714,8 @@ corePacks = import ../packs {
         inherit cuda_arch;
         mklfft = false;
       };
+      # for cuda 11.6:
+      patches = [(builtins.fetchurl "https://github.com/3dem/relion/commit/554e0ed993e5ac8a3fee4be7c5cf64a62216a8c7.patch")];
     };
     samtools = {
       # to match bcftools
@@ -1286,7 +1298,7 @@ pkgStruct = {
     cuda
     cudnn
     curl
-    disBatch
+    #disBatch
     distcc
     doxygen
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
