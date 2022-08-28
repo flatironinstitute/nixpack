@@ -6,6 +6,11 @@ import datetime
 import nixpack
 import spack
 
+try:
+    from spack.package_base import PackageBase
+except ImportError:
+    from spack.package import PackageBase
+
 root = nixpack.getVar('out')
 name = nixpack.getVar('name')
 modtype = nixpack.getVar('modtype')
@@ -20,7 +25,7 @@ core_specs = modconf.setdefault('core_specs', [])
 
 cls = spack.modules.module_types[modtype]
 
-class FakePackage(spack.package.PackageBase):
+class FakePackage(PackageBase):
     extendees = ()
     provided = {}
 
