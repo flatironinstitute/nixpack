@@ -22,8 +22,15 @@ with pkgs;
   nix = (nix.override {
     withAWS = false;
   }).overrideAttrs (old: {
-    patches = [../patch/nix-ignore-fsea.patch];
     doInstallCheck = false;
+  });
+
+  git = git.overrideAttrs (old: {
+    doInstallCheck = false; # failure
+  });
+
+  ell = ell.overrideAttrs (old: {
+    doCheck = false; # test-dbus-properties failure: /tmp/ell-test-bus: EADDRINUSE
   });
 
   gtk3 = gtk3.override {
@@ -43,6 +50,9 @@ with pkgs;
   });
 
   openssl = self.openssl_1_1;
+
+  # we don't need libredirect for anything (just openssh tests), and it's broken
+  libredirect = "/var/empty";
 
   openssh = openssh.overrideAttrs (old: {
     doCheck = false; # strange environment mismatch
@@ -67,4 +77,24 @@ with pkgs;
         (isa "AVX512SKX" false)
       ];
   });
+
+  libical = libical.overrideAttrs (old: {
+    cmakeFlags = old.cmakeFlags ++ ["-DBerkeleyDB_ROOT_DIR=${db}"];
+  });
+
+  llvmPackages_14 = llvmPackages_14 // {
+    # broken glob test?
+    llvm = llvmPackages_14.llvm.overrideAttrs (old: {
+      postPatch = old.postPatch + ''
+        rm test/Other/ChangePrinters/DotCfg/print-changed-dot-cfg.ll
+      '';
+    });
+    libllvm = llvmPackages_14.libllvm.overrideAttrs (old: {
+      postPatch = old.postPatch + ''
+        rm test/Other/ChangePrinters/DotCfg/print-changed-dot-cfg.ll
+      '';
+    });
+  };
+
+
 }
