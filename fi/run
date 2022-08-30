@@ -67,6 +67,9 @@ case "$cmd" in
 				(shell)
 					attrs="pkgs.zsh pkgs.tmux pkgs.git"
 					;;
+				(viswall)
+					attrs="nixpkgs.xscreensaver nixpkgs.mpv"
+					;;
 				(*)
 					echo "Unknown profile"
 					exit 1
@@ -135,6 +138,7 @@ Commands:
     nix        nix build environment
     lmod       lua modules environment
     shell      zsh and other shell tools
+    viswall    viswall movie display environment
     all        all of the above
     modules    nixpack lmod modules (for testing only)
   modules NAME release nixpack lmod modules to modules/NAME
