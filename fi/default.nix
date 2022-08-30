@@ -1350,13 +1350,14 @@ pkgStruct = {
     #nix #too old/broken
     node-js
     npm
-    { pkg = nvhpc;
+    (rec { pkg = nvhpc;
       context = {
         # no compiler, no sub-modules
         provides = ["mpi"];
-        unlocked_paths = [];
+        # need to messily override module paths to only include compiler+mpi packages
+        unlocked_paths = ["${pkg.spec.name}/${pkg.spec.version}-${builtins.substring (1 + builtins.stringLength builtins.storeDir) 7 pkg.out}/${pkg.spec.name}/${pkg.spec.version}"];
       };
-    }
+    })
     octave
     openjdk
     openmm
@@ -1712,6 +1713,31 @@ pkgStruct = {
     ];
   };
 
+  nvhpc = rec {
+    packs = corePacks.withPrefs {
+      package = {
+        compiler = corePacks.pkgs.nvhpc;
+        mpi = corePacks.pkgs.nvhpc;
+        fftw = {
+          variants = {
+            openmp = true;
+            precision = ["float" "double" "long_double"];
+          };
+        };
+      } // blasVirtuals corePacks.pkgs.nvhpc;
+      global = {
+        variants = {
+          mpi = true;
+        };
+      };
+    };
+    pkgs = builtins.tail (optMpiPkgs packs) # omitting boost
+      ++
+      (with packs.pkgs; [
+        osu-micro-benchmarks
+      ]);
+  };
+
   skylake = rec {
     packs = mkSkylake corePacks;
     mpiPacks = mkSkylake (findCore (findCore pkgStruct.compilers).mpis).packs;
@@ -1936,6 +1962,9 @@ modPkgs = with pkgStruct;
   map (pkg: pkgMod pkg // { projection = "{name}/libcpp-{version}";
     autoload = [clangcpp.packs.pkgs.compiler]; })
     clangcpp.pkgs
+  ++
+  map (pkg: pkgMod pkg // { projection = "{name}/nvhpc-{version}"; })
+    nvhpc.pkgs
   ++
   skylake.pkgs
   ++
