@@ -1344,6 +1344,7 @@ pkgStruct = {
     keepassxc
     lftp
     libffi
+    libtirpc
     libzmq
     likwid
     #magma
@@ -1456,6 +1457,7 @@ pkgStruct = {
       gmp
       healpix-cxx
       hwloc
+      jemalloc
       #libdrm
       magma
       #mesa

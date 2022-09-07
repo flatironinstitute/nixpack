@@ -123,7 +123,7 @@ with packs.pkgs; [
   r-segmented
   r-seqinr
   r-sessioninfo
-  #r-sf #needs old proj
+  r-sf
   r-shape
   r-shiny
   r-snow
