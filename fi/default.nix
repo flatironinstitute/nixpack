@@ -1168,6 +1168,12 @@ juliaPacks = corePacks.withPrefs {
       patches = [
         "${corePacks.spack}/var/spack/repos/builtin/packages/julia/fix-gfortran.patch"
       ];
+      build = {
+        # https://github.com/spack/spack/issues/32085
+        post = ''
+          os.symlink("/etc/ssl/certs/ca-certificates.crt", os.path.join(pkg.prefix.share, "julia/cert.pem"))
+        '';
+      };
     };
     llvm = {
       version = "12.0.1";
