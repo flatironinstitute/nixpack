@@ -2003,8 +2003,8 @@ mods = corePacks.modules {
     hierarchy = ["mpi"];
     hash_length = 0;
     prefix_inspections = {
-      "lib" = ["LIBRARY_PATH"];
-      "lib64" = ["LIBRARY_PATH"];
+      "lib" = ["LIBRARY_PATH" "LD_LIBRARY_PATH"];
+      "lib64" = ["LIBRARY_PATH" "LD_LIBRARY_PATH"];
       "include" = ["C_INCLUDE_PATH" "CPLUS_INCLUDE_PATH"];
       "" = ["{name}_ROOT" "{name}_BASE"];
     };
