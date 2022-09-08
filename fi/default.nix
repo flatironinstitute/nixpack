@@ -1278,6 +1278,19 @@ pkgStruct = {
       };
       core = true;
     }
+    { pkg = llvm.withPrefs {
+        version = "14";
+        depends = {
+          compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
+        };
+        variants = {
+          inherit cuda_arch;
+          # omp_as_runtime = false; # tries to build duplicate OMP targets and fails
+          cuda = true;
+        };
+      };
+      core = true;
+    }
     { pkg = amdlibm;
       core = true;
     }
