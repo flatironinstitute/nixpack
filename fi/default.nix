@@ -1335,6 +1335,7 @@ pkgStruct = {
     gdal
     gdb
     gdrcopy
+    geos
     ghostscript
     git
     git-lfs
