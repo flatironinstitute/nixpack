@@ -262,6 +262,16 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    grace = {
+      depends = {
+        fftw = {
+          version = "2";
+          variants = {
+            precision = ["float" "double"];
+          };
+        };
+      };
+    };
     gromacs = {
       variants = {
         cuda = true;
@@ -1342,6 +1352,7 @@ pkgStruct = {
       };
       default = true;
     }
+    grace
     hdfview
     imagemagick
     (blasPkg intel-mkl)
