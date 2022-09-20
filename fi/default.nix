@@ -1441,19 +1441,17 @@ pkgStruct = {
     { version = v; extern = "/cm/shared/sw/pkg/vendor/mathematica/${v}"; })
     ["11.2" "11.3" "12.1" "12.2" "12.3" "13.0"]
   ++
-  map (v: {
-    pkg = matlab.withPrefs
-      { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; };
-  }) ["R2020a" "R2021a"]
+  map (v: matlab.withPrefs
+    { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; })
+    ["R2020a" "R2021a"]
   ++
-  map (v:
-    matlab.withPrefs
-      { version = v;
-        variants = {
-          key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
-        };
-      }
-  ) ["R2022b"]
+  map (v: matlab.withPrefs
+    { version = v;
+      variants = {
+        key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
+      };
+    })
+    ["R2022b"]
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
@@ -2073,6 +2071,7 @@ mods = corePacks.modules {
     matlab = {
       environment = {
         set = {
+          # not really necessary (included in spack matlab install)
           MLM_LICENSE_FILE = "/mnt/sw/fi/licenses/matlab/license.dat";
         };
       };
