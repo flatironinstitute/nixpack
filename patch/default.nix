@@ -176,4 +176,5 @@ in
   cuda = nocompiler;
   cudnn = nocompiler;
   ghostscript-fonts = nocompiler;
+  matlab = nocompiler;
 }

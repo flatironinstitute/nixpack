@@ -25,12 +25,13 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "e64de4f3ba8b216cdf511c01ab51733aadd6c5d8";
+    rev = "8bc3c0f81005606c32c518a58e0772053bf34dbb";
   };
 
   spackConfig = {
     config = {
       source_cache = "/mnt/home/spack/cache";
+      license_dir = "/mnt/sw/fi/licenses";
     };
   };
   spackPython = "/usr/bin/python3";
@@ -41,7 +42,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-22.05";
-    rev = "580d1ea22a647908f159fb6b138083dfe5c8c7b0";
+    rev = "6dd5255fc4f61624361226ef8528bea508d7f4d0";
   };
 
   repos = [
@@ -1443,29 +1444,16 @@ pkgStruct = {
   map (v: {
     pkg = matlab.withPrefs
       { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; };
-    environment = {
-      set = {
-        MLM_LICENSE_FILE = "/cm/shared/sw/pkg/vendor/matlab/src/network.lic";
-      };
-    };
-  }) ["R2018a" "R2018b" "R2020a" "R2021a"]
-  /*
+  }) ["R2020a" "R2021a"]
   ++
-  map (v: {
-    pkg = intel-parallel-studio.withPrefs
-      { inherit (v) version; extern = "/cm/shared/sw/pkg/vendor/intel-pstudio/${v.path}"; };
-    environment = {
-      set = {
-        INTEL_LICENSE_FILE = "28518@lic1.flatironinstitute.org";
-      };
-    }; }) [
-      { version = "cluster.2017.4"; path = "2017-4"; }
-      { version = "cluster.2019.0"; path = "2019"; }
-      #{ version = "cluster.2019.3"; path = "2019-3"; }
-      { version = "cluster.2020.0"; path = "2020"; }
-      { version = "cluster.2020.4"; path = "2020-4"; }
-    ]
-    */
+  map (v:
+    matlab.withPrefs
+      { version = v;
+        variants = {
+          key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
+        };
+      }
+  ) ["R2022b"]
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
@@ -2079,6 +2067,13 @@ mods = corePacks.modules {
         prepend_path = {
           # see pythonbind
           PYTHONPATH = "{prefix}/lib/python3/site-packages";
+        };
+      };
+    };
+    matlab = {
+      environment = {
+        set = {
+          MLM_LICENSE_FILE = "/mnt/sw/fi/licenses/matlab/license.dat";
         };
       };
     };
