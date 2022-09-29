@@ -742,6 +742,9 @@ corePacks = import ../packs {
         hwloc = true;
       };
     };
+    sra-tools = {
+      patches = [(builtins.fetchurl "https://patch-diff.githubusercontent.com/raw/ncbi/sra-tools/pull/664.diff")];
+    };
     texlive = {
       depends = {
         poppler = {
@@ -1432,6 +1435,7 @@ pkgStruct = {
     rust
     singularity
     smartmontools
+    sra-tools
     stress-ng
     subversion
     swig
