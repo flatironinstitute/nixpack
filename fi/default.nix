@@ -1,7 +1,7 @@
 /* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
 { os ? "centos7"
 , target ? "broadwell"
-, cudaarch ? "60,70,80"
+, cudaarch ? "60,70,80" #TODO: 90
 , gitrev ? null
 }:
 
@@ -1291,6 +1291,19 @@ pkgStruct = {
     }
     { pkg = llvm.withPrefs {
         version = "14";
+        depends = {
+          compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
+        };
+        variants = {
+          inherit cuda_arch;
+          # omp_as_runtime = false; # tries to build duplicate OMP targets and fails
+          cuda = true;
+        };
+      };
+      core = true;
+    }
+    { pkg = llvm.withPrefs {
+        version = "15";
         depends = {
           compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
         };
