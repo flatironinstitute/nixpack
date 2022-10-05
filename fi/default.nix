@@ -857,8 +857,16 @@ corePacks = import ../packs {
     assimp = spec: old: {
       depends = builtins.removeAttrs old.depends ["boost"];
     };
-    /* overaggresive variants */
+    py-pycuda = spec: old: {
+      /* overaggresive variants */
+      depends = old.depends // {
+        boost = if old.depends.boost == null then null else old.depends.boost // {
+          variants = {};
+        };
+      };
+    };
     valgrind = spec: old: {
+      /* overaggresive variants */
       depends = old.depends // {
         boost = if old.depends.boost == null then null else old.depends.boost // {
           variants = {};
