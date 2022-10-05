@@ -1581,7 +1581,8 @@ pkgStruct = {
           { pkg = gromacs.withPrefs { version = "2021.4"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
           plumed
-          relion
+          (relion.withPrefs { version = "3"; })
+          (relion.withPrefs { version = "4"; patches = []; })
         ]
         ++
         lib.optionals comp.isCore [
