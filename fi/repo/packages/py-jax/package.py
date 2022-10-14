@@ -9,8 +9,9 @@ class PyJax(PythonPackage, CudaPackage):
     homepage = "https://github.com/google/jax"
     url      = "https://github.com/google/jax/archive/refs/tags/jax-v0.2.20.tar.gz"
 
+    version('0.3.23', sha256='fa8c68a82fa2fcf3d272bf239c77e7028bb6077466a53349ce85f6e85ed623db')
     version('0.3.4',  sha256='8946d0c309ebe373a4811693c5a953572104bac908ae76c211f50a8e3f506e2f')
-    version('0.2.28', sha256='7c6ffb14c2069d75c0721ec21b35ee253f0f368b84b9ec9459f0870ed902bfa7', preferred=True)
+    version('0.2.28', sha256='7c6ffb14c2069d75c0721ec21b35ee253f0f368b84b9ec9459f0870ed902bfa7')
     version('0.2.20', sha256='2e40bd8e2493a3609177b122c583636c0c88c5e695f8041190eefdfd42a6fc5b')
 
     variant('cuda', default=True, description='Build with CUDA support')
@@ -26,7 +27,7 @@ class PyJax(PythonPackage, CudaPackage):
     depends_on('py-wheel', type='build')
     depends_on('cudnn', type=('build', 'link', 'run'), when='+cuda')
     depends_on('bazel', type=('build'))
-    patch('bazel_call.patch')
+    patch('bazel_call.patch', when="@:0.3.4")
 
     conflicts('cuda_arch=none', when='+cuda', msg='Must specify CUDA compute capabilities of your GPU, see https://developer.nvidia.com/cuda-gpus')
 

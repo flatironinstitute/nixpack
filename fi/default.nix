@@ -1,7 +1,7 @@
 /* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
 { os ? "centos7"
 , target ? "broadwell"
-, cudaarch ? "60,70,80" #TODO: 90
+, cudaarch ? "60,70,80,90"
 , gitrev ? null
 }:
 
@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "8bc3c0f81005606c32c518a58e0772053bf34dbb";
+    rev = "9ba2357181141746b1e92e74fe4447e11802d06d";
   };
 
   spackConfig = {
@@ -42,7 +42,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-22.05";
-    rev = "6dd5255fc4f61624361226ef8528bea508d7f4d0";
+    rev = "9234f5a17e1a7820b5e91ecd4ff0de449e293383";
   };
 
   repos = [
@@ -158,7 +158,7 @@ corePacks = import ../packs {
     cpio = rpmExtern "cpio"; # some intel installers need this -- avoid compiler dependency
     cuda = {
       # make sure this matches image driver
-      version = "11.6";
+      version = "11.8";
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
@@ -568,6 +568,13 @@ corePacks = import ../packs {
         };
       };
     };
+    py-blessings = {
+      depends = {
+        py-setuptools = {
+          version = "57";
+        };
+      };
+    };
     py-botocore = {
       # for py-aiobotocore
       version = "1.19.52";
@@ -575,6 +582,19 @@ corePacks = import ../packs {
     py-chardet = {
       # for py-aiohttp
       #version = "3";
+    };
+    py-charset-normalizer = {
+      # for py-requests
+      version = "2.0";
+    };
+    py-cppy = {
+      # py-setuptools
+      #version = "1.1";
+      depends = {
+        py-setuptools = {
+          version = "62:";
+        };
+      };
     };
     py-cryptography = {
       # for py-oauthlib
@@ -586,7 +606,16 @@ corePacks = import ../packs {
     };
     py-docutils = {
       # for py-sphinx
-      version = "0.17";
+      #version = "0.17";
+    };
+    py-filelock = {
+      # py-setuptools
+      #version = ":3.7";
+      depends = {
+        py-setuptools = {
+          version = "62:";
+        };
+      };
     };
     py-gevent = {
       depends = {
@@ -599,9 +628,14 @@ corePacks = import ../packs {
     };
     py-idna = {
       # for py-requests
-      version = "2";
+      #version = "2";
     };
     py-ipyparallel = {
+      depends = {
+        py-setuptools = {
+          version = "59";
+        };
+      };
       build = {
         # workaround ipython/ipyparallel#675
         IPP_DISABLE_JS = "1";
@@ -622,7 +656,12 @@ corePacks = import ../packs {
     };
     py-jupyter-packaging11 = {
       # py-setuptools dep
-      version = ":0.11";
+      #version = ":0.11";
+      depends = {
+        py-setuptools = {
+          version = "62:";
+        };
+      };
     };
     py-jupyter-server = {
       # py-nbconvert dep
@@ -632,12 +671,16 @@ corePacks = import ../packs {
       # py-jupyter-server dep
       version = ":3.3";
     };
+    py-jupyterlab-pygments = {
+      # avoid recursive jupyterlab -> jupyter_server -> nbconvert -> dependency
+      version = "0.1";
+    };
     py-lazy-object-proxy = {
       # to avoid py-setuptools-scm constraint
-      version = "1.4";
+      #version = "1.4";
     };
     py-mistune = {
-      # for py-nbconvert
+      # for py-nbconvert, py-m2r
       version = ":1";
     };
     py-multidict = {
@@ -649,20 +692,46 @@ corePacks = import ../packs {
       version = "0.5";
     };
     py-nbconvert = {
-      # py-setuptools dep
+      # py-nbconvert -> py-mistune dep, setuptools
       version = ":6.4";
     };
     py-nbformat = {
       # py-setuptools dep
-      version = ":5.2";
+      #version = ":5.2";
+      depends = {
+        py-setuptools = {
+          version = "62:";
+        };
+      };
+    };
+    py-nose = {
+      depends = {
+        py-setuptools = {
+          version = "57";
+        };
+      };
     };
     py-numpy = {
       # for py-numba
-      version = "1.21";
+      version = ":1.22";
+      depends = {
+        py-setuptools = {
+          version = "59";
+        };
+      };
+    };
+    py-pkgutil-resolve-name = {
+      depends = {
+        py-flit-core = {
+          version = "2";
+        };
+      };
     };
     py-pybind11 = {
       # for py-torch
       version = "2.6.2";
+      # for py-scipy
+      #version = ":2.8";
     };
     py-pyqt5 = {
       depends = {
@@ -674,17 +743,44 @@ corePacks = import ../packs {
         };
       };
     };
+    py-scikit-learn = {
+      depends = {
+        py-setuptools = {
+          version = "59";
+        };
+      };
+    };
+    py-scipy = {
+      depends = {
+        py-setuptools = {
+          version = "59";
+        };
+      };
+    };
+    py-shapely = {
+      depends = {
+        py-setuptools = {
+          version = "59";
+        };
+      };
+    };
     py-setuptools = {
       # for py-blessings (59 for numpy)
-      version = "57";
+      #version = "57";
+      version = "59";
     };
     py-setuptools-rust = {
       # py-setuptools dep
-      version = "1.2.0";
+      #version = "1.2.0";
+      depends = {
+        py-setuptools = {
+          version = "62:";
+        };
+      };
     };
     py-setuptools-scm = {
       # for py-matplotlib
-      version = "6";
+      #version = "6";
       variants = {
         toml = true;
       };
@@ -703,6 +799,13 @@ corePacks = import ../packs {
         valgrind = false;
       };
       depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
+    };
+    py-virtualenv = {
+      depends = {
+        py-setuptools = {
+          version = "62:";
+        };
+      };
     };
     py-wrapt = {
       # for py-astroid
@@ -978,10 +1081,10 @@ mkCompilers = base: gen:
     (corePacks.pkgs.gcc.withPrefs { version = "11"; })
   ];
 
-mkMpis = base: gen:
+mkMpis = comp: gen:
   builtins.map (mpi: gen {
     inherit mpi;
-    packs = base.withPrefs {
+    packs = comp.packs.withPrefs {
       global = {
         variants = {
           mpi = true;
@@ -1000,35 +1103,11 @@ mkMpis = base: gen:
     isOpenmpi = mpi.name == "openmpi";
     isCore = mpi == { name = "openmpi"; };
   })
-  [ /* -------- mpis -------- */
+  ([ /* -------- mpis -------- */
     { name = "openmpi"; }
-    /*
-    { name = "openmpi";
-      version = "2.1";
-      variants = {
-        # openmpi 2 on ib reports: "unknown link width 0x10" and is a bit slow
-        fabrics = {
-          ucx = false;
-        };
-        internal-hwloc = true;
-        pmix = false; # patched to mean internal
-        thread_multiple = true;
-      };
-    }
-    { name = "openmpi";
-      version = "1.10";
-      variants = {
-        fabrics = {
-          ucx = false;
-        };
-        internal-hwloc = true;
-        pmix = false;
-        thread_multiple = true;
-      };
-    }
-    */
-    { name = "intel-oneapi-mpi"; }
+  ] ++ lib.optionals comp.isCore [
     /* { name = "intel-mpi"; } */
+    { name = "intel-oneapi-mpi"; }
     { name = "openmpi";
       variants = {
         cuda = true;
@@ -1057,7 +1136,7 @@ mkMpis = base: gen:
         };
       };
     }
-  ];
+  ]);
 
 flexiBlases = {
   openblas = {
@@ -1134,7 +1213,7 @@ pyBlacklist = [
   { name = "py-pip"; } # already in python
   { name = "py-setuptools"; } # already in python
   { name = "py-cython"; version = "3"; } # py-gevent dep
-  { name = "py-flit-core"; version = "3.2"; } # py-testpath dep
+  { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
 ];
@@ -1281,15 +1360,10 @@ pkgStruct = {
         add_property("lmod","sticky")
       '';
     }
-    (llvm.withPrefs { version = "10"; })
+    (gcc.withPrefs { version = "12"; })
     { pkg = llvm;
       default = true;
     }
-    (llvm.withPrefs { version = "12";
-      variants = {
-        omp_as_runtime = false;
-      };
-    })
     { pkg = llvm.withPrefs { version = "13";
         depends = {
           compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
@@ -1301,25 +1375,12 @@ pkgStruct = {
       core = true;
     }
     { pkg = llvm.withPrefs {
-        version = "14";
-        depends = {
-          compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
-        };
-        variants = {
-          inherit cuda_arch;
-          # omp_as_runtime = false; # tries to build duplicate OMP targets and fails
-          cuda = true;
-        };
-      };
-      core = true;
-    }
-    { pkg = llvm.withPrefs {
         version = "15";
         depends = {
           compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
         };
         variants = {
-          inherit cuda_arch;
+          cuda_arch = cuda_arch // { "90" = false; };
           # omp_as_runtime = false; # tries to build duplicate OMP targets and fails
           cuda = true;
         };
@@ -1520,7 +1581,7 @@ pkgStruct = {
     optMpiPkgs comp.packs
     ;
 
-    mpis = mkMpis comp.packs (mpi: mpi // {
+    mpis = mkMpis comp (mpi: mpi // {
       pkgs = with mpi.packs.pkgs;
         lib.optionals mpi.isOpenmpi ([
           { pkg = mpi.packs.pkgs.mpi; # others are above, compiler-independent
@@ -1644,7 +1705,7 @@ pkgStruct = {
         #py-husl
         py-hypothesis
         py-intervaltree
-        py-ipdb
+        #py-ipdb
         py-ipykernel
         py-ipyparallel
         py-ipywidgets
@@ -1719,15 +1780,20 @@ pkgStruct = {
         py-yt
       ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "10") [
         # bazel broken with gcc 11
-        py-jax
+        #py-jax #TODO: broken
         py-torch
-        py-torchvision
+        #py-torchvision #doesn't support sm_90 (but torch does, and inherits archs from it!)
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
       ])
       ).overrideView {
-        # for py-pyqt/py-sip
-        ignoreConflicts = ["lib/python3.*/site-packages/PyQt5/__init__.py"];
+        ignoreConflicts = [
+          # for py-pyqt/py-sip:
+          "lib/python3.*/site-packages/PyQt5/__init__.py"
+          # cmyt, jupyter-packaging11:
+          "lib/python3.*/site-packages/tests/__init__.py"
+          "lib/python3.*/site-packages/tests/__pycache__/__init__.*.pyc"
+        ];
       };
     });
   });
@@ -2054,6 +2120,12 @@ mods = corePacks.modules {
       prerequisites = "direct";
       filter = {
         environment_blacklist = ["CC" "FC" "CXX" "F77"];
+      };
+    };
+    boost = {
+      filter = {
+        # don't add numpy, setuptools deps:
+        environment_blacklist = ["PYTHONPATH"];
       };
     };
     intel-mkl = {
