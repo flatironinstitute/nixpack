@@ -1705,7 +1705,7 @@ pkgStruct = {
         #py-husl
         py-hypothesis
         py-intervaltree
-        #py-ipdb
+        #py-ipdb #0.10.1 broken with new setuptools, needs update
         py-ipykernel
         py-ipyparallel
         py-ipywidgets
