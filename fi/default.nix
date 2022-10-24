@@ -418,7 +418,7 @@ corePacks = import ../packs {
     };
     netcdf-c = {
       variants = {
-        # jsut to force curl dep
+        # just to force curl dep
         dap = true;
       };
     };
@@ -799,6 +799,36 @@ corePacks = import ../packs {
         valgrind = false;
       };
       depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
+    };
+    py-torch-cluster = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
+    py-torch-geometric = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
+    py-torch-scatter = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
+    py-torch-sparse = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
+    py-torch-spline-conv = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
     };
     py-virtualenv = {
       depends = {
@@ -1781,7 +1811,7 @@ pkgStruct = {
       ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "10") [
         # bazel broken with gcc 11
         #py-jax #TODO: broken
-        py-torch
+        py-torch-geometric
         #py-torchvision #doesn't support sm_90 (but torch does, and inherits archs from it!)
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
@@ -1790,9 +1820,12 @@ pkgStruct = {
         ignoreConflicts = [
           # for py-pyqt/py-sip:
           "lib/python3.*/site-packages/PyQt5/__init__.py"
-          # cmyt, jupyter-packaging11:
-          "lib/python3.*/site-packages/tests/__init__.py"
-          "lib/python3.*/site-packages/tests/__pycache__/__init__.*.pyc"
+        ];
+        exclude = [
+          # cmyt, jupyter-packaging11
+          "lib/python3.*/site-packages/tests"
+          # torch-scatter, torch-cluster
+          "lib/python3.*/site-packages/test"
         ];
       };
     });
