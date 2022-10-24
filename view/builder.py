@@ -285,8 +285,6 @@ class Inode:
         if node is not None:
             if not self.unify(node):
                 raise Conflict(path, self, node)
-            if self.src != node.src:
-                self.src = None # set?
 
     @property
     def needed(self):
@@ -299,7 +297,7 @@ class Inode:
 
     def srcpath(self, path: Path) -> Path:
         "translate the given path to the specific src path for this node"
-        assert self.src is not None
+        assert self.src is not None, path
         return Path(srcPaths[self.src], path.relpath)
 
     def create(self, dst: Path) -> None:
@@ -396,6 +394,8 @@ class Dir(Inode):
 
     def __init__(self, node: Inode, src: int, path: Path):
         super().__init__(node, src, path)
+        if node and self.src != node.src:
+            self.src = None
         self.dir = node.dir if node else dict()
         with path.opendir():
             for ent in path.scandir():
