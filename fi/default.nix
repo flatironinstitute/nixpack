@@ -1930,7 +1930,7 @@ pkgStruct = {
     kubectl
     #libreoffice
     #meshlab
-    (withGL mplayer)
+    (withGL mplayer // { name = builtins.replaceString ["-unstable"] [""] mplayer.name; })
     (withGL mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
     #pass
     #pdftk
