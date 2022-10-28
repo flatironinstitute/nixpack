@@ -1506,6 +1506,7 @@ pkgStruct = {
         unlocked_paths = ["${pkg.spec.name}/${pkg.spec.version}-${builtins.substring (1 + builtins.stringLength builtins.storeDir) 7 pkg.out}/${pkg.spec.name}/${pkg.spec.version}"];
       };
     })
+    nvtop
     octave
     openjdk
     openmm
@@ -1930,7 +1931,7 @@ pkgStruct = {
     kubectl
     #libreoffice
     #meshlab
-    (withGL mplayer // { name = builtins.replaceString ["-unstable"] [""] mplayer.name; })
+    (withGL mplayer // { name = builtins.replaceStrings ["-unstable"] [""] mplayer.name; })
     (withGL mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
     #pass
     #pdftk
