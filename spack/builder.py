@@ -54,8 +54,6 @@ origenv = os.environ.copy()
 # create and stash some metadata
 spack.build_environment.setup_package(pkg, True, context='build')
 os.makedirs(pkg.metadata_dir, exist_ok=True)
-with open(os.path.join(spec.prefix, nixpack.NixSpec.nixSpecFile), 'w') as sf:
-    json.dump(spec.nixspec, sf)
 
 # log build phases to nix
 def wrapPhase(p, f, *args):
@@ -75,6 +73,9 @@ spack.installer.build_process(pkg, opts)
 os.environ.clear()
 os.environ.update(origenv)
 spack.build_environment.setup_package(pkg, True, context='test')
+
+with open(os.path.join(spec.prefix, nixpack.NixSpec.nixSpecFile), 'w') as sf:
+    json.dump(spec.nixspec, sf)
 
 if post:
     exec(post)
