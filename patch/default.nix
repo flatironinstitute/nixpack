@@ -177,4 +177,5 @@ in
   cudnn = nocompiler;
   ghostscript-fonts = nocompiler;
   matlab = nocompiler;
+  mathematica = nocompiler;
 }

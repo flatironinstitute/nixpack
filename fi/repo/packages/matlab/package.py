@@ -6,7 +6,7 @@ class Matlab(spack.pkg.builtin.matlab.Matlab):
     manual_download = False
 
     def url_for_version(self, version):
-        return "file:///mnt/home/spack/matlab_{0}_glnxa64.zip".format(version)
+        return "file:///mnt/sw/pkg/matlab_{0}_glnxa64.zip".format(version)
 
     def install(self, spec, prefix):
         super().install(spec, prefix)

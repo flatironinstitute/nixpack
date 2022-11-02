@@ -1555,12 +1555,9 @@ pkgStruct = {
   ]
   ++
   map (v: mathematica.withPrefs
-    { version = v; extern = "/cm/shared/sw/pkg/vendor/mathematica/${v}"; })
-    ["11.2" "11.3" "12.1" "12.2" "12.3" "13.0"]
-  ++
-  map (v: matlab.withPrefs
-    { version = v; extern = "/cm/shared/sw/pkg/vendor/matlab/${v}"; })
-    ["R2020a" "R2021a"]
+    { version = v;
+    })
+    ["12.1.1" "12.2.0"]
   ++
   map (v: matlab.withPrefs
     { version = v;
