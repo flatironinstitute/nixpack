@@ -488,6 +488,11 @@ corePacks = import ../packs {
         legacylaunchers = true;
       };
     };
+    openssl = if os == "rocky8" then rpmExtern "openssl" // {
+      variants = {
+        fips = false;
+      };
+    } else {};
     opensubdiv = {
       variants = {
         inherit cuda_arch;
