@@ -60,9 +60,14 @@ def wrapPhase(p, f, *args):
     nixpack.nixLog({'action': 'setPhase', 'phase': p})
     return f(*args)
 
-for pn, pa in zip(pkg.phases, pkg._InstallPhase_phases):
-    pf = getattr(pkg, pa)
-    setattr(pkg, pa, functools.partial(wrapPhase, pn, pf))
+if hasattr(pkg, '_InstallPhase_phases'):
+    for pn, pa in zip(pkg.phases, pkg._InstallPhase_phases):
+        pf = getattr(pkg, pa)
+        setattr(pkg, pa, functools.partial(wrapPhase, pn, pf))
+else:
+    builder = spack.builder.create(pkg)
+    for phase in builder:
+        phase.execute = functools.partial(wrapPhase, phase.name, phase.execute)
 
 # make sure cache is group-writable (should be configurable, ideally in spack)
 os.umask(0o002)
