@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "9ba2357181141746b1e92e74fe4447e11802d06d";
+    rev = "7f4b0a6b52990d66304dc0a3f9783d76694cdef0";
   };
 
   spackConfig = {
@@ -42,7 +42,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-22.05";
-    rev = "9234f5a17e1a7820b5e91ecd4ff0de449e293383";
+    rev = "4f09cfce9c1d54fb56b65125061a632849de1a49";
   };
 
   repos = [
@@ -536,6 +536,11 @@ corePacks = import ../packs {
       # for gromacs
       version = "2.8.0";
     };
+    poppler = {
+      variants = {
+        glib = true;
+      };
+    };
     postgresql = {
       # for py-psycopg2
       version = ":13";
@@ -556,6 +561,11 @@ corePacks = import ../packs {
     py-astroid = {
       # for py-pylint
       #version = "2.5";
+      depends = {
+        py-setuptools = {
+          version = "62";
+        };
+      };
     };
     py-async-timeout = {
       # for py-aiohttp
@@ -598,7 +608,7 @@ corePacks = import ../packs {
     };
     py-cryptography = {
       # for py-oauthlib
-      version = "3";
+      #version = "3";
     };
     py-decorator = {
       # for py-networkx
@@ -757,17 +767,11 @@ corePacks = import ../packs {
         };
       };
     };
-    py-shapely = {
-      depends = {
-        py-setuptools = {
-          version = "59";
-        };
-      };
-    };
     py-setuptools = {
       # for py-blessings (59 for numpy)
       #version = "57";
-      version = "59";
+      #version = "59";
+      version = "62";
     };
     py-setuptools-rust = {
       # py-setuptools dep
@@ -1023,6 +1027,10 @@ corePacks = import ../packs {
           deptype = ["build" "link"];
         };
       };
+    };
+    /* doesn't actually need gtk-doc */
+    libcroco = spec: old: {
+      depends = builtins.removeAttrs old.depends ["gtk-doc"];
     };
     /* fix LIBRARY_PATH ordering wrt system /lib64 for libraries with different major versions */
     boost = lib64Link;
