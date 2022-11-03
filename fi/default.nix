@@ -1491,6 +1491,7 @@ pkgStruct = {
     intel-oneapi-vtune
     { pkg = juliaPacks.pkgs.julia; core = true; }
     keepassxc
+    latex2html
     lftp
     libffi
     libtirpc
