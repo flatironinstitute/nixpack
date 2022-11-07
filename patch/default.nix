@@ -160,9 +160,10 @@ in
     build = {
       # make sure it doesn't use (system) python (really should have a proper variant and dep)
       setup = ''
-        configure_args = pkg.configure_args()
+        builder = getattr(pkg, 'builder', pkg)
+        configure_args = builder.configure_args()
         configure_args.append('--disable-pump-mode')
-        pkg.configure_args = lambda: configure_args
+        builder.configure_args = lambda: configure_args
       '';
     };
   };
