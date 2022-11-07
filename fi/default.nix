@@ -549,6 +549,9 @@ corePacks = import ../packs {
     postgresql = {
       # for py-psycopg2
       version = ":13";
+      variants = {
+        client_only = true;
+      };
     };
     proj = {
       # for vtk
