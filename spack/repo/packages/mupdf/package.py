@@ -23,4 +23,4 @@ class Mupdf(MakefilePackage):
 
     def edit(self, spec, prefix):
         env['XCFLAGS'] = "-std=c99"
-        self.install_targets = ['prefix={}'.format(prefix), 'install']
+        self.install_targets.append('prefix={}'.format(prefix))

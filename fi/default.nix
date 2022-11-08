@@ -961,11 +961,12 @@ corePacks = import ../packs {
         lib.optionals (spec.version == "2.1.6")                   [ ./openmpi-2.1.6.PATCH ];
       build = {
         setup = ''
-          configure_args = pkg.configure_args()
+          builder = getattr(pkg, 'builder', pkg)
+          configure_args = builder.configure_args()
           configure_args.append('CPPFLAGS=-I/usr/include/infiniband')
           # avoid openmpi1 internal hwloc libXNVCtrl link
           configure_args.append('enable_gl=no')
-          pkg.configure_args = lambda: configure_args
+          builder.configure_args = lambda: configure_args
         '';
         post = ''
           mca_conf_path = os.path.join(pkg.prefix.etc, "openmpi-mca-params.conf")
