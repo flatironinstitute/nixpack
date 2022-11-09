@@ -21,4 +21,4 @@ class Pvfmm(CMakePackage):
         if '+extended_bc' in self.spec:
             cxx_flags += ' -DPVFMM_EXTENDED_BC'
 
-        return [CMakePackage.define('CMAKE_CXX_FLAGS', cxx_flags)]
+        return [self.define('CMAKE_CXX_FLAGS', cxx_flags)]
