@@ -156,6 +156,10 @@ corePacks = import ../packs {
       tests = false;
     };
     cpio = rpmExtern "cpio"; # some intel installers need this -- avoid compiler dependency
+    cryptsetup = {
+      # needs openssl pkgconfig
+      build = opensslPkgconfig;
+    };
     cuda = {
       # make sure this matches image driver
       version = "11.8";
@@ -488,11 +492,7 @@ corePacks = import ../packs {
         legacylaunchers = true;
       };
     };
-    openssl = if os == "rocky8" then rpmExtern "openssl" // {
-      variants = {
-        fips = false;
-      };
-    } else {};
+    openssl = if os == "rocky8" then opensslExtern else {};
     opensubdiv = {
       variants = {
         inherit cuda_arch;
@@ -873,6 +873,10 @@ corePacks = import ../packs {
       # for cuda 11.6:
       patches = [(builtins.fetchurl "https://github.com/3dem/relion/commit/554e0ed993e5ac8a3fee4be7c5cf64a62216a8c7.patch")];
     };
+    rust = {
+      # needs openssl pkgconfig
+      build = opensslPkgconfig;
+    };
     samtools = {
       # to match bcftools
       #version = "1.12";
@@ -1082,11 +1086,7 @@ bootstrapPacks = corePacks.withPrefs {
         abi = "5";
       };
     };
-    openssl = rpmExtern "openssl" // {
-      variants = {
-        fips = false;
-      };
-    };
+    openssl = opensslExtern;
     perl = rpmExtern "perl";
     pkgconfig = if os == "centos7" then rpmExtern "pkgconfig" else {};
     psm = {};
@@ -1212,6 +1212,27 @@ blasPkg = pkg: {
     add_property("lmod","sticky")
   '';
 };
+
+opensslExtern = rpmExtern "openssl" // {
+  variants = {
+    fips = false;
+  };
+};
+
+linkfiles = name: files: derivation {
+  system = builtins.currentSystem;
+  inherit name;
+  builder = ./linkfiles.sh;
+  args = files;
+};
+
+opensslPkgconfig = if os == "rocky8" then {
+  PKG_CONFIG_PATH = linkfiles "openssl-pkgconfig" [
+    "/usr/lib64/pkgconfig/openssl.pc"
+    "/usr/lib64/pkgconfig/libssl.pc"
+    "/usr/lib64/pkgconfig/libcrypto.pc"
+  ];
+} else {};
 
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
@@ -1620,7 +1641,7 @@ pkgStruct = {
       (blasPkg (openblas.withPrefs { variants = { threads = "pthreads"; }; }) // {
         projection = "{name}/threaded-{version}";
       })
-      openssl
+      #openssl
       pgplot
       ucx
     ] ++
