@@ -508,6 +508,9 @@ corePacks = import ../packs {
         intel-tbb = {
           # doesn't support 2021 (missing headers)
           version = "2020";
+          variants = {
+            build_system = "makefile";
+          };
         };
       };
     };
@@ -1333,10 +1336,7 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.7.2";
-      patches = [
-        "${corePacks.spack}/var/spack/repos/builtin/packages/julia/fix-gfortran.patch"
-      ];
+      version = "1.8.2";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
@@ -1344,8 +1344,13 @@ juliaPacks = corePacks.withPrefs {
         '';
       };
     };
+    compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
     llvm = {
-      version = "12.0.1";
+      version = "13.0.1";
+      depends = {
+        # why isn't this picking up from above?
+        compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
+      };
       variants = {
         internal_unwind = false;
         llvm_dylib = true;
@@ -1359,15 +1364,12 @@ juliaPacks = corePacks.withPrefs {
         };
         version_suffix = "jl";
         omp_as_runtime = false;
+        shlib_symbol_version = "jl";
       };
-      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch")];
-    };
-    libuv = {
-      version = "1.42.0";
-      patches = [(builtins.fetchurl "https://raw.githubusercontent.com/spack/patches/89b6d14eb1f3c3d458a06f1e06f7dda3ab67bd38/julia/libuv-1.42.0.patch")];
+      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch")];
     };
     mbedtls = {
-      version = "2.24";
+      version = "2.28";
       variants = {
         libs = ["shared"];
         pic = true;
@@ -1380,10 +1382,11 @@ juliaPacks = corePacks.withPrefs {
       variants = {
         ilp64 = true;
         symbol_suffix = "64_";
+        threads = "openmp";
       };
     };
     openlibm = {
-      version = "0.7";
+      version = "0.8";
     };
     curl = {
       variants = {
@@ -1393,13 +1396,13 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     libblastrampoline = {
-      version = "3";
+      version = "5";
     };
     libgit2 = {
-      version = "1.1";
+      version = "1.3";
     };
     libssh2 = {
-      version = "1.9";
+      version = "1.10";
       variants = {
         crypto = "mbedtls";
       };
