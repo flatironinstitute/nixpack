@@ -20,7 +20,7 @@ class Stkfmm(CMakePackage):
         cxx_flags = '-g'
         options = []
         if '+python' in self.spec:
-            options.append(CMakePackage.define('PyInterface', True))
-        options.append(CMakePackage.define('CMAKE_CXX_FLAGS', cxx_flags))
+            options.append(self.define('PyInterface', True))
+        options.append(self.define('CMAKE_CXX_FLAGS', cxx_flags))
 
         return options
