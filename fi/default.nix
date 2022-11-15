@@ -897,6 +897,15 @@ cuda_arch = { none = false; } // builtins.listToAttrs
   (map (a: { name = a; value = true; })
     (if builtins.isString cudaarch then lib.splitRegex "," cudaarch else cudaarch));
 
+format_cudaarch = (dot: sep: builtins.concatStringsSep sep
+  (map (v: let L = builtins.stringLength v; in
+      builtins.concatStringsSep dot
+        [ (builtins.substring 0 (L - 1) v) (builtins.substring (L - 1) 1 v) ]
+      )
+    (lib.splitRegex "," cudaarch)
+  )
+);
+
 mkSkylake = base: base.withPrefs {
   global = {
     target = "skylake_avx512";
@@ -1992,6 +2001,18 @@ mods = corePacks.modules {
       prerequisites = "direct";
       filter = {
         environment_blacklist = ["CC" "FC" "CXX" "F77"];
+      };
+    };
+    cuda = {
+      environment = {
+        set = {
+          # set target arches for common cuda software
+          TORCH_CUDA_ARCH_LIST = format_cudaarch "." ";";  # 7.0;8.0
+          TCNN_CUDA_ARCHITECTURES = format_cudaarch "" ";";  # 70;80
+          HOROVOD_BUILD_CUDA_CC_LIST = format_cudaarch "" ",";  # 70,80
+
+          HOROVOD_CUDA_HOME = "{prefix}";
+        };
       };
     };
     intel-mkl = {
