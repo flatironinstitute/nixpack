@@ -1126,7 +1126,6 @@ mkCompilers = base: gen:
     defaulting = pkg: { default = isCore; inherit pkg; };
   }))
   [ /* -------- compilers -------- */
-    (corePacks.pkgs.gcc.withPrefs { version = "7"; })
     (corePacks.pkgs.gcc.withPrefs { version = "10"; })
     (corePacks.pkgs.gcc.withPrefs { version = "11"; })
   ];
@@ -1431,6 +1430,7 @@ pkgStruct = {
         add_property("lmod","sticky")
       '';
     }
+    (gcc.withPrefs { version = "7"; })
     (gcc.withPrefs { version = "12"; })
     { pkg = llvm;
       default = true;
