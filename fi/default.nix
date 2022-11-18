@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "7f4b0a6b52990d66304dc0a3f9783d76694cdef0";
+    rev = "f4a9fa2d03140d216875031c05ba1f00c39a7c30";
   };
 
   spackConfig = {
@@ -42,7 +42,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-22.05";
-    rev = "4f09cfce9c1d54fb56b65125061a632849de1a49";
+    rev = "6474d93e007e4d165bcf48e7f87de2175c93d10b";
   };
 
   repos = [
@@ -514,6 +514,9 @@ corePacks = import ../packs {
         };
       };
     };
+    osu-micro-benchmarks = {
+      version = "6";
+    };
     pango = {
       variants = {
         X = true;
@@ -624,6 +627,10 @@ corePacks = import ../packs {
     py-decorator = {
       # for py-networkx
       #version = "4";
+    };
+    py-distributed = {
+      # for py-dask
+      version = "2021.6.2";
     };
     py-docutils = {
       # for py-sphinx
@@ -809,6 +816,8 @@ corePacks = import ../packs {
       };
     };
     py-torch = {
+      # for py-scipy through py-pybind11
+      version = "1.12";
       variants = {
         inherit cuda_arch;
         valgrind = false;
@@ -1047,6 +1056,10 @@ corePacks = import ../packs {
     /* doesn't actually need gtk-doc */
     libcroco = spec: old: {
       depends = builtins.removeAttrs old.depends ["gtk-doc"];
+    };
+    /* downloads its own libvips, and spack libvips is broken */
+    npm = spec: old: {
+      depends = builtins.removeAttrs old.depends ["libvips"];
     };
     /* fix LIBRARY_PATH ordering wrt system /lib64 for libraries with different major versions */
     boost = lib64Link;
