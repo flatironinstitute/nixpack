@@ -895,7 +895,7 @@ corePacks = import ../packs {
       };
     };
     sra-tools = {
-      patches = [(builtins.fetchurl "https://patch-diff.githubusercontent.com/raw/ncbi/sra-tools/pull/664.diff")];
+      patches = [./sra-tools-javadoc.patch];
     };
     texlive = {
       depends = {

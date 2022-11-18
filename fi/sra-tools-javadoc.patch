@@ -1,0 +1,11 @@
+--- src/ngs/ngs-java/CMakeLists.txt.orig	2022-11-18 13:50:47.782582466 -0500
++++ src/ngs/ngs-java/CMakeLists.txt	2022-11-18 13:51:03.834666326 -0500
+@@ -143,7 +143,7 @@
+         if( ${OS} STREQUAL "windows" )
+             set( NGS_JAVADOC_DIR ${TARGDIR} )
+         else()
+-            set( NGS_JAVADOC_DIR ${TARGDIR}/obj )
++            set( NGS_JAVADOC_DIR ${TARGDIR} )
+         endif()
+         if ( Java_JAR_EXECUTABLE AND NOT (${OS} STREQUAL "windows") )
+             add_custom_target(
