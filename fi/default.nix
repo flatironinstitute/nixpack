@@ -73,11 +73,6 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
-    amdlibm = {
-      depends = {
-        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
-      };
-    };
     assimp = {
       version = "5.0";
     };
@@ -1480,9 +1475,7 @@ pkgStruct = {
       };
       core = true;
     }
-    { pkg = amdlibm;
-      core = true;
-    }
+    #amdlibm #33756
     { pkg = aocc;
       context = {
         provides = []; # not a real compiler
