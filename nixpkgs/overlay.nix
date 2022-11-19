@@ -96,5 +96,11 @@ with pkgs;
     });
   };
 
-
+  xscreensaver = xscreensaver.overrideAttrs (old: rec {
+    version = "6.04";
+    src = fetchurl {
+      url = "https://www.jwz.org/${old.pname}/${old.pname}-${version}.tar.gz"  ;
+      sha256 = "sha256:0lmiyvp3qs2gngd53f191jmlizs9l04i2gnrqbn96mqckyr18w3q";
+    };
+  });
 }
