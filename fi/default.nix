@@ -1930,11 +1930,10 @@ pkgStruct = {
         };
       };
     };
-    pkgs = builtins.tail (optMpiPkgs packs) # omitting boost
-      ++
-      (with packs.pkgs; [
-        osu-micro-benchmarks
-      ]);
+    pkgs = (with packs.pkgs; [
+      fftw
+      osu-micro-benchmarks
+    ]);
   };
 
   skylake = rec {
