@@ -2206,7 +2206,8 @@ mods = corePacks.modules {
       autoload = "none";
       prerequisites = "direct";
       filter = {
-        environment_blacklist = ["CC" "FC" "CXX" "F77"];
+        environment_blacklist = ["CC" "FC" "CXX" "F77"
+          "XDG_DATA_DIRS" "GI_TYPELIB_PATH" "XLOCALEDIR"];
       };
     };
     boost = {
