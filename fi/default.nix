@@ -2034,7 +2034,6 @@ pkgStruct = {
           "lib/openmm" = "openmm";
           "nodejs" = "node-js";
           "nvidia/nvhpc" = "nvhpc";
-          "openmpi2" = "openmpi/2";
           "openmpi4" = "openmpi/4";
           "perl5" = "perl/5";
           "python3" = "python/3";
