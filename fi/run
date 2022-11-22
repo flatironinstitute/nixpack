@@ -102,7 +102,8 @@ case "$cmd" in
 		fi
 		# fixups
 		nix-build -o singularity -A pkgs.singularity $nixargs
-		for fix in singularity/bin/spack_perms_fix.sh ; do
+		nix-build -o apptainer -A pkgs.apptainer $nixargs
+		for fix in singularity/bin/spack_perms_fix.sh apptainer/bin/spack_perms_fix.sh ; do
 			sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
 		done
 		# release

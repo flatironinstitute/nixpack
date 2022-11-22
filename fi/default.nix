@@ -1490,6 +1490,7 @@ pkgStruct = {
         long_description = short_description;
       };
     }
+    apptainer
     blast-plus
     #blender
     cmake
