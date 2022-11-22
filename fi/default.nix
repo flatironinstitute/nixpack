@@ -503,6 +503,9 @@ corePacks = import ../packs {
         intel-tbb = {
           # doesn't support 2021 (missing headers)
           version = "2020";
+          variants = {
+            build_system = "makefile";
+          };
         };
       };
     };
@@ -1349,10 +1352,7 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.7.2";
-      patches = [
-        "${corePacks.spack}/var/spack/repos/builtin/packages/julia/fix-gfortran.patch"
-      ];
+      version = "1.7.3";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
@@ -1396,6 +1396,7 @@ juliaPacks = corePacks.withPrefs {
       variants = {
         ilp64 = true;
         symbol_suffix = "64_";
+        threads = "openmp";
       };
     };
     openlibm = {
