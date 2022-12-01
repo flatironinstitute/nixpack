@@ -1613,7 +1613,7 @@ pkgStruct = {
   map (v: mathematica.withPrefs
     { version = v;
     })
-    ["12.1.1" "12.2.0"]
+    ["12.2.0" "13.1.0"]
   ++
   map (v: matlab.withPrefs
     { version = v;
@@ -1622,6 +1622,11 @@ pkgStruct = {
       };
     })
     ["R2022b"]
+  ++
+  map (v: idl.withPrefs
+    { version = v;
+    })
+    ["8.8.3"]
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
