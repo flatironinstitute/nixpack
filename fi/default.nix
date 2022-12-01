@@ -1538,6 +1538,7 @@ pkgStruct = {
       default = true;
     }
     grace
+    graphviz
     hdfview
     imagemagick
     (blasPkg intel-mkl)
@@ -1803,6 +1804,7 @@ pkgStruct = {
         #py-glueviz
         #py-gmpy2
         py-gpustat
+        py-graphviz
         py-h5py
         #py-husl
         py-hypothesis
