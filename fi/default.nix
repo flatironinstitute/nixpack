@@ -327,6 +327,19 @@ corePacks = import ../packs {
       # for samtools/bcftools
       #version = "1.12";
     };
+    idl = {
+      build = {
+        post = ''
+          license_path = pkg.prefix.license
+          with open(os.path.join(license_path, "o_licenseserverurl.txt"), 'a') as f:
+              f.write("http://lic1.flatironinstitute.org:7070/fne/bin/capability")
+          for d in ["flexera", "flexera-sv"]:
+            dir = os.path.join(license_path, d)
+            os.rmdir(dir)
+            os.symlink("/tmp", dir)
+        '';
+      };
+    };
     intel-parallel-studio = {
       build = {
         INTEL_LICENSE_FILE = "28518@lic1.flatironinstitute.org";
