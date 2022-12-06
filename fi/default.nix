@@ -1762,7 +1762,13 @@ pkgStruct = {
           py-h5py
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && lib.versionMatches comp.compiler.spec.version "10:") (with py.packs.pkgs;
-          [triqs] ++
+          [(pkgMod triqs // {
+            postscript = ''
+              depends_on("fftw/mpi-${fftw.spec.version}")
+              depends_on("hdf5/mpi-${hdf5.spec.version}")
+              depends_on("python-mpi/${python.spec.version}")
+            '';
+          })] ++
           map (p: pkgMod p // { postscript = ''depends_on("triqs")''; }) [
             triqs-cthyb
             { pkg = triqs-cthyb.withPrefs { variants = { complex = true; }; };
