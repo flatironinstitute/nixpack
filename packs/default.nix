@@ -118,7 +118,7 @@ lib.fix (packs: with packs; {
   spackBuilder = attrs: builtins.removeAttrs (derivation (spackEnv // {
     inherit (packs) system os spackConfig;
     builder = spackPython;
-    PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external";
+    PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external:${spack}/lib/spack/external/_vendoring";
     LC_ALL = "en_US.UTF-8"; # work around spack bugs processing log files
     repos = if attrs ? withRepos
       then if attrs.withRepos
