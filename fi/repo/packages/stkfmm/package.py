@@ -4,10 +4,10 @@ class Stkfmm(CMakePackage):
     """A C++ library implements the Kernel Aggregated Fast Multipole Method based on the library PVFMM."""
 
     homepage = "https://github.com/flatironinstitute/stkfmm"
-    url      = "https://github.com/flatironinstitute/stkfmm/archive/refs/tags/v1.0.0.tar.gz"
+    git      = "https://github.com/flatironinstitute/stkfmm.git"
 
     maintainers = ['blackwer', 'wenyan4work']
-    version('1.0.0', sha256='029de6f1872d5d72b9810f9f2319b665dfe05dd73fcac60820c9091338c54f3f')
+    version('1.1.0', commit='56bfce38397b19a245cca2a1a8c47a221aa2da40')
     depends_on('blas', type=('build', 'link'))
     depends_on('mpi', type=('build', 'link'))
     depends_on('eigen', type=('build'))

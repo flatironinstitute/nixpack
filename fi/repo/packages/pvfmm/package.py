@@ -4,11 +4,11 @@ class Pvfmm(CMakePackage):
     """PVFMM is a library for solving certain types of elliptic partial differential equations."""
 
     homepage = "https://pvfmm.org"
-    url      = "https://github.com/dmalhotra/pvfmm/archive/refs/tags/v1.2.1.tar.gz"
+    git      = "https://github.com/dmalhotra/pvfmm.git"
 
     maintainers = ['blackwer', 'dmalhotra']
 
-    version('1.2.1', sha256='726ffb32c33bd38a6f87ef55affbe7ce538c306c59ce78510cc09b0de2f641d4')
+    version('1.3.0', commit='d820725558838879ff916cb3c328260b45b11078', submodules=True)
     depends_on('blas', type=('build', 'link'))
     depends_on('mpi', type=('build', 'link'))
     depends_on('fftw-api@3', type=('build', 'link'))
