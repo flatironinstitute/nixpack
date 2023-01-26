@@ -1321,7 +1321,7 @@ pkgStruct = {
     #blender
     cmake
     (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
-    cuda
+    { pkg = cuda; default = true; }
     (mkCuda12 corePacks).pkgs.cuda
     cudnn
     curl
