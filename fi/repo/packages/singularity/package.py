@@ -7,6 +7,12 @@ class Singularity(spack.pkg.builtin.singularity.Singularity):
     depends_on('e2fsprogs', type='run')
 
     @property
+    def config_options(self):
+        options = super().config_options
+        options.remove('--without-conmon')
+        return options
+
+    @property
     def package_dir(self):
         return os.path.abspath(os.path.dirname(spack.pkg.builtin.singularity.__file__))
 

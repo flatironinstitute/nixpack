@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "f4a9fa2d03140d216875031c05ba1f00c39a7c30";
+    rev = "c4c1bf52664f78ab0b85cfaae1cbd0fe63309645";
   };
 
   spackConfig = {
@@ -42,7 +42,7 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     ref = "release-22.05";
-    rev = "6474d93e007e4d165bcf48e7f87de2175c93d10b";
+    rev = "0874168639713f547c05947c76124f78441ea46c";
   };
 
   repos = [
@@ -73,12 +73,6 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
-    assimp = {
-      version = "5.0";
-    };
-    bazel = {
-      version = "3";
-    };
     binutils = {
       variants = {
         gold = true;
@@ -91,9 +85,6 @@ corePacks = import ../packs {
         ffmpeg = true;
         opensubdiv = true;
       };
-      depends = {
-        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
-      };
     };
     boost = {
       variants = {
@@ -104,6 +95,7 @@ corePacks = import ../packs {
         coroutine = true;
         date_time = true;
         exception = true;
+        fiber = true;
         filesystem = true;
         graph = true;
         iostreams = true;
@@ -123,6 +115,10 @@ corePacks = import ../packs {
         cxxstd = "14";
       };
     };
+    c-blosc = {
+      # for openvdb
+      version = "1.17.0";
+    };
     cairo = {
       variants = {
         X = true;
@@ -135,16 +131,12 @@ corePacks = import ../packs {
       };
     };
     cfitsio = {
-      # for healpix-cxx
-      version = "3.49";
+      # for py-astropy
+      version = "3";
     };
     cli11 = {
       # for paraview
       version = "1.9.1";
-    };
-    cmake = {
-      # py-torch breakage
-      version = "3.22.3";
     };
     coreutils = {
       # failing
@@ -156,7 +148,7 @@ corePacks = import ../packs {
       build = opensslPkgconfig;
     };
     cuda = {
-      # make sure this matches image driver
+      # make sure this is <= image driver
       version = "11.8";
       depends = {
         libxml2 = rpmExtern "libxml2";
@@ -171,21 +163,8 @@ corePacks = import ../packs {
       };
     };
     dejagnu = {
-      # for gcc
-      version = "1.4";
       # failing
       tests = false;
-    };
-    docbook-xml = {
-      # for dbus
-      version = "4.4";
-    };
-    docbook-xsl = {
-      version = "1.78.1";
-    };
-    doxygen = {
-      # for openmm build failure, gcc conflict
-      version = "1.8";
     };
     embree = {
       # for blender
@@ -198,6 +177,7 @@ corePacks = import ../packs {
       };
     };
     ffmpeg = {
+      version = "4"; # 5 has incorrect configure args
       variants = {
         libaom = true;
       };
@@ -218,8 +198,6 @@ corePacks = import ../packs {
       variants = {
         languages = ["c" "c++" "fortran" "jit"];
       };
-      # needs guile, which is broken
-      #tests = false;
     };
     gdal = {
       variants = {
@@ -236,18 +214,8 @@ corePacks = import ../packs {
       };
     };
     gdbm = {
-      # for perl
-      version = "1.19";
       # failing
       tests = false;
-    };
-    gdk-pixbuf = {
-      depends = {
-        meson = {
-          # work around undefined x11 in spack build
-          version = "0.59";
-        };
-      };
     };
     gdrcopy = {
       version = "2.3"; # match kernel module
@@ -289,10 +257,6 @@ corePacks = import ../packs {
         };
       };
     };
-    guile = {
-      # for autogen
-      version = "2.0";
-    };
     harfbuzz = {
       variants = {
         graphite2 = true;
@@ -322,10 +286,6 @@ corePacks = import ../packs {
           };
         };
       };
-    };
-    htslib = {
-      # for samtools/bcftools
-      #version = "1.12";
     };
     idl = {
       build = {
@@ -380,10 +340,6 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
-    libgit2 = {
-      # for rust
-      version = "1.3";
-    };
     libglx = {
       name = "opengl";
     };
@@ -415,9 +371,11 @@ corePacks = import ../packs {
       tests = false;
     };
     mpc = {
+      # for gcc via mpfr
       version = "1.1";
     };
     mpfr = {
+      # for gcc
       version = "3.1.6";
     };
     mpi = {
@@ -462,7 +420,6 @@ corePacks = import ../packs {
       };
     };
     openblas = {
-      #version = "0.3.15";
       variants = {
         threads = "pthreads";
       };
@@ -512,18 +469,6 @@ corePacks = import ../packs {
       variants = {
         python = true;
       };
-      depends = {
-        intel-tbb = {
-          # doesn't support 2021 (missing headers)
-          version = "2020";
-          variants = {
-            build_system = "makefile";
-          };
-        };
-      };
-    };
-    osu-micro-benchmarks = {
-      version = "6";
     };
     pango = {
       variants = {
@@ -536,8 +481,8 @@ corePacks = import ../packs {
       version = "6.0.0.1-fi";
     };
     paraview = {
-      # 5.10.0 build failure?? graphviz geom.h POINTS_PER_INCH
-      #version = "5.9.1";
+      # 5.11 needs proj 8
+      version = "5.10";
       variants = {
         python3 = true;
         qt = true;
@@ -550,10 +495,6 @@ corePacks = import ../packs {
         hypre = false;
         superlu-dist = false;
       };
-    };
-    plumed = {
-      # for gromacs
-      version = "2.8.0";
     };
     poppler = {
       variants = {
@@ -571,32 +512,13 @@ corePacks = import ../packs {
       # for vtk
       version = "7";
     };
-    protobuf = {
-      # for py-torch
-      version = "3.14";
-    };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
-    py-aiohttp = {
-      # 3.8 build broken
-      #version = "3.7";
-    };
-    py-astroid = {
-      # for py-pylint
-      #version = "2.5";
+    py-astropy = {
+      # 5 has broken build (copy permissions)
+      version = "4";
       depends = {
-        py-setuptools = {
-          version = "62";
-        };
-      };
-    };
-    py-async-timeout = {
-      # for py-aiohttp
-      #version = "3";
-    };
-    py-backports-entry-points-selectable = {
-      depends = {
-        py-importlib-metadata = {
-          version = ":3.8";
+        py-cython = {
+          version = "0.29.30";
         };
       };
     };
@@ -607,51 +529,20 @@ corePacks = import ../packs {
         };
       };
     };
-    py-botocore = {
-      # for py-aiobotocore
-      version = "1.19.52";
-    };
-    py-chardet = {
-      # for py-aiohttp
-      #version = "3";
-    };
     py-charset-normalizer = {
       # for py-requests
       version = "2.0";
     };
-    py-cppy = {
-      # py-setuptools
-      #version = "1.1";
+    py-distributed = {
       depends = {
-        py-setuptools = {
-          version = "62:";
+        py-tornado = {
+          version = "6.1";
         };
       };
-    };
-    py-cryptography = {
-      # for py-oauthlib
-      #version = "3";
-    };
-    py-decorator = {
-      # for py-networkx
-      #version = "4";
-    };
-    py-distributed = {
-      # for py-dask
-      version = "2021.6.2";
-    };
-    py-docutils = {
-      # for py-sphinx
-      #version = "0.17";
     };
     py-filelock = {
       # py-setuptools
-      #version = ":3.7";
-      depends = {
-        py-setuptools = {
-          version = "62:";
-        };
-      };
+      version = ":3.7";
     };
     py-gevent = {
       depends = {
@@ -659,12 +550,6 @@ corePacks = import ../packs {
           version = "3";
         };
       };
-    };
-    py-h5py = {
-    };
-    py-idna = {
-      # for py-requests
-      #version = "2";
     };
     py-ipyparallel = {
       depends = {
@@ -682,63 +567,17 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
-    py-jupyter-client = {
-      # for py-nest-asyncio, py-ipykernel
-      #version = "6";
-    };
-    py-jupyter-packaging = {
-      # for py-jupyterlab-widgets
-      #version = "0.7";
-    };
-    py-jupyter-packaging11 = {
-      # py-setuptools dep
-      #version = ":0.11";
-      depends = {
-        py-setuptools = {
-          version = "62:";
-        };
-      };
-    };
-    py-jupyter-server = {
-      # py-nbconvert dep
-      version = ":1.15";
-    };
-    py-jupyterlab = {
-      # py-jupyter-server dep
-      version = ":3.3";
-    };
-    py-jupyterlab-pygments = {
-      # avoid recursive jupyterlab -> jupyter_server -> nbconvert -> dependency
-      version = "0.1";
-    };
-    py-lazy-object-proxy = {
-      # to avoid py-setuptools-scm constraint
-      #version = "1.4";
+    py-meson-python = {
+      # for py-scipy
+      version = "0.11";
     };
     py-mistune = {
       # for py-nbconvert, py-m2r
       version = ":1";
     };
-    py-multidict = {
-      # for py-aiohttp
-      #version = "4";
-    };
-    py-nbclient = {
-      # for py-nbconvert
-      version = "0.5";
-    };
     py-nbconvert = {
-      # py-nbconvert -> py-mistune dep, setuptools
-      version = ":6.4";
-    };
-    py-nbformat = {
-      # py-setuptools dep
-      #version = ":5.2";
-      depends = {
-        py-setuptools = {
-          version = "62:";
-        };
-      };
+      # py-nbconvert -> py-mistune dep
+      version = "6";
     };
     py-nose = {
       depends = {
@@ -750,11 +589,6 @@ corePacks = import ../packs {
     py-numpy = {
       # for py-numba
       version = ":1.22";
-      depends = {
-        py-setuptools = {
-          version = "59";
-        };
-      };
     };
     py-pkgutil-resolve-name = {
       depends = {
@@ -765,9 +599,14 @@ corePacks = import ../packs {
     };
     py-pybind11 = {
       # for py-torch
-      version = "2.6.2";
-      # for py-scipy
-      #version = ":2.8";
+      version = "2.10.0";
+    };
+    py-pyfftw = {
+      depends = {
+        py-setuptools = {
+          version = "59";
+        };
+      };
     };
     py-pyqt5 = {
       depends = {
@@ -779,6 +618,13 @@ corePacks = import ../packs {
         };
       };
     };
+    py-scikit-image = {
+      depends = {
+        py-setuptools = {
+          version = "59";
+        };
+      };
+    };
     py-scikit-learn = {
       depends = {
         py-setuptools = {
@@ -787,45 +633,19 @@ corePacks = import ../packs {
       };
     };
     py-scipy = {
-      depends = {
-        py-setuptools = {
-          version = "59";
-        };
-      };
+      # for py-pybind11
+      version = "1.9";
     };
     py-setuptools = {
-      # for py-blessings (59 for numpy)
-      #version = "57";
-      #version = "59";
+      # for py-numpy, py-satroid, and others
       version = "62";
     };
-    py-setuptools-rust = {
-      # py-setuptools dep
-      #version = "1.2.0";
-      depends = {
-        py-setuptools = {
-          version = "62:";
-        };
-      };
-    };
     py-setuptools-scm = {
-      # for py-matplotlib
-      #version = "6";
       variants = {
         toml = true;
       };
     };
-    py-testpath = {
-      depends = {
-        py-flit-core = {
-          # for py-testpath
-          version = "3.2";
-        };
-      };
-    };
     py-torch = {
-      # for py-scipy through py-pybind11
-      version = "1.12";
       variants = {
         inherit cuda_arch;
         valgrind = false;
@@ -862,17 +682,6 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
-    py-virtualenv = {
-      depends = {
-        py-setuptools = {
-          version = "62:";
-        };
-      };
-    };
-    py-wrapt = {
-      # for py-astroid
-      #version = "1.12";
-    };
     python = corePython;
     qt = {
       variants = {
@@ -890,16 +699,10 @@ corePacks = import ../packs {
         inherit cuda_arch;
         mklfft = false;
       };
-      # for cuda 11.6:
-      patches = [(builtins.fetchurl "https://github.com/3dem/relion/commit/554e0ed993e5ac8a3fee4be7c5cf64a62216a8c7.patch")];
     };
     rust = {
       # needs openssl pkgconfig
       build = opensslPkgconfig;
-    };
-    samtools = {
-      # to match bcftools
-      #version = "1.12";
     };
     shadow = rpmExtern "shadow-utils";
     slurm = rec {
@@ -910,9 +713,6 @@ corePacks = import ../packs {
         pmix = true;
         hwloc = true;
       };
-    };
-    sra-tools = {
-      patches = [./sra-tools-javadoc.patch];
     };
     texlive = {
       depends = {
@@ -1217,6 +1017,17 @@ mkMpis = comp: gen:
     }
   ]);
 
+mkCuda12 = base: base.withPrefs {
+  package = {
+    cuda = {
+      version = "12";
+      depends = {
+        libxml2 = rpmExtern "libxml2";
+      };
+    };
+  };
+};
+
 flexiBlases = {
   openblas = {
     FLEXIBLAS_LIBRARY_PATH = "/lib";
@@ -1312,10 +1123,12 @@ mkPythons = base: gen:
 pyBlacklist = [
   { name = "py-pip"; } # already in python
   { name = "py-setuptools"; } # already in python
+  { name = "py-cython"; version = "0.29.30"; } # py-astropy dep
   { name = "py-cython"; version = "3"; } # py-gevent dep
   { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
+  { name = "py-tornado"; version = "6.1"; } # py-distributed dep
 ];
 
 pyView = pl: corePacks.pythonView {
@@ -1486,7 +1299,7 @@ pkgStruct = {
       };
       core = true;
     }
-    #amdlibm #33756
+    amdlibm
     { pkg = aocc;
       context = {
         provides = []; # not a real compiler
@@ -1509,9 +1322,10 @@ pkgStruct = {
     cmake
     (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
     cuda
+    (mkCuda12 corePacks).pkgs.cuda
     cudnn
     curl
-    #disBatch
+    disBatch
     distcc
     doxygen
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
@@ -1592,6 +1406,7 @@ pkgStruct = {
     petsc
     pixz
     postgresql
+    proj
     qt
     { pkg = rView;
       environment = {
@@ -1742,11 +1557,11 @@ pkgStruct = {
         lib.optionals (comp.isCore && mpi.isCore) [
           # these are broken with intel...
           gromacs
-          { pkg = gromacs.withPrefs { version = "2021.4"; variants = { plumed = true; }; };
+          { pkg = gromacs.withPrefs { version = "2022.3"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
           plumed
-          (relion.withPrefs { version = "3"; })
-          (relion.withPrefs { version = "4"; patches = []; })
+          #(relion.withPrefs { version = "3"; })
+          (relion.withPrefs { version = "4"; })
         ]
         ++
         lib.optionals comp.isCore [
@@ -1865,7 +1680,7 @@ pkgStruct = {
         py-pyyaml
         py-qtconsole
         #py-ray #needs bazel 3
-        py-s3fs
+        #py-s3fs # botocore deps
         #py-scikit-cuda
         py-scikit-image
         py-scikit-learn
@@ -1977,7 +1792,7 @@ pkgStruct = {
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
         projection = "{name}/skylake-mpi-{version}";
       }
-      { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "2021.4"; variants = { mpi = true; plumed = true; }; };
+      { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "2022.3"; variants = { mpi = true; plumed = true; }; };
         projection = "{name}/skylake-mpi-plumed-{version}";
       }
     ];
@@ -2340,7 +2155,7 @@ corePacks // {
     mods
     modsMod
     jupyter;
-
+  
   traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
     let q = p.pkg or p; in
     q.pkgs or (if q ? spec then [q] else [])) modPkgs);

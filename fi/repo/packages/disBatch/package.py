@@ -13,6 +13,7 @@ class Disbatch(PythonPackage):
     url      = "https://github.com/flatironinstitute/disBatch/archive/refs/tags/1.4.tar.gz"
     git      = "https://github.com/flatironinstitute/disBatch.git"
 
+    version('2.5', sha256='829c82ca71668ef68c924e2bc058c999fbe87f446dbbc26538b85cb95ed72062')
     version('2.0', sha256='8a510e6b392491b48c2a03f558a50df71738631d89ccaece7de117d62743e25f')
     version('1.4', sha256='ce3a1079f895ddc0029cd21db3a5f4bf07602392a7587bdf99e4e04834e91516')
 
