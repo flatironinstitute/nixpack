@@ -1,5 +1,5 @@
 /* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
-{ os ? "centos7"
+{ os ? "rocky8"
 , target ? "broadwell"
 , cudaarch ? "60,70,80,90"
 , gitrev ? null
@@ -651,6 +651,7 @@ corePacks = import ../packs {
         valgrind = false;
       };
       depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
+      patches = [./py-torch-extension-cuda.patch];
     };
     py-torch-cluster = {
       variants = {
@@ -1707,7 +1708,7 @@ pkgStruct = {
         # bazel broken with gcc 11
         #py-jax #TODO: broken
         py-torch-geometric
-        #py-torchvision #doesn't support sm_90 (but torch does, and inherits archs from it!)
+        py-torchvision
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
       ])

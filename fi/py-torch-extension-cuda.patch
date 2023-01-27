@@ -1,0 +1,11 @@
+--- a/torch/utils/cpp_extension.py	2023-01-27 13:26:14.973930000 -0500
++++ b/torch/utils/cpp_extension.py	2023-01-27 13:26:58.288194860 -0500
+@@ -1749,7 +1749,7 @@
+     ])
+ 
+     supported_arches = ['3.5', '3.7', '5.0', '5.2', '5.3', '6.0', '6.1', '6.2',
+-                        '7.0', '7.2', '7.5', '8.0', '8.6']
++                        '7.0', '7.2', '7.5', '8.0', '8.6', '9.0']
+     valid_arch_strings = supported_arches + [s + "+PTX" for s in supported_arches]
+ 
+     # The default is sm_30 for CUDA 9.x and 10.x
