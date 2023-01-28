@@ -49,7 +49,7 @@ with pkgs;
     '';
   });
 
-  openssl = self.openssl_1_1;
+  # openssl = self.openssl_1_1;
 
   # we don't need libredirect for anything (just openssh tests), and it's broken
   libredirect = "/var/empty";
@@ -82,25 +82,36 @@ with pkgs;
     cmakeFlags = old.cmakeFlags ++ ["-DBerkeleyDB_ROOT_DIR=${db}"];
   });
 
-  llvmPackages_14 = llvmPackages_14 // {
-    # broken glob test?
-    llvm = llvmPackages_14.llvm.overrideAttrs (old: {
-      postPatch = old.postPatch + ''
-        rm test/Other/ChangePrinters/DotCfg/print-changed-dot-cfg.ll
-      '';
+  llvmPackages_14 = llvmPackages_14 // (let
+    tools = llvmPackages_14.tools.extend (self: super: {
+      # broken glob test?
+      libllvm = super.libllvm.overrideAttrs (old: {
+        postPatch = old.postPatch + ''
+          rm test/Other/ChangePrinters/DotCfg/print-changed-dot-cfg.ll
+        '';
+      });
     });
-    libllvm = llvmPackages_14.libllvm.overrideAttrs (old: {
-      postPatch = old.postPatch + ''
-        rm test/Other/ChangePrinters/DotCfg/print-changed-dot-cfg.ll
-      '';
-    });
+    in { inherit tools; } // tools);
+
+  libxcrypt = libxcrypt.overrideAttrs (old: {
+    /* sign-conversion warnings: */
+    configureFlags = old.configureFlags ++ [ "--disable-werror" ];
+  });
+
+  python310 = python310.override {
+    packageOverrides = self: super: {
+      pycryptodome = super.pycryptodome.overridePythonAttrs (old: {
+        # FAIL: test_negate (Cryptodome.SelfTest.PublicKey.test_ECC_25519.TestEccPoint_Ed25519)
+        doCheck = false;
+      });
+    };
   };
 
-  xscreensaver = xscreensaver.overrideAttrs (old: rec {
-    version = "6.04";
-    src = fetchurl {
-      url = "https://www.jwz.org/${old.pname}/${old.pname}-${version}.tar.gz"  ;
-      sha256 = "sha256:0lmiyvp3qs2gngd53f191jmlizs9l04i2gnrqbn96mqckyr18w3q";
-    };
-  });
+  pipewire = pipewire.override {
+    bluezSupport = false;
+  };
+
+  ffmpeg = ffmpeg.override {
+    libaomSupport = true;
+  };
 }

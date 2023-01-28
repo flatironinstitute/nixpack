@@ -41,8 +41,8 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
-    ref = "release-22.05";
-    rev = "0874168639713f547c05947c76124f78441ea46c";
+    ref = "release-22.11";
+    rev = "cc4bb87f5457ba06af9ae57ee4328a49ce674b1b";
   };
 
   repos = [
@@ -1811,11 +1811,11 @@ pkgStruct = {
     }; in [
     /* -------- nixpkgs modules --------- */
     nix
-    (withGL blender)
+    (withGL blender.override { cudaSupport = false; }) # build failure cuda+avx
     elinks
     #evince
     feh
-    (ffmpeg.override { libaomSupport = true; })
+    ffmpeg
     #gimp
     #git
     #i3-env
