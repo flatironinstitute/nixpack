@@ -1811,7 +1811,7 @@ pkgStruct = {
     }; in [
     /* -------- nixpkgs modules --------- */
     nix
-    (withGL blender.override { cudaSupport = false; }) # build failure cuda+avx
+    (withGL blender)
     elinks
     #evince
     feh
