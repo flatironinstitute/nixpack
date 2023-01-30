@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "c4c1bf52664f78ab0b85cfaae1cbd0fe63309645";
+    rev = "bec491a3c3227ac24b164f0abe961668ab728d6b";
   };
 
   spackConfig = {
@@ -511,6 +511,10 @@ corePacks = import ../packs {
     proj = {
       # for vtk
       version = "7";
+    };
+    protobuf = {
+      # for py-protobuf
+      version = "3.20";
     };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
     py-astropy = {
