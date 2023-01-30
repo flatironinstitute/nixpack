@@ -111,10 +111,6 @@ with pkgs;
     bluezSupport = false;
   };
 
-  ffmpeg = ffmpeg.override {
-    libaomSupport = true;
-  };
-
   blender = blender.overrideAttrs (old: {
     patches = old.patches ++ [ ./blender-sse2.patch ];
   });

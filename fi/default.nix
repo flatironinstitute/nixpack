@@ -1815,7 +1815,11 @@ pkgStruct = {
     elinks
     #evince
     feh
-    ffmpeg
+    (ffmpeg-full.override {
+      samba = null;
+      frei0r = null;
+      xavs = null;
+    })
     #gimp
     #git
     #i3-env
@@ -1829,6 +1833,7 @@ pkgStruct = {
     (withGL mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
     #pass
     #pdftk
+    rav1e
     #rxvt-unicode
     #sage
     (withGL slack)
