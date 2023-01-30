@@ -1819,7 +1819,7 @@ pkgStruct = {
       samba = null;
       frei0r = null;
       xavs = null;
-    })
+    } // { name = builtins.replaceStrings ["-full"] [""] ffmpeg-full.name; module = { default = true; }; })
     #gimp
     #git
     #i3-env
