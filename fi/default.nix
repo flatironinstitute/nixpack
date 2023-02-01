@@ -694,6 +694,11 @@ corePacks = import ../packs {
         X = true;
       };
     };
+    r-xml = {
+      build = {
+        XMLSEC_CONFIG = "/bin/false";
+      };
+    };
     relion = {
       variants = {
         inherit cuda_arch;
