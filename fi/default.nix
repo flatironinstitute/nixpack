@@ -300,11 +300,6 @@ corePacks = import ../packs {
         '';
       };
     };
-    intel-parallel-studio = {
-      build = {
-        INTEL_LICENSE_FILE = "28518@lic1.flatironinstitute.org";
-      };
-    };
     java = {
       # for hdfview (weird issue with 11.0.12)
       name = "openjdk";
@@ -2103,7 +2098,8 @@ mods = corePacks.modules {
     intel-parallel-studio = {
       environment = {
         set = {
-          INTEL_LICENSE_FILE = "28518@lic1.flatironinstitute.org";
+          # not really necessary (included in spack intal)
+          INTEL_LICENSE_FILE = "/mnt/sw/fi/licenses/intel/license.lic";
         };
       };
     };
