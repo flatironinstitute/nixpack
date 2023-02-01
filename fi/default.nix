@@ -947,6 +947,11 @@ mkSkylake = base: base.withPrefs {
   };
 };
 
+gcc11 = corePacks.pkgs.gcc.withPrefs {
+  version = "11";
+  target = if target == "skylake-avx512" then "skylake" else target;
+};
+
 mkCompilers = base: gen:
   builtins.map (compiler: gen (rec {
     inherit compiler;
@@ -957,7 +962,7 @@ mkCompilers = base: gen:
   }))
   [ /* -------- compilers -------- */
     (corePacks.pkgs.gcc.withPrefs { version = "10"; })
-    (corePacks.pkgs.gcc.withPrefs { version = "11"; })
+    gcc11
   ];
 
 mkMpis = comp: gen:
@@ -1272,13 +1277,13 @@ pkgStruct = {
       '';
     }
     (gcc.withPrefs { version = "7"; })
-    (gcc.withPrefs { version = "12"; })
+    (gcc11.withPrefs { version = "12"; })
     { pkg = llvm;
       default = true;
     }
     { pkg = llvm.withPrefs { version = "13";
         depends = {
-          compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
+          compiler = gcc11;
         };
         variants = {
           omp_as_runtime = false;
@@ -1289,7 +1294,7 @@ pkgStruct = {
     { pkg = llvm.withPrefs {
         version = "15";
         depends = {
-          compiler = corePacks.pkgs.gcc.withPrefs { version = "11"; };
+          compiler = gcc11;
         };
         variants = {
           cuda_arch = cuda_arch // { "90" = false; };
