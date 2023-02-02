@@ -291,8 +291,7 @@ corePacks = import ../packs {
       build = {
         post = ''
           license_path = pkg.prefix.license
-          with open(os.path.join(license_path, "o_licenseserverurl.txt"), 'a') as f:
-              f.write("http://lic1.flatironinstitute.org:7070/fne/bin/capability")
+          os.symlink("/mnt/sw/fi/licenses/idl/o_licenseserverurl.txt", os.path.join(license_path, "o_licenseserverurl.txt"))
           for d in ["flexera", "flexera-sv"]:
             dir = os.path.join(license_path, d)
             os.rmdir(dir)
