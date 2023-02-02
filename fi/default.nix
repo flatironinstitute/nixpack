@@ -1188,7 +1188,7 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.7.3";
+      version = "1.8.3";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
@@ -1196,8 +1196,9 @@ juliaPacks = corePacks.withPrefs {
         '';
       };
     };
+    compiler = gcc11;
     llvm = {
-      version = "12.0.1";
+      version = "13.0.1";
       variants = {
         internal_unwind = false;
         llvm_dylib = true;
@@ -1210,23 +1211,24 @@ juliaPacks = corePacks.withPrefs {
           webassembly = true;
         };
         version_suffix = "jl";
+        shlib_symbol_version = "jl";
         omp_as_runtime = false;
       };
-      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/fed41342a82f5a3a9201819a82bf7a48313e296b...980d2f60a8524c5546397db9e8bbb7d6ea56c1b7.patch")];
+      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch")];
+      depends = {
+        compiler = gcc11;
+      };
     };
     libuv = {
       version = "1.42.0";
       patches = [(builtins.fetchurl "https://raw.githubusercontent.com/spack/patches/89b6d14eb1f3c3d458a06f1e06f7dda3ab67bd38/julia/libuv-1.42.0.patch")];
     };
     mbedtls = {
-      version = "2.24";
+      version = "2.28";
       variants = {
         libs = ["shared"];
         pic = true;
       };
-    };
-    curl = {
-      version = "7.78";
     };
     openblas = {
       variants = {
@@ -1236,9 +1238,10 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     openlibm = {
-      version = "0.7";
+      version = "0.8.1";
     };
     curl = {
+      version = "7.78";
       variants = {
         libssh2 = true;
         nghttp2 = true;
@@ -1246,13 +1249,13 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     libblastrampoline = {
-      version = "3";
+      version = "5.1";
     };
     libgit2 = {
-      version = "1.1";
+      version = "1.3";
     };
     libssh2 = {
-      version = "1.9";
+      version = "1.10";
       variants = {
         crypto = "mbedtls";
       };
