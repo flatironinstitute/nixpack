@@ -1873,6 +1873,7 @@ pkgStruct = {
         let alias = {
           "Blast" = "blast-plus";
           "amd/aocc" = "aocc";
+          "healpix-cxx" = "healpix";
           "intel/mkl" = "intel-mkl";
           "lib/arpack" = "arpack-ng";
           "lib/boost" = "boost";
