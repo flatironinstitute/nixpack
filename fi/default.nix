@@ -68,6 +68,14 @@ corePacks = import ../packs {
     /* ---------- global package preferences ------------
      * Default settings and versions for specific packages should be added here (in alphabetical order).
      */
+    adios2 = {
+      # for visit
+      variants = {
+        hdf5 = true;
+        ssc = false;
+        sst = false;
+      };
+    };
     aocc = {
       variants = {
         license-agreed = true;
@@ -138,6 +146,19 @@ corePacks = import ../packs {
       # for paraview
       version = "1.9.1";
     };
+    conduit = {
+      # for visit
+      variants = {
+        python = true;
+        parmetis = false;
+      };
+      depends = {
+        hdf5 = {
+          version = "1.8";
+          variants = { fortran = false; };
+        };
+      };
+    };
     coreutils = {
       # failing
       tests = false;
@@ -192,6 +213,10 @@ corePacks = import ../packs {
       variants = {
         xft = true;
       };
+    };
+    freetype = {
+      # for visit via old vtk
+      version = "2.10.2";
     };
     gcc = {
       version = if os == "centos7" then "7" else "10";
@@ -363,6 +388,15 @@ corePacks = import ../packs {
         pic = true;
       };
       tests = false;
+    };
+    mfem = {
+      # for visit
+      variants = {
+        conduit = true;
+        exceptions = true;
+        fms = true;
+        shared = true;
+      };
     };
     mpc = {
       # for gcc via mpfr
@@ -688,6 +722,13 @@ corePacks = import ../packs {
         opengl = true;
       };
     };
+    qwt = {
+      depends = {
+        qt = {
+          version = "5.14";
+        };
+      };
+    };
     r = {
       variants = {
         X = true;
@@ -709,6 +750,14 @@ corePacks = import ../packs {
       build = opensslPkgconfig;
     };
     shadow = rpmExtern "shadow-utils";
+    silo = {
+      depends = {
+        hdf5 = {
+          version = "1.8";
+          variants = { fortran = false; };
+        };
+      };
+    };
     slurm = rec {
       extern = "/cm/shared/apps/slurm/current";
       version = lib.capture ["/bin/readlink" "-n" extern] { inherit os; };
@@ -767,7 +816,30 @@ corePacks = import ../packs {
     visit = {
       variants = {
         python = false; # needs python2
+        osmesa = true;
+        gui = false;
       };
+      depends = {
+        qt = {
+          version = "5.14";
+        };
+        vtk = {
+          version = "8.1";
+          variants = {
+            qt = false;
+            osmesa = true;
+          };
+          depends = {
+            proj = {
+              version = "4";
+            };
+          };
+        };
+      };
+    };
+    zfp = {
+      # for visit via adios2
+      version = "0.5";
     };
     zstd = {
       variants = {
@@ -1443,7 +1515,7 @@ pkgStruct = {
     unison
     valgrind
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
-    #visit #needs qt <= 5.14.2, vtk dep patches?
+    visit
     vmd
     vtk
     wecall
