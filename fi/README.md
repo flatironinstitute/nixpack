@@ -121,7 +121,7 @@ Commands:
 You can source `env` to setup a build environment for running `nix` command-line tools (like `nix-build`).
 For example, to build a single package into `result`, run:
 ```
-nix-build -A pkgs.packagename -j 1 --cores 8 fi
+./fi/run build -j 1 --cores 8 -A pkgs.packagename
 ```
 
 ### Releases

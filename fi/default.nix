@@ -1482,7 +1482,7 @@ pkgStruct = {
       flexiblas
       gsl
       gmp
-      healpix-cxx
+      healpix
       hwloc
       jemalloc
       #libdrm
@@ -1882,7 +1882,7 @@ pkgStruct = {
           "lib/gmp" = "gmp";
           "lib/gsl" = "gsl";
           "lib/hdf5" = "hdf5";
-          "lib/healpix" = "healpix-cxx";
+          "lib/healpix" = "healpix";
           "lib/mpc" = "mpc";
           "lib/mpfr" = "mpfr";
           "lib/netcdf" = "netcdf-c";
