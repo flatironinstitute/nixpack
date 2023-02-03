@@ -18,6 +18,11 @@ class Healpix(MakefilePackage):
         config.filter(r'^\s*CXXPREFIX=.*', f'CXXPREFIX={prefix}')
         config.filter(r'SHARP_LIBS="[^"]*"', f'SHARP_LIBS="-L{prefix.lib} -lsharp"')
         config.filter(r'SHARP_CFLAGS="[^"]*"', f'SHARP_CFLAGS="-I{prefix.include}"')
+        config.filter(r'^\s*F90_BINDIR=.*', f'F90_BINDIR={prefix.bin}')
+        config.filter(r'^\s*F90_INCDIR=.*', f'F90_INCDIR={prefix.include}')
+        config.filter(r'^\s*F90_LIBDIR=.*', f'F90_LIBDIR={prefix.lib}')
+        config.filter(r'^\s*ExtendCFLAGS "-I.*\/include"', f'ExtendCFLAGS "-I{prefix.include}"')
+
 
     @run_before('build')
     def configure(self):
@@ -29,7 +34,7 @@ class Healpix(MakefilePackage):
         )
 
     def configure_args(self):
-        return ['-L', '--auto=c,cxx']
+        return ['-L', '--auto=c,cxx,f90']
 
     def configure_env(self, spec):
         return dict(
@@ -38,6 +43,7 @@ class Healpix(MakefilePackage):
             FITSDIR=spec['cfitsio'].prefix.lib,
             FITSINC=spec['cfitsio'].prefix.include,
             SHARP_COPT='-O3 -ffast-math',
+            F_SHARED='1',
         )
         
     @property
