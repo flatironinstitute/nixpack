@@ -1627,6 +1627,7 @@ pkgStruct = {
         #py-einsum2
         py-emcee
         py-envisage #qt
+        py-healpy
         py-flask
         py-flask-socketio
         py-fusepy
