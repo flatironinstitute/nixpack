@@ -512,8 +512,7 @@ corePacks = import ../packs {
     };
     psm = bootstrapPacks.pkgs.psm; # needs old gcc
     py-astropy = {
-      # 5 has broken build (copy permissions)
-      version = "4";
+      version = "5";
       depends = {
         py-cython = {
           version = "0.29.30";
