@@ -1504,6 +1504,20 @@ pkgStruct = {
       })
       #openssl
       pgplot
+      {
+        pkg = rockstar;
+        postscript = ''
+          whatis("Short description: Peter Behroozi's Rockstar (https://bitbucket.org/gfcstanford/rockstar)")
+          help([[Peter Behroozi's Rockstar (https://bitbucket.org/gfcstanford/rockstar)]])
+        '';
+      }
+      {
+        pkg = rockstar.withPrefs { version = "galaxies"; };
+        postscript = ''
+          whatis("Short description: Andrew Wetzel's rockstar-galaxies (https://bitbucket.org/awetzel/rockstar-galaxies)")
+          help([[Andrew Wetzel's rockstar-galaxies (https://bitbucket.org/awetzel/rockstar-galaxies)]])
+        '';
+      }
       ucx
     ] ++
     optMpiPkgs comp.packs

@@ -1,0 +1,53 @@
+From 36ce9eea36eeda4c333acf56f8bb0d40ff0df2a1 Mon Sep 17 00:00:00 2001
+From: Peter Behroozi <peter@Peters-MacBook-Pro-3.local>
+Date: Sat, 4 Sep 2021 15:20:44 +0900
+Subject: [PATCH] Fix to solve linking problem with gcc-10
+
+---
+ client.c       | 2 +-
+ fun_times.h    | 2 +-
+ interleaving.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/client.c b/client.c
+index 5525eb9..cd4e1ff 100644
+--- a/client.c
++++ b/client.c
+@@ -764,7 +764,7 @@ void transfer_stuff(int64_t s, int64_t c, int64_t timestep) {
+ }
+ 
+ void do_projections(void) {
+-  int64_t i, j, idx, dir;
++  int64_t i, j, idx, dir=0;
+   assert(BOX_SIZE > 0);
+   for (i=0; i<num_proj; i++) {
+     prj[i].id = prq[i].id;
+diff --git a/fun_times.h b/fun_times.h
+index 0dd1355..10397cd 100644
+--- a/fun_times.h
++++ b/fun_times.h
+@@ -15,7 +15,7 @@ struct prev_bounds {
+   float bounds[6];
+ };
+ 
+-struct prev_bounds *p_bounds;
++extern struct prev_bounds *p_bounds;
+ extern int64_t prev_snap;
+ 
+ #define MAX_CORE_PARTICLES 10000
+diff --git a/interleaving.h b/interleaving.h
+index 1d3894b..1537887 100644
+--- a/interleaving.h
++++ b/interleaving.h
+@@ -18,7 +18,7 @@ struct bgroup {
+ 
+ extern int64_t num_new_bp;
+ extern struct bgroup *bg;
+-struct bgroup *final_bg;
++extern struct bgroup *final_bg;
+ extern int64_t num_bg_sets;
+ extern int64_t *bg_set_sizes;
+ extern int64_t *bg_set_indices;
+-- 
+2.35.1
+
