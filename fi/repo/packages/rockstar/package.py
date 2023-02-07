@@ -1,5 +1,7 @@
 # Adapted from Spack's built-in Rockstar
 
+import os
+
 from spack.package import *
 
 
@@ -53,7 +55,7 @@ class Rockstar(MakefilePackage):
     def install(self, spec, prefix):
         # install the entire repo
         # probably only the binaries will be used, though
-        install_tree('.', prefix)
+        install_tree('.', prefix.src)
 
         mkdirp(prefix.bin)
         mkdirp(prefix.lib)
@@ -64,14 +66,19 @@ class Rockstar(MakefilePackage):
                 'util/subhalo_stats',
                 ]
         for fn in util:
-            install(fn, prefix.bin)
+            install_link(join_path(prefix.src, fn),
+                         prefix.bin)
         
         if '@galaxies' in spec:
-            install('rockstar-galaxies', prefix.bin)
-            install('librockstar-galaxies.so', prefix.lib)
+            install_link(join_path(prefix.src, 'rockstar-galaxies'),
+                         prefix.bin)
+            install_link(join_path(prefix.src, 'librockstar-galaxies.so'),
+                         prefix.lib)
         else:
-            install('rockstar', prefix.bin)
-            install('librockstar.so', prefix.lib)
+            install_link(join_path(prefix.src, 'rockstar'),
+                        prefix.bin)
+            install_link(join_path(prefix.src, 'librockstar.so'),
+                         prefix.lib)
 
     @property
     def build_targets(self):
@@ -86,3 +93,7 @@ class Rockstar(MakefilePackage):
         else:
             targets += ['all']
         return targets
+
+def install_link(src, dst):
+    '''Install into `dst` dir via hard link'''
+    os.link(src, join_path(dst, os.path.basename(src)))
