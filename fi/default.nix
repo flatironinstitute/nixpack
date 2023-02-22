@@ -1294,7 +1294,6 @@ pkgStruct = {
           omp_as_runtime = false;
         };
       };
-      core = true;
     }
     { pkg = llvm.withPrefs {
         version = "15";
@@ -1307,7 +1306,6 @@ pkgStruct = {
           cuda = true;
         };
       };
-      core = true;
     }
     amdlibm
     { pkg = aocc;
@@ -1374,7 +1372,7 @@ pkgStruct = {
     intel-oneapi-mpi
     intel-oneapi-tbb
     intel-oneapi-vtune
-    { pkg = juliaPacks.pkgs.julia; core = true; }
+    { pkg = juliaPacks.pkgs.julia; }
     keepassxc
     latex2html
     lftp
