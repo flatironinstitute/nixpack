@@ -216,6 +216,7 @@ class Path:
         l = 0
         while l < len(data):
             l += os.write(self.fd, data[l:])
+        return l
 
     def readInterp(self) -> Optional[bytes]:
         "extract the interpreter from #! script, if any"
@@ -227,8 +228,15 @@ class Path:
     def copyfile(self, src):
         "write the contents of this open file from the open src file"
         z = src.stat().st_size
-        while os.sendfile(self.fd, src.fd, None, z) > 0:
-            pass
+        try:
+            while os.sendfile(self.fd, src.fd, None, z) > 0:
+                pass
+        except OSError as err:
+            if err.errno in (errno.EINVAL, errno.ENOSYS):
+                while self.write(os.read(src.fd, 65536)) > 0:
+                    pass
+            else:
+                raise err
 
     def compare(self, other) -> bool:
         "compare stat and contents of two files, return true if identical"
