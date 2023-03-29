@@ -1638,7 +1638,6 @@ pkgStruct = {
         #py-einsum2
         py-emcee
         py-envisage #qt
-        py-healpy
         py-flask
         py-flask-socketio
         py-fusepy
@@ -1650,6 +1649,8 @@ pkgStruct = {
         py-gpustat
         py-graphviz
         py-h5py
+        py-hdf5plugin
+        py-healpy
         #py-husl
         py-hypothesis
         py-intervaltree
