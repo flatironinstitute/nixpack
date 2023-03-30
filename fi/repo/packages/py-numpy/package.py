@@ -2,9 +2,8 @@ from spack import *
 import spack.pkg.builtin.py_numpy
 
 class PyNumpy(spack.pkg.builtin.py_numpy.PyNumpy):
-    @run_before('install')
-    def set_blas_lapack(self):
-        super().set_blas_lapack()
+
+    def install(self, spec, prefix):
         # Skip if no BLAS/LAPACK requested
         spec = self.spec
         if '+blas' not in spec or spec['blas'].name != 'flexiblas':
@@ -41,7 +40,10 @@ class PyNumpy(spack.pkg.builtin.py_numpy.PyNumpy):
             f.write('libraries = {0}\n'.format(lapack_lib_names))
             write_library_dirs(f, lapack_lib_dirs)
             f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
-    
+
+        super().install(spec, prefix)
+
+
     def setup_build_environment(self, env):
         super().setup_build_environment(env)
         if '+blas' not in self.spec or self.spec['blas'].name != 'flexiblas':
