@@ -1624,6 +1624,10 @@ pkgStruct = {
         /* ---------- python packages ---------- */
         python
         gettext
+        py-asdf
+        py-asdf-standard
+        py-asdf-transform-schemas
+        py-asdf-unit-schemas
         py-astropy
         py-autopep8
         #py-backports-ssl-match-hostname #conflicts...
