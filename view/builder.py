@@ -216,6 +216,7 @@ class Path:
         l = 0
         while l < len(data):
             l += os.write(self.fd, data[l:])
+        return l
 
     def readInterp(self) -> Optional[bytes]:
         "extract the interpreter from #! script, if any"
@@ -224,10 +225,20 @@ class Path:
             return None
         return hb[2:].lstrip()
 
+    def sendfile(self, src, z):
+        "try os.sendfile to self from src, falling back to read/write"
+        try:
+            return os.sendfile(self.fd, src.fd, None, z)
+        except OSError as err:
+            if err.errno in (errno.EINVAL, errno.ENOSYS):
+                return self.write(os.read(src.fd, z))
+            else:
+                raise err
+
     def copyfile(self, src):
         "write the contents of this open file from the open src file"
         z = src.stat().st_size
-        while os.sendfile(self.fd, src.fd, None, z) > 0:
+        while self.sendfile(src, z) > 0:
             pass
 
     def compare(self, other) -> bool:
