@@ -1128,8 +1128,8 @@ mkPythons = base: gen:
   ];
 
 pyBlacklist = [
-  { name = "py-pip"; } # already in python
-  { name = "py-setuptools"; } # already in python
+# { name = "py-pip"; } # already in python
+  { name = "py-setuptools"; } # too many versions
   { name = "py-cython"; version = "0.29.30"; } # py-astropy dep
   { name = "py-cython"; version = "3"; } # py-gevent dep
   { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
