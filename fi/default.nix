@@ -1313,6 +1313,12 @@ pkgStruct = {
           cuda = true;
         };
       };
+      environment = {
+        append_path = {
+          LD_LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
+        };
+      };
+      autoload = [hwloc];
     }
     amdlibm
     { pkg = aocc;
