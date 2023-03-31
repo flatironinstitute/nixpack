@@ -358,6 +358,13 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    mathematica = {
+      build = {
+        post = ''
+          os.symlink(pkg.global_license_file, os.path.join(pkg.prefix, pkg.license_files[0]))
+        '';
+      };
+    };
     mbedtls = {
       variants = {
         pic = true;
