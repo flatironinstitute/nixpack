@@ -1463,7 +1463,7 @@ pkgStruct = {
   map (v: mathematica.withPrefs
     { version = v;
     })
-    ["12.2.0" "13.1.0"]
+    ["12.3.0" "13.1.0"]
   ++
   map (v: matlab.withPrefs
     { version = v;
