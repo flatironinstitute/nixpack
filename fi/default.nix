@@ -656,6 +656,20 @@ corePacks = import ../packs {
       depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
       patches = [./py-torch-extension-cuda.patch];
     };
+    py-torchaudio = {
+      build = {
+        # torchaudio will only build in a git checkout.
+        # spack caches git checkouts, without the .git directory.
+        # torchaudio will only build without a spack cache!
+        # TODO: find a better way to disable cache (installer use_cache=False?)
+        setup = ''
+          try:
+            os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
+          except OSError:
+            pass
+        '';
+      };
+    };
     py-torch-cluster = {
       variants = {
         cuda = true;
