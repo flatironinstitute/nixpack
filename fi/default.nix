@@ -1747,7 +1747,7 @@ pkgStruct = {
       ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "10") [
         # bazel broken with gcc 11
         #py-jax #TODO: broken
-        py-torch-geometric
+        py-torch
         py-torchvision
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
