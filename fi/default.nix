@@ -382,6 +382,11 @@ corePacks = import ../packs {
     mpi = {
       name = "openmpi";
     };
+    music = {
+      variants = {
+        hdf5 = true;
+      };
+    };
     nccl = {
       variants = {
         inherit cuda_arch;
@@ -1412,6 +1417,14 @@ pkgStruct = {
     #mplayer
     #mpv
     mupdf
+    {
+      pkg = music.withPrefs {variants = { single_prec = false; }; };
+      projection = "{name}/double-{version}";
+    }
+    {
+      pkg = music.withPrefs {variants = { single_prec = true; }; };
+      projection = "{name}/single-{version}";
+    }
     nccl
     #neovim
     #nix #too old/broken
