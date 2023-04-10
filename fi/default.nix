@@ -541,6 +541,15 @@ corePacks = import ../packs {
       # for py-requests
       version = "2.0";
     };
+    py-globus-sdk = {
+      depends = {
+        py-pyjwt = {
+          variants = {
+            crypto = true;
+          };
+        };
+      };
+    };
     py-distributed = {
       depends = {
         py-tornado = {
@@ -1688,6 +1697,8 @@ pkgStruct = {
         py-fusepy
         #py-fuzzysearch
         #py-fwrap
+        py-globus-cli
+        py-globus-sdk
         #py-ggplot
         #py-glueviz
         #py-gmpy2
