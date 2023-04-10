@@ -131,8 +131,8 @@ corePacks = import ../packs {
       };
     };
     cfitsio = {
-      # for py-astropy
-      version = "3";
+      # for py-astropy and py-fitsio
+      version = "3.49";
     };
     cli11 = {
       # for paraview
@@ -1150,7 +1150,7 @@ mkPythons = base: gen:
 
 pyBlacklist = [
 # { name = "py-pip"; } # already in python
-  { name = "py-setuptools"; } # too many versions
+  { name = "py-setuptools"; version = ":62.5,62.7:"; } # fitsio dep (arbitrary version)
   { name = "py-cython"; version = "0.29.30"; } # py-astropy dep
   { name = "py-cython"; version = "3"; } # py-gevent dep
   { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
@@ -1669,6 +1669,7 @@ pkgStruct = {
         #py-einsum2
         py-emcee
         py-envisage #qt
+        py-fitsio
         py-flask
         py-flask-socketio
         py-fusepy
