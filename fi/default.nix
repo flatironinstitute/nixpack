@@ -1523,6 +1523,7 @@ pkgStruct = {
       cfitsio
       cgal
       eigen
+      fgsl
       ffmpeg
       flexiblas
       gsl
