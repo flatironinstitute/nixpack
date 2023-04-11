@@ -1688,6 +1688,7 @@ pkgStruct = {
         py-bottleneck
         py-cachey
         py-cherrypy
+        py-classylss
         py-coverage
         py-cython
         py-dask
