@@ -1689,6 +1689,7 @@ pkgStruct = {
         py-cachey
         py-cherrypy
         py-classylss
+        py-corrfunc
         py-coverage
         py-cython
         py-dask
