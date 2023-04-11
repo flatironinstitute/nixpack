@@ -1797,6 +1797,8 @@ pkgStruct = {
         py-torchvision
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
+      ] ++ lib.optionals (lib.versionMatches py.python.version "3.9:") [
+        py-halotools
       ])
       ).overrideView {
         ignoreConflicts = [
