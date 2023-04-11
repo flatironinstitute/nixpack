@@ -626,6 +626,20 @@ corePacks = import ../packs {
         };
       };
     };
+    py-pytest-cov = {
+      depends = {
+        py-coverage = {
+          variants = {
+            toml = true;
+          };
+        };
+      };
+    };
+    py-runtests = {
+      variants = {
+        mpi = true;
+      };
+    };
     py-scikit-image = {
       depends = {
         py-setuptools = {
@@ -1630,6 +1644,7 @@ pkgStruct = {
           py-mpi4py
           py-bigfile
           py-h5py
+          py-runtests
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && lib.versionMatches comp.compiler.spec.version "10:") (with py.packs.pkgs;
           [(pkgMod triqs // {
@@ -1669,6 +1684,7 @@ pkgStruct = {
         py-bokeh
         py-bottleneck
         py-cherrypy
+        py-coverage
         py-cython
         py-dask
         #py-deeptools #pysam broken
