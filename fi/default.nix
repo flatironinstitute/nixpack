@@ -525,6 +525,11 @@ corePacks = import ../packs {
         };
       };
     };
+    py-bigfile = {
+      variants = {
+        mpi = true;
+      };
+    };
     py-blessings = {
       depends = {
         py-setuptools = {
@@ -1623,6 +1628,7 @@ pkgStruct = {
         /* ---------- python+mpi modules ---------- */
         view = py.packs.pythonView { pkgs = with py.packs.pkgs; [
           py-mpi4py
+          py-bigfile
           py-h5py
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && lib.versionMatches comp.compiler.spec.version "10:") (with py.packs.pkgs;
