@@ -550,6 +550,16 @@ corePacks = import ../packs {
         };
       };
     };
+    py-dedalus = {
+      depends = {
+        fftw = {
+          variants = {
+            mpi = true;
+            precision = ["float" "double" "long_double"];
+          };
+        };
+      };
+    };
     py-distributed = {
       depends = {
         py-tornado = {
@@ -632,6 +642,15 @@ corePacks = import ../packs {
             module = "PyQt5.sip";
           };
           version = "4";
+        };
+      };
+    };
+    py-pytest-cov = {
+      depends = {
+        py-coverage = {
+          variants = {
+            toml = true;
+          };
         };
       };
     };
@@ -1665,6 +1684,22 @@ pkgStruct = {
             triqs-maxent
             #triqs-omegamaxent-interface
             triqs-tprf
+        ] ++
+        [
+          {
+            pkg = py-dedalus.withPrefs { version = "3"; };
+            projection = "dedalus/{version}-py{^python.version}";
+            postscript = ''
+              depends_on("python-mpi/${python.spec.version}")
+            ''
+          }
+          {
+            pkg = py-dedalus.withPrefs { version = "2"; };
+            projection = "dedalus/{version}-py{^python.version}";
+            postscript = ''
+              depends_on("python-mpi/${python.spec.version}")
+            ''
+          }
         ]);
       });
     });
