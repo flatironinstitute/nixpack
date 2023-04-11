@@ -1729,6 +1729,7 @@ pkgStruct = {
         py-mako
         #py-matlab-wrapper
         py-matplotlib
+        py-mcfit
         py-netcdf4
         py-nbconvert
         py-nose
