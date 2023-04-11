@@ -1723,6 +1723,7 @@ pkgStruct = {
         py-jupyter-server
         py-jupyterlab
         py-jupyterlab-server
+        py-kdcount
         #py-leveldb
         #py-llfuse
         py-mako
@@ -1771,6 +1772,7 @@ pkgStruct = {
         py-seaborn
         #py-setuptools
         py-shapely
+        py-sharedmem
         #py-sip
         py-sphinx
         py-sqlalchemy
