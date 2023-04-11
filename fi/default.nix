@@ -1686,6 +1686,7 @@ pkgStruct = {
         py-biopython
         py-bokeh
         py-bottleneck
+        py-cachey
         py-cherrypy
         py-coverage
         py-cython
