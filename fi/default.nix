@@ -1691,14 +1691,14 @@ pkgStruct = {
             projection = "dedalus/{version}-py{^python.version}";
             postscript = ''
               depends_on("python-mpi/${python.spec.version}")
-            ''
+            '';
           }
           {
             pkg = py-dedalus.withPrefs { version = "2"; };
             projection = "dedalus/{version}-py{^python.version}";
             postscript = ''
               depends_on("python-mpi/${python.spec.version}")
-            ''
+            '';
           }
         ]);
       });
@@ -2027,7 +2027,6 @@ pkgStruct = {
 #  amd/aocl (amdblis, amdlibflame, amdfftw, amdlibm, aocl-sparse, amdscalapack)
 #  amd/uprof
 #  py jaxlib cuda
-#  py deadalus mpi: robert
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python
