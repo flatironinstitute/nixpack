@@ -1644,6 +1644,7 @@ pkgStruct = {
           py-mpi4py
           py-bigfile
           py-h5py
+          py-mpsort
           py-runtests
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && lib.versionMatches comp.compiler.spec.version "10:") (with py.packs.pkgs;
