@@ -1,70 +1,49 @@
-from spack import *
-import os
-import tempfile
-import glob
+# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-class PyJax(PythonPackage, CudaPackage):
-    """JAX is Autograd and XLA, brought together for high-performance machine learning research."""
+
+from spack.package import *
+
+
+class PyJax(PythonPackage):
+    """JAX is Autograd and XLA, brought together for high-performance
+    machine learning research. With its updated version of Autograd,
+    JAX can automatically differentiate native Python and NumPy
+    functions. It can differentiate through loops, branches,
+    recursion, and closures, and it can take derivatives of
+    derivatives of derivatives. It supports reverse-mode
+    differentiation (a.k.a. backpropagation) via grad as well as
+    forward-mode differentiation, and the two can be composed
+    arbitrarily to any order."""
 
     homepage = "https://github.com/google/jax"
-    url      = "https://github.com/google/jax/archive/refs/tags/jax-v0.2.20.tar.gz"
+    pypi = "jax/jax-0.2.25.tar.gz"
 
-    version('0.3.23', sha256='fa8c68a82fa2fcf3d272bf239c77e7028bb6077466a53349ce85f6e85ed623db')
-    version('0.3.4',  sha256='8946d0c309ebe373a4811693c5a953572104bac908ae76c211f50a8e3f506e2f')
-    version('0.2.28', sha256='7c6ffb14c2069d75c0721ec21b35ee253f0f368b84b9ec9459f0870ed902bfa7')
-    version('0.2.20', sha256='2e40bd8e2493a3609177b122c583636c0c88c5e695f8041190eefdfd42a6fc5b')
+    version("0.4.3", sha256="d43f08f940aa30eb339965cfb3d6bee2296537b0dc2f0c65ccae3009279529ae")
+    version("0.3.23", sha256="bff436e15552a82c0ebdef32737043b799e1e10124423c57a6ae6118c3a7b6cd")
+    version("0.2.25", sha256="822e8d1e06257eaa0fdc4c0a0686c4556e9f33647fa2a766755f984786ae7446")
 
-    variant('cuda', default=True, description='Build with CUDA support')
+    depends_on("python@3.8:", when="@0.4:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-numpy@1.20:", when="@0.3:", type=("build", "run"))
+    depends_on("py-numpy@1.18:", type=("build", "run"))
+    depends_on("py-opt-einsum", type=("build", "run"))
+    depends_on("py-scipy@1.5:", when="@0.3:", type=("build", "run"))
+    depends_on("py-scipy@1.2.1:", type=("build", "run"))
 
-    depends_on('python@3.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-pip', type='build')
-    depends_on('py-numpy@1.18:', type=('build', 'run'))
-    depends_on('py-scipy@1.2.1:', type=('build', 'run'))
-    depends_on('py-absl-py', type='build')
-    depends_on('py-cython', type=('build'))
-    depends_on('py-opt-einsum', type='build')
-    depends_on('py-wheel', type='build')
-    depends_on('cudnn', type=('build', 'link', 'run'), when='+cuda')
-    depends_on('bazel', type=('build'))
-    patch('bazel_call.patch', when="@:0.3.4")
+    # See _minimum_jaxlib_version in jax/version.py
+    jax_to_jaxlib = {
+        "0.4.3": "0.4.2",
+        "0.3.23": "0.3.15",
+        "0.2.25": "0.1.69",
+    }
 
-    conflicts('cuda_arch=none', when='+cuda', msg='Must specify CUDA compute capabilities of your GPU, see https://developer.nvidia.com/cuda-gpus')
+    for jax, jaxlib in jax_to_jaxlib.items():
+        depends_on(f"py-jaxlib@{jaxlib}:", when=f"@{jax}", type=("build", "run"))
 
-    phases = ['build', 'install']
-
-    def setup_build_environment(self, env):
-        tmp_path = tempfile.mkdtemp(prefix='spack')
-        env.set('TEST_TMPDIR', tmp_path)
-
-    def patch(self):
-        capabilities = ','.join('{0:.1f}'.format(
-            float(i) / 10.0) for i in self.spec.variants['cuda_arch'].value)
-        filter_file(r'TF_CUDA_COMPUTE_CAPABILITIES="[^"]*"',
-                'TF_CUDA_COMPUTE_CAPABILITIES="{0}"'.format(capabilities),
-                '.bazelrc')
-
-    def build(self, spec, prefix):
-        pythonargs = ['build/build.py',
-                      '--bazel_options=--jobs=' + str(make_jobs)]
-        if spec.satisfies('+cuda'):
-            pythonargs.extend([
-                      '--enable_cuda',
-                      '--cuda_path=' + spec['cuda'].prefix,
-                      '--cudnn_path=' + spec['cudnn'].prefix])
-        python(*pythonargs)
-
-        with open('.jax_configure.bazelrc', 'a') as f:
-            f.write('build --action_env PYTHONPATH="{0}"\n'.format(env['PYTHONPATH']))
-
-        with working_dir('build'):
-            with open('bazel_args', 'r') as f:
-                bazelargs = [l.rstrip('\n') for l in f]
-            bazel(*bazelargs)
-
-    def install(self, spec, prefix):
-        pip = which('pip')
-        wheel = glob.glob(os.path.join('dist', 'jaxlib-*.whl'))
-        pip('install', *wheel, '--prefix={0}'.format(prefix))
-
-        super().install(spec, prefix)
+    # Historical dependencies
+    depends_on("py-absl-py", when="@:0.3", type=("build", "run"))
+    depends_on("py-typing-extensions", when="@:0.3", type=("build", "run"))
+    depends_on("py-etils+epath", when="@0.3", type=("build", "run"))

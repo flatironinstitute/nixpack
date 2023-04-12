@@ -566,6 +566,10 @@ corePacks = import ../packs {
       };
     };
     py-jax = {
+      version = "0.4";
+    };
+    py-jaxlib = {
+      version = "0.4";
       variants = {
         inherit cuda_arch;
       };
@@ -1760,7 +1764,7 @@ pkgStruct = {
         py-yt
       ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "10") [
         # bazel broken with gcc 11
-        #py-jax #TODO: broken
+        py-jax
         py-torch
         py-torchaudio
         py-torchvision
@@ -1965,7 +1969,6 @@ pkgStruct = {
 # TODO:
 #  amd/aocl (amdblis, amdlibflame, amdfftw, amdlibm, aocl-sparse, amdscalapack)
 #  amd/uprof
-#  py jaxlib cuda
 #  py deadalus mpi: robert
 
 jupyterBase = pyView (with corePacks.pkgs; [
