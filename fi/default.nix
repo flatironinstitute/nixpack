@@ -1428,6 +1428,7 @@ pkgStruct = {
     intel-tbb
     intel-parallel-studio
     intel-oneapi-compilers
+    intel-oneapi-advisor
     (blasPkg intel-oneapi-mkl)
     intel-oneapi-mpi
     intel-oneapi-tbb
