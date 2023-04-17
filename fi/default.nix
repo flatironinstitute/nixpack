@@ -490,7 +490,7 @@ corePacks = import ../packs {
       # 5.11 needs proj 8
       version = "5.10";
       variants = {
-        python3 = true;
+        python = true;
         qt = true;
         osmesa = false;
       };
