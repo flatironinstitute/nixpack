@@ -980,7 +980,6 @@ bootstrapPacks = corePacks.withPrefs {
 blasVirtuals = blas: {
   blas      = blas;
   lapack    = blas;
-  scalapack = blas;
 };
 
 cuda_arch = { none = false; } // builtins.listToAttrs
@@ -1651,6 +1650,8 @@ pkgStruct = {
           gromacs
           { pkg = gromacs.withPrefs { version = "2022.3"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
+          { pkg = netlib-scalapack;  # MKL provies Intel ScaLAPACK
+            projection = "scalapack/{version}"; }
           plumed
           #(relion.withPrefs { version = "3"; })
           (relion.withPrefs { version = "4"; })
