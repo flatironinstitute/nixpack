@@ -583,6 +583,12 @@ corePacks = import ../packs {
       # py-setuptools
       version = ":3.7";
     };
+    py-fsspec = {
+      # py-lightning-fabric
+      variants = {
+        http = true;
+      };
+    };
     py-gevent = {
       depends = {
         py-cython = {
@@ -609,9 +615,16 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
-    py-meson-python = {
-      # for py-scipy
-      version = "0.11";
+    py-jaxlib = {
+      variants = {
+        inherit cuda_arch;
+      };
+      depends = {
+        bazel = {
+          # needs 5; can reuse the 5.3.0 build from other software
+          version = "5.3.0";  
+        };
+      };
     };
     py-mistune = {
       # for py-nbconvert, py-m2r
@@ -643,9 +656,13 @@ corePacks = import ../packs {
       # for py-virtualenv
       version = "2";
     };
+    py-protobuf = {
+      # for py-torch
+      version = "3";
+    };
     py-pybind11 = {
       # for py-torch
-      version = "2.10.0";
+      version = "2.10.1";
     };
     py-pyfftw = {
       depends = {
@@ -706,13 +723,49 @@ corePacks = import ../packs {
         toml = true;
       };
     };
+    py-tensorflow = {
+      variants = {
+        inherit cuda_arch;
+      };
+      depends = {
+        bazel = {
+          version = "5.3.0";
+        };
+      };
+    };
+    re2 = {
+      # py-tensorflow
+      variants = {
+        shared = true;
+      };
+    };
+    py-libclang = {
+      # py-tensorflow
+      # 13 or 14 works, but we have a build for 13
+      version = "13";
+      depends = {
+        llvm = {
+          variants = {
+            # clang = true;
+            omp_as_runtime = false;  # just matching the module build
+          };
+          version = "13";
+          depends = {
+            compiler = gcc11;
+          };
+        };
+      };
+    };
+    py-google-auth-oauthlib = {
+      # for py-tensorflow
+      version = "0.4";
+    };
     py-torch = {
       variants = {
         inherit cuda_arch;
         valgrind = false;
       };
       depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
-      patches = [./py-torch-extension-cuda.patch];
     };
     py-torchaudio = {
       build = {
@@ -1837,7 +1890,6 @@ pkgStruct = {
         py-sqlalchemy
         #py-statistics
         py-sympy
-        #py-tensorflow
         #py-tess
         py-toml
         py-twisted
@@ -1849,10 +1901,17 @@ pkgStruct = {
         py-yt
       ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "10") [
         # bazel broken with gcc 11
-        #py-jax #TODO: broken
         py-torch
         py-torchaudio
         py-torchvision
+        py-lightning-fabric
+      ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "11") [
+        py-jax
+        py-tensorflow
+        py-keras
+        # py-horovod  # needs spack package.py update
+        # py-pymc  # needs spack package.py update
+        # py-pytorch-lightning  # needs horovod
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
       ])
@@ -2054,7 +2113,6 @@ pkgStruct = {
 # TODO:
 #  amd/aocl (amdblis, amdlibflame, amdfftw, amdlibm, aocl-sparse, amdscalapack)
 #  amd/uprof
-#  py jaxlib cuda
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python
