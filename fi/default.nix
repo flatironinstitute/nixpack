@@ -977,16 +977,6 @@ corePacks = import ../packs {
         };
       };
     };
-    /* messed up plumed deps */
-    gromacs = spec: old: {
-      depends = old.depends // {
-        # hack to avoid incorrect version-specific deps
-        plumed = [
-          (builtins.elemAt old.depends.plumed 0)
-          (builtins.elemAt old.depends.plumed 1)
-        ];
-      };
-    };
     /* missing openssl dep */
     openldap = spec: old: {
       depends = old.depends // {
@@ -1728,7 +1718,7 @@ pkgStruct = {
         lib.optionals (comp.isCore && mpi.isCore) [
           # these are broken with intel...
           gromacs
-          { pkg = gromacs.withPrefs { version = "2022.3"; variants = { plumed = true; }; };
+          { pkg = gromacs.withPrefs { version = "2022.5"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
           plumed
           #(relion.withPrefs { version = "3"; })
@@ -1996,7 +1986,7 @@ pkgStruct = {
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
         projection = "{name}/skylake-mpi-{version}";
       }
-      { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "2022.3"; variants = { mpi = true; plumed = true; }; };
+      { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "2022.5"; variants = { mpi = true; plumed = true; }; };
         projection = "{name}/skylake-mpi-plumed-{version}";
       }
     ];
