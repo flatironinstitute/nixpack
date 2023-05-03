@@ -1712,8 +1712,7 @@ pkgStruct = {
         lib.optionals mpi.isCore [
           pvfmm
           stkfmm
-          (trilinos.withPrefs { version = "13.2.0"; })
-          (trilinos.withPrefs { version = "12.18.1"; variants = { gotype = "int"; cxxstd = "11"; }; })
+          (trilinos.withPrefs { version = "13.4.1"; })
         ]
         ++
         lib.optionals (comp.isCore && mpi.isCore) [
