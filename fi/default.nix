@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "bec491a3c3227ac24b164f0abe961668ab728d6b";
+    rev = "b6ff0a1fabde5fae965ef46239bda7d3a4d7e9c3";
   };
 
   spackConfig = {
@@ -158,13 +158,21 @@ corePacks = import ../packs {
       version = "8.4";
     };
     curl = {
+      version = "7";  # for r
       variants = {
         libidn2 = true;
+        nghttp2 = true;  # for rust
       };
     };
     dejagnu = {
       # failing
       tests = false;
+    };
+    elfutils = {
+      # for gdb
+      variants = {
+        debuginfod = true;
+      };
     };
     embree = {
       # for blender
@@ -280,7 +288,6 @@ corePacks = import ../packs {
           };
         };
         hdf5 = {
-          version = "1.10.7";
           variants = {
             java = true;
           };
@@ -299,16 +306,15 @@ corePacks = import ../packs {
         '';
       };
     };
-    java = {
-      # for hdfview (weird issue with 11.0.12)
-      name = "openjdk";
-      version = "11.0.8_10";
-    };
     libaio = {
       # needs mke2fs?
       tests = false;
     };
     libarchive = {
+      # for elfutils
+      variants = {
+        iconv = false;
+      };
       depends = {
         mbedtls = {
           version = "2";
@@ -331,11 +337,17 @@ corePacks = import ../packs {
       };
     };
     libffi = {
+      # for gobject-introspection
+      version = "3.3";
       # failing
       tests = false;
     };
     libglx = {
       name = "opengl";
+    };
+    libmicrohttpd = {
+      # for elfutils
+      version = "0.9.50";
     };
     libunwind = {
       # failing
@@ -578,6 +590,9 @@ corePacks = import ../packs {
         };
       };
     };
+    py-greenlet = {
+      version = "1";
+    };
     py-ipyparallel = {
       depends = {
         py-setuptools = {
@@ -615,7 +630,7 @@ corePacks = import ../packs {
     };
     py-numpy = {
       # for py-numba
-      version = ":1.22";
+      version = ":1.23";
     };
     py-pkgutil-resolve-name = {
       depends = {
@@ -623,6 +638,10 @@ corePacks = import ../packs {
           version = "2";
         };
       };
+    };
+    py-platformdirs = {
+      # for py-virtualenv
+      version = "2";
     };
     py-pybind11 = {
       # for py-torch
@@ -656,8 +675,11 @@ corePacks = import ../packs {
     };
     py-scikit-image = {
       depends = {
+        py-meson-python = {
+          version = "0.13";
+        };
         py-setuptools = {
-          version = "59";
+          version = "67";
         };
       };
     };
@@ -669,8 +691,11 @@ corePacks = import ../packs {
       };
     };
     py-scipy = {
-      # for py-pybind11
-      version = "1.9";
+      depends = {
+        py-meson-python = {
+          version = "0.12";
+        };
+      };
     };
     py-setuptools = {
       # for py-numpy, py-satroid, and others
@@ -1190,6 +1215,7 @@ pyBlacklist = [
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
   { name = "py-tornado"; version = "6.1"; } # py-distributed dep
+  { name = "py-meson-python"; }  # TODO: why do we need this?
 ];
 
 pyView = pl: corePacks.pythonView {
@@ -1262,7 +1288,7 @@ juliaPacks = corePacks.withPrefs {
           webassembly = true;
         };
         version_suffix = "jl";
-        shlib_symbol_version = "jl";
+        shlib_symbol_version = "JL_LLVM_13.0";
         omp_as_runtime = false;
       };
       patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch")];
@@ -1270,9 +1296,8 @@ juliaPacks = corePacks.withPrefs {
         compiler = gcc11;
       };
     };
-    libuv = {
-      version = "1.42.0";
-      patches = [(builtins.fetchurl "https://raw.githubusercontent.com/spack/patches/89b6d14eb1f3c3d458a06f1e06f7dda3ab67bd38/julia/libuv-1.42.0.patch")];
+    libuv-julia = {
+      version = "1.44.2";
     };
     mbedtls = {
       version = "2.28";
@@ -1280,6 +1305,9 @@ juliaPacks = corePacks.withPrefs {
         libs = ["shared"];
         pic = true;
       };
+    };
+    nghttp2 = {
+      version = "1.47";
     };
     openblas = {
       variants = {
@@ -1292,7 +1320,6 @@ juliaPacks = corePacks.withPrefs {
       version = "0.8.1";
     };
     curl = {
-      version = "7.78";
       variants = {
         libssh2 = true;
         nghttp2 = true;
@@ -1495,7 +1522,6 @@ pkgStruct = {
     }
     rclone
     rust
-    singularity
     smartmontools
     sra-tools
     stress-ng
@@ -1710,6 +1736,7 @@ pkgStruct = {
         /* ---------- python packages ---------- */
         python
         gettext
+        meson
         py-asdf
         py-asdf-standard
         py-asdf-transform-schemas
@@ -1762,6 +1789,7 @@ pkgStruct = {
         py-mako
         #py-matlab-wrapper
         py-matplotlib
+        py-meson-python
         py-netcdf4
         py-nbconvert
         py-nose
@@ -1785,7 +1813,6 @@ pkgStruct = {
         py-pyfftw
         py-pygments
         py-pylint
-        py-pymc3
         py-pyqt5
         #py-pyreadline
         #py-pysnmp
