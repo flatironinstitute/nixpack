@@ -1279,6 +1279,7 @@ hdf5Pkgs = packs: with packs.pkgs; [
     default = true;
   }
   (hdf5.withPrefs { version = "1.12"; })
+  (hdf5.withPrefs { version = "1.14"; })
 ];
 
 /* packages that we build both with and without mpi */
