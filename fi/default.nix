@@ -1945,6 +1945,7 @@ pkgStruct = {
     #jabref
     #keepassx2
     kubectl
+    linuxKernel.packages.linux_6_1.perf
     #libreoffice
     #meshlab
     (withGL mplayer // { name = builtins.replaceStrings ["-unstable"] [""] mplayer.name; })
