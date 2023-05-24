@@ -622,7 +622,7 @@ corePacks = import ../packs {
       depends = {
         bazel = {
           # needs 5; can reuse the 5.3.0 build from other software
-          version = "5.3.0";  
+          version = "5.3.0";
         };
       };
     };
@@ -2356,8 +2356,10 @@ corePacks // {
     mods
     modsMod
     jupyter;
-  
-  traceModSpecs = lib.traceSpecTree (builtins.concatMap (p:
-    let q = p.pkg or p; in
-    q.pkgs or (if q ? spec then [q] else [])) modPkgs);
+
+  traceModSpecs =
+    let filterSpecs = builtins.concatMap (p:
+      let q = p.pkg or p; in
+      if q ? pkgs then filterSpecs q.pkgs else if q ? spec then [q] else []);
+    in lib.traceSpecTree (filterSpecs modPkgs);
 }
