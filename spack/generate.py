@@ -7,6 +7,7 @@ from collections import defaultdict
 
 import nixpack
 import spack
+import spack.version as vn
 
 identPat = re.compile("[a-zA-Z_][a-zA-Z0-9'_-]*")
 reserved = {'if','then','else','derivation','let','rec','in','inherit','import','with'}
@@ -173,7 +174,7 @@ def unlist(l):
 
 def specPrefs(s):
     p = {}
-    if s.versions != spack.spec._any_version:
+    if s.versions != vn.any_version:
         p['version'] = str(s.versions)
     if s.variants:
         p['variants'] = {n: unlist(v.value) for n, v in s.variants.items()}
@@ -191,7 +192,7 @@ def depPrefs(d):
 
 def conditions(c, p, s, dep=None):
     def addConditions(a, s):
-        if s.versions != spack.spec._any_version:
+        if s.versions != vn.any_version:
             c.append(App("versionMatches", Expr(a+'.version'), str(s.versions)))
         if s.variants:
             for n, v in s.variants.items():
@@ -200,7 +201,7 @@ def conditions(c, p, s, dep=None):
             notExtern = Eq(Expr(a+'.extern'), None)
             if s.compiler.name:
                 c.append(And(notExtern, Eq(Expr(a+'.depends.compiler.spec.name'), s.compiler.name)))
-            if s.compiler.versions != spack.spec._any_version:
+            if s.compiler.versions != vn.any_version:
                 c.append(And(notExtern, App("versionMatches", Expr(a+'.depends.compiler.spec.version'), str(s.compiler.versions))))
         for d in s.dependencies():
             if dep and d.name == dep.spec.name:
