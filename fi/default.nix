@@ -1601,7 +1601,7 @@ pkgStruct = {
   map (v: idl.withPrefs
     { version = v;
     })
-    ["8.8.3"]
+    ["8.9"]
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
