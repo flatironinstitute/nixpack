@@ -73,6 +73,10 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
+    bazel = {
+      # py-tensorflow family
+      version = "5.3.0";
+    };
     binutils = {
       variants = {
         gold = true;
@@ -586,6 +590,10 @@ corePacks = import ../packs {
         http = true;
       };
     };
+    py-gast = {
+      # py-pythran
+      version = "0.5.3";
+    };
     py-gevent = {
       depends = {
         py-cython = {
@@ -639,7 +647,7 @@ corePacks = import ../packs {
       };
     };
     py-numpy = {
-      # for py-numba
+      # for py-tensorflow
       version = ":1.23";
     };
     py-pkgutil-resolve-name = {
@@ -723,35 +731,18 @@ corePacks = import ../packs {
     py-tensorflow = {
       variants = {
         inherit cuda_arch;
-      };
-      depends = {
-        bazel = {
-          version = "5.3.0";
-        };
+        xla = true;
       };
     };
     re2 = {
-      # py-tensorflow
+      # for py-tensorflow
       variants = {
         shared = true;
       };
     };
     py-libclang = {
-      # py-tensorflow
-      # 13 or 14 works, but we have a build for 13
-      version = "13";
-      depends = {
-        llvm = {
-          variants = {
-            # clang = true;
-            omp_as_runtime = false;  # just matching the module build
-          };
-          version = "13";
-          depends = {
-            compiler = gcc11;
-          };
-        };
-      };
+      # for py-tensorflow
+      version = "14";
     };
     py-google-auth-oauthlib = {
       # for py-tensorflow
@@ -1888,7 +1879,6 @@ pkgStruct = {
         py-torchaudio
         py-torchvision
         py-lightning-fabric
-      ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "11") [
         py-jax
         py-tensorflow
         py-keras
