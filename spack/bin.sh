@@ -11,7 +11,7 @@ for v in system os PATH SPACK_PYTHON spackConfig spackCache NIX_BUILD_TOP NIX_ST
 	eval "echo \'\"\$$v\"\'"
 done
 cat << EOF
-sys.path[:0] = ['$spackNixLib', '$spack/lib/spack', '$spack/lib/spack/external']
+sys.path[:0] = ['$spackNixLib', '$spack/lib/spack', '$spack/lib/spack/external', '$spack/lib/spack/external/_vendoring']
 import nixpack
 import spack.main
 if __name__ == "__main__":
