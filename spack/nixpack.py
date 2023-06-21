@@ -64,7 +64,10 @@ spack.config.config.remove_scope('system')
 spack.config.config.remove_scope('user')
 
 spack.config.set('config:build_stage', [getVar('NIX_BUILD_TOP')], 'command_line')
-cores = int(getVar('NIX_BUILD_CORES', 0))
+enableParallelBuilding = bool(getVar('enableParallelBuilding', True))
+cores = 1
+if enableParallelBuilding:
+    cores = int(getVar('NIX_BUILD_CORES', 0))
 if cores > 0:
     spack.config.set('config:build_jobs', cores, 'command_line')
 
@@ -281,7 +284,7 @@ class NixSpec(spack.spec.Spec):
         compiler = depends.pop('compiler', None)
         self.compiler = self.get(compiler, top=False).as_compiler if compiler else nullCompiler
 
-        for n, d in depends.items():
+        for n, d in sorted(depends.items()):
             dtype = spack.dependency.canonical_deptype(nixspec['deptypes'].get(n) or ())
             if d:
                 dep = self.get(d, top=False)
