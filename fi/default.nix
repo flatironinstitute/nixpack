@@ -284,6 +284,7 @@ corePacks = import ../packs {
           };
         };
         hdf5 = {
+          version = "1.14";
           variants = {
             java = true;
           };
