@@ -351,9 +351,10 @@ corePacks = import ../packs {
       tests = false;
     };
     llvm = {
-      version = "11";
+      version = "14";
       build = {
         # install python bindings
+        # TODO: probably ought to use +python instead, but it's broken
         setup = ''
           cmake_args = pkg.cmake_args()
           cmake_args.append("-DCLANG_PYTHON_BINDINGS_VERSIONS=3")
@@ -1406,30 +1407,8 @@ pkgStruct = {
     { pkg = llvm;
       default = true;
     }
-    { pkg = llvm.withPrefs { version = "13";
-        depends = {
-          compiler = gcc11;
-        };
-        variants = {
-          omp_as_runtime = false;
-        };
-      };
-    }
     { pkg = llvm.withPrefs {
-        version = "15";
-        depends = {
-          compiler = gcc11;
-        };
-        variants = {
-          cuda_arch = cuda_arch // { "90" = false; };
-          # omp_as_runtime = false; # tries to build duplicate OMP targets and fails
-          cuda = true;
-        };
-      };
-      environment = {
-        append_path = {
-          LD_LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
-        };
+        version = "16";
       };
       autoload = [hwloc];
     }
