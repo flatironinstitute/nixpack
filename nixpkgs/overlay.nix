@@ -4,8 +4,9 @@ with pkgs;
 {
   nss_sss = callPackage sssd/nss-client.nix { };
 
-  libuv = libuv.overrideAttrs (old: {
-    doCheck = false; # failure
+  makeShellWrapper = makeShellWrapper.overrideAttrs (old: {
+    # avoid infinite recursion by escaping to system (hopefully it's good enough)
+    shell = "/bin/sh";
   });
 
   coreutils = (coreutils.override {
@@ -49,13 +50,15 @@ with pkgs;
     '';
   });
 
-  # openssl = self.openssl_1_1;
-
   # we don't need libredirect for anything (just openssh tests), and it's broken
   libredirect = "/var/empty";
 
   openssh = openssh.overrideAttrs (old: {
     doCheck = false; # strange environment mismatch
+  });
+
+  libuv = libuv.overrideAttrs (old: {
+    doCheck = false; # failure
   });
 
   openimageio = openimageio.overrideAttrs (old: {
