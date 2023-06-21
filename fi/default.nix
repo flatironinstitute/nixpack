@@ -155,7 +155,7 @@ corePacks = import ../packs {
       };
     };
     cudnn = {
-      version = "8.4";
+      version = "8.9.1.23-11.8";
     };
     curl = {
       version = "7";  # for r
@@ -1456,7 +1456,24 @@ pkgStruct = {
     (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
     { pkg = cuda; default = true; }
     (mkCuda12 corePacks).pkgs.cuda
-    cudnn
+    { pkg = cudnn;
+      default = true;
+      postscript = ''
+        depends_on("cuda/11.8")
+      '';
+    }
+    { pkg = cudnn.withPrefs {
+        version = "8.9.1.23-12.0";
+        depends = {
+          cuda = {
+            version = "12";
+          };
+        };
+      };
+      postscript = ''
+        depends_on("cuda/12.0")
+      '';
+    }
     curl
     disBatch
     distcc
