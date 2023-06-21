@@ -2010,8 +2010,11 @@ pkgStruct = {
     #evince
     feh
     (ffmpeg-full.override {
+      withSamba = false;
       samba = null;
+      withFrei0r = false;
       frei0r = null;
+      withXavs = false;
       xavs = null;
     } // { name = builtins.replaceStrings ["-full"] [""] ffmpeg-full.name; module = { default = true; }; })
     #gimp
