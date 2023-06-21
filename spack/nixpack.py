@@ -284,7 +284,7 @@ class NixSpec(spack.spec.Spec):
         compiler = depends.pop('compiler', None)
         self.compiler = self.get(compiler, top=False).as_compiler if compiler else nullCompiler
 
-        for n, d in depends.items():
+        for n, d in sorted(depends.items()):
             dtype = spack.dependency.canonical_deptype(nixspec['deptypes'].get(n) or ())
             if d:
                 dep = self.get(d, top=False)
