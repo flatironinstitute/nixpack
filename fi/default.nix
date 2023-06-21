@@ -179,10 +179,6 @@ corePacks = import ../packs {
       variants = {
         ispc = false;
       };
-      depends = {
-        # -mprefer-vector-width=256
-        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
-      };
     };
     ffmpeg = {
       version = "4"; # 5 has incorrect configure args
@@ -202,7 +198,7 @@ corePacks = import ../packs {
       };
     };
     gcc = {
-      version = if os == "centos7" then "7" else "10";
+      version = "11";
       variants = {
         languages = ["c" "c++" "fortran" "jit"];
       };
@@ -333,7 +329,7 @@ corePacks = import ../packs {
     };
     libfabric = {
       variants = {
-        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2"] ++ lib.optionals (os == "centos7") ["psm"] ++ ["mlx"];
+        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "mlx"];
       };
     };
     libffi = {
@@ -461,7 +457,7 @@ corePacks = import ../packs {
           none = false;
           ofi = true;
           ucx = true;
-          psm = os == "centos7";
+          psm = false;
           psm2 = true;
           verbs = true;
         };
@@ -534,7 +530,6 @@ corePacks = import ../packs {
       # for py-protobuf
       version = "3.20";
     };
-    psm = bootstrapPacks.pkgs.psm; # needs old gcc
     py-astropy = {
       depends = {
         py-cython = {
@@ -1012,7 +1007,7 @@ lib64Link = {
 bootstrapPacks = corePacks.withPrefs {
   label = "bootstrap";
   global = {
-    target = if os == "centos7" then "haswell" else target;
+    target = target;
     resolver = null;
     tests = false;
   };
@@ -1036,7 +1031,7 @@ bootstrapPacks = corePacks.withPrefs {
     };
     openssl = opensslExtern;
     perl = rpmExtern "perl";
-    pkgconfig = if os == "centos7" then rpmExtern "pkgconfig" else {};
+    pkgconfig = {};
     psm = {};
     uuid = {
       name = "libuuid";
@@ -1084,7 +1079,6 @@ mkCompilers = base: gen:
     defaulting = pkg: { default = isCore; inherit pkg; };
   }))
   [ /* -------- compilers -------- */
-    (corePacks.pkgs.gcc.withPrefs { version = "10"; })
     gcc11
   ];
 
@@ -1230,7 +1224,7 @@ withPython = packs: py: let
   };
   in pyPacks;
 
-corePython = { version = if os == "centos7" then "3.8" else "3.9"; };
+corePython = { version = "3.9"; };
 
 mkPythons = base: gen:
   builtins.map (python: gen ({
@@ -1406,7 +1400,8 @@ pkgStruct = {
       '';
     }
     (gcc.withPrefs { version = "7"; })
-    (gcc11.withPrefs { version = "12"; })
+    (gcc.withPrefs { version = "10"; })
+    (gcc11.withPrefs { version = "12.2"; })  # 12.3 won't bootstrap
     { pkg = llvm;
       default = true;
     }
