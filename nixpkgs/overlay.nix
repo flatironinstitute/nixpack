@@ -96,6 +96,17 @@ with pkgs;
     });
     in { inherit tools; } // tools);
 
+  llvmPackages_15 = llvmPackages_15 // (let
+    tools = llvmPackages_15.tools.extend (self: super: {
+      # broken glob test?
+      libllvm = super.libllvm.overrideAttrs (old: {
+        postPatch = old.postPatch + ''
+          rm test/Other/ChangePrinters/DotCfg/print-changed-dot-cfg.ll
+        '';
+      });
+    });
+    in { inherit tools; } // tools);
+
   libxcrypt = libxcrypt.overrideAttrs (old: {
     /* sign-conversion warnings: */
     configureFlags = old.configureFlags ++ [ "--disable-werror" ];
@@ -116,5 +127,12 @@ with pkgs;
 
   blender = blender.overrideAttrs (old: {
     patches = old.patches ++ [ ./blender-sse2.patch ];
+  });
+
+  SDL = SDL.overrideAttrs (old: {
+    # this is already patched into configure.in, but not configure
+    postConfigure = ''
+      sed -i '/SDL_VIDEO_DRIVER_X11_CONST_PARAM_XDATA32/s/.*/#define SDL_VIDEO_DRIVER_X11_CONST_PARAM_XDATA32 1/' include/SDL_config.h
+    '';
   });
 }
