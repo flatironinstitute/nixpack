@@ -950,9 +950,13 @@ corePacks = import ../packs {
       '';
       };
     };
-    /* incorrect dependency, see https://github.com/spack/spack/pull/29629 */
-    assimp = spec: old: {
-      depends = builtins.removeAttrs old.depends ["boost"];
+    py-cython = spec: old: {
+      depends = old.depends // {
+        py-setuptools = {
+          deptype = ["build"];
+        };
+      };
+    };
     };
     py-pycuda = spec: old: {
       /* overaggresive variants */
