@@ -648,9 +648,16 @@ corePacks = import ../packs {
       # for py-nbconvert, py-m2r
       version = ":1";
     };
-    py-nbconvert = {
-      # py-nbconvert -> py-mistune dep
-      version = "6";
+    py-jupyterhub = {
+      version = "3";
+    };
+    py-jupyterlab = {
+      version = "3";
+      depends = {
+        py-jupyter-server = {
+          version = "1";
+        };
+      };
     };
     py-nose = {
       depends = {
@@ -962,6 +969,14 @@ corePacks = import ../packs {
       depends = old.depends // {
         py-setuptools = {
           deptype = ["build"];
+        };
+      };
+    };
+    py-jupyterlab = spec: old: {
+      depends = old.depends // {
+        py-jinja2 = {
+          version = "3.0.3:";
+          deptype = ["build" "run"];
         };
       };
     };
