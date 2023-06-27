@@ -47,7 +47,7 @@ class PyNumba(PythonPackage):
     # See https://reviews.llvm.org/D44140
     conflicts("^llvm@6.0.0")
 
-    version("0.57.0", sha256="2af6d81067a5bdc13960c6d2519dbabbf4d5d597cf75d640c5aeaefd48c6420a")
+    version("0.57.1", sha256="33c0500170d213e66d90558ad6aca57d3e03e97bb11da82e6d87ab793648cb17")
 
     depends_on("python@3.8:3.11", when="@0.57", type=("build", "run"))
     depends_on("py-numpy@1.21:1.24", when="@0.57", type=("build", "run"))
