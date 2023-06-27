@@ -1851,6 +1851,7 @@ pkgStruct = {
         py-pyyaml
         py-qtconsole
         #py-ray #needs bazel 3
+        py-ruff
         #py-s3fs # botocore deps
         #py-scikit-cuda
         py-scikit-image
