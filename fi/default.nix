@@ -306,7 +306,10 @@ corePacks = import ../packs {
           os.symlink("/mnt/sw/fi/licenses/idl/o_licenseserverurl.txt", os.path.join(license_path, "o_licenseserverurl.txt"))
           for d in ["flexera", "flexera-sv"]:
             dir = os.path.join(license_path, d)
-            os.rmdir(dir)
+            try:
+              os.rmdir(dir)
+            except FileNotFoundError:
+              pass
             os.symlink("/tmp", dir)
         '';
       };
