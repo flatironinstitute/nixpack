@@ -314,6 +314,11 @@ corePacks = import ../packs {
         '';
       };
     };
+    intel-oneapi-compilers = {
+      variants = {
+        codeplay = true;
+      };
+    };
     libaio = {
       # needs mke2fs?
       tests = false;
