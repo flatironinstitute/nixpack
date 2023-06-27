@@ -518,7 +518,8 @@ corePacks = import ../packs {
         hdf5 = false;
         hypre = false;
         superlu-dist = false;
-      };
+        glib = true;  # for latex2html
+        qt = true;  # for texstudio
     };
     poppler = {
       variants = {
