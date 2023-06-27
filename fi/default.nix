@@ -119,6 +119,10 @@ corePacks = import ../packs {
         cxxstd = "14";
       };
     };
+    botan = {
+      # for keepassxc
+      version = "2";
+    };
     c-blosc = {
       # for openvdb
       version = "1.17.0";
