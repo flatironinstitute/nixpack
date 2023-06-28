@@ -1001,11 +1001,10 @@ corePacks = import ../packs {
         };
       };
     };
-    /* missing openssl dep */
-    openldap = spec: old: {
+    xcb-proto = spec: old: {
       depends = old.depends // {
-        openssl = {
-          deptype = ["build" "link"];
+        python = {
+          deptype = ["build"];
         };
       };
     };
