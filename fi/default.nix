@@ -564,13 +564,10 @@ corePacks = import ../packs {
       # for py-requests
       version = "2.0";
     };
-    py-globus-sdk = {
-      depends = {
-        py-pyjwt = {
-          variants = {
-            crypto = true;
-          };
-        };
+    py-cryptography = {
+      # py-pyopenssl
+      version = "38";
+    };
       };
     };
     py-dedalus = {
@@ -613,6 +610,15 @@ corePacks = import ../packs {
     };
     py-greenlet = {
       version = "1";
+    };
+    py-globus-sdk = {
+      depends = {
+        py-pyjwt = {
+          variants = {
+            crypto = true;
+          };
+        };
+      };
     };
     py-ipyparallel = {
       depends = {
