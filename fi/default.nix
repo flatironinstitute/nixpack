@@ -568,6 +568,10 @@ corePacks = import ../packs {
       # py-pyopenssl
       version = "38";
     };
+    py-cupy = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
       };
     };
     py-dedalus = {
@@ -1865,6 +1869,7 @@ pkgStruct = {
         py-pycuda
         py-pyfftw
         py-pygments
+        py-cupy
         py-pylint
         py-pyqt5
         #py-pyreadline
