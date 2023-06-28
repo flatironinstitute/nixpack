@@ -426,13 +426,6 @@ corePacks = import ../packs {
         dap = true;
       };
     };
-    neovim = {
-      depends = {
-        lua = {
-          version = "5.1";
-        };
-      };
-    };
     nix = {
       variants = {
         storedir = builtins.getEnv "NIX_STORE_DIR";
@@ -1553,7 +1546,6 @@ pkgStruct = {
       projection = "{name}/single-{version}";
     }
     nccl
-    #neovim
     #nix #too old/broken
     node-js
     npm
@@ -2054,6 +2046,7 @@ pkgStruct = {
     #meshlab
     (withGL mplayer // { name = builtins.replaceStrings ["-unstable"] [""] mplayer.name; })
     (withGL mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
+    neovim
     #pass
     #pdftk
     rav1e
