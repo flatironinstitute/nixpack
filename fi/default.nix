@@ -524,12 +524,12 @@ corePacks = import ../packs {
         hdf5 = false;
         hypre = false;
         superlu-dist = false;
-        glib = true;  # for latex2html
-        qt = true;  # for texstudio
+      };
     };
     poppler = {
       variants = {
-        glib = true;
+        glib = true;  # for latex2html
+        qt = true;  # for texstudio
       };
     };
     postgresql = {
@@ -863,25 +863,6 @@ corePacks = import ../packs {
         sysconfdir = "/cm/shared/apps/slurm/var/etc/slurm";
         pmix = true;
         hwloc = true;
-      };
-    };
-    texlive = {
-      depends = {
-        poppler = {
-          version = ":0.84";
-        };
-      };
-      variants = {
-        scheme = "full";
-      };
-    };
-    texstudio = {
-      depends = {
-        poppler = {
-          variants = {
-            qt = true;
-          };
-        };
       };
     };
     trilinos = {
