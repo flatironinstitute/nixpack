@@ -935,7 +935,7 @@ corePacks = import ../packs {
               if spec.satisfies("@4.0:"):
                   f.write("""
           #btl_openib_receive_queues=P,128,2048,1024,32:S,2048,2048,1024,64:S,12288,2048,1024,64:S,65536,2048,1024,64
-          btl=^openib,usnix
+          btl=^openib
           mtl=^psm,ofi
           pml=ucx
           pml_ucx_tls=any
