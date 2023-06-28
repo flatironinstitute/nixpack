@@ -978,6 +978,12 @@ corePacks = import ../packs {
         };
       };
     };
+    py-numpy = spec: old: {
+      depends = old.depends // {
+        py-setuptools = {
+          deptype = ["build"];
+        };
+      };
     };
     py-pycuda = spec: old: {
       /* overaggresive variants */
