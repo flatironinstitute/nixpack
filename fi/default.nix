@@ -1500,16 +1500,6 @@ pkgStruct = {
     gnuplot
     gperftools
     gpu-burn
-    { pkg = gromacs;
-      projection = "{name}/singlegpunode-{version}";
-      environment = {
-        set = { GMX_GPU_DD_COMMS = "true";
-                GMX_GPU_PME_PP_COMMS = "true";
-                GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
-        };
-      };
-      default = true;
-    }
     grace
     graphviz
     hdfview
@@ -1987,15 +1977,6 @@ pkgStruct = {
     packs = mkSkylake corePacks;
     mpiPacks = mkSkylake (findCore (findCore pkgStruct.compilers).mpis).packs;
     pkgs = [
-      { pkg = packs.pkgs.gromacs;
-        projection = "{name}/skylake-singlegpunode-{version}";
-        environment = {
-          set = { GMX_GPU_DD_COMMS = "true";
-                  GMX_GPU_PME_PP_COMMS = "true";
-                  GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
-          };
-        };
-      }
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
         projection = "{name}/skylake-mpi-{version}";
       }
