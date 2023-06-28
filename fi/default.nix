@@ -1008,10 +1008,6 @@ corePacks = import ../packs {
         };
       };
     };
-    /* doesn't actually need gtk-doc */
-    libcroco = spec: old: {
-      depends = builtins.removeAttrs old.depends ["gtk-doc"];
-    };
     /* downloads its own libvips, and spack libvips is broken */
     npm = spec: old: {
       depends = builtins.removeAttrs old.depends ["libvips"];
