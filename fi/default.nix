@@ -1463,7 +1463,6 @@ pkgStruct = {
     blast-plus
     #blender
     cmake
-    (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
     { pkg = cuda; default = true; }
     (mkCuda12 corePacks).pkgs.cuda
     { pkg = cudnn;
@@ -1516,7 +1515,6 @@ pkgStruct = {
     hdfview
     imagemagick
     (blasPkg intel-mkl)
-    (blasPkg (intel-mkl.withPrefs { version = "2017.4.239"; }))
     intel-tbb
     intel-parallel-studio
     intel-oneapi-compilers
@@ -1533,10 +1531,7 @@ pkgStruct = {
     libtirpc
     libzmq
     likwid
-    #magma
     mercurial
-    #mplayer
-    #mpv
     mupdf
     {
       pkg = music.withPrefs {variants = { single_prec = false; }; };
@@ -1602,7 +1597,6 @@ pkgStruct = {
     vmd
     vtk
     wecall
-    #xscreensaver
     zsh
   ]
   ++
@@ -1744,7 +1738,6 @@ pkgStruct = {
           { pkg = netlib-scalapack;  # MKL provies Intel ScaLAPACK
             projection = "scalapack/{version}"; }
           plumed
-          #(relion.withPrefs { version = "3"; })
           (relion.withPrefs { version = "4"; })
         ]
         ++
