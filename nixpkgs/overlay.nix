@@ -156,11 +156,9 @@ with pkgs;
     bluetoothSupport = false;
   };
 
-  blender = (blender.override {
+  blender = blender.override {
     tbb = tbb_2021_8;
-  }).overrideAttrs (old: {
-    patches = old.patches ++ [ ./blender-sse2.patch ];
-  });
+  };
 
   SDL = SDL.overrideAttrs (old: {
     # this is already patched into configure.in, but not configure
