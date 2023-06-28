@@ -584,13 +584,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-distributed = {
-      depends = {
-        py-tornado = {
-          version = "6.1";
-        };
-      };
-    };
     py-filelock = {
       # py-setuptools
       version = ":3.7";
@@ -968,6 +961,16 @@ corePacks = import ../packs {
       depends = old.depends // {
         py-setuptools = {
           deptype = ["build"];
+        };
+      };
+    };
+    py-distributed = spec: old: {
+      depends = old.depends // {
+        py-tornado = {
+          version = "6.0.4:";
+        };
+        py-jinja2 = {
+          version = "2.10.3:";
         };
       };
     };
