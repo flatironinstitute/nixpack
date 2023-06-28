@@ -1272,17 +1272,17 @@ mkPythons = base: gen:
     { version = "3.8"; }
     { version = "3.9"; }
     { version = "3.10"; }
+    { version = "3.11"; }
   ];
 
 pyBlacklist = [
-# { name = "py-pip"; } # already in python
   { name = "py-setuptools"; version = ":62.5,62.7:"; } # fitsio dep (arbitrary version)
   { name = "py-cython"; version = "0.29.30"; } # py-astropy dep
   { name = "py-cython"; version = "3"; } # py-gevent dep
   { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
-  { name = "py-tornado"; version = "6.1"; } # py-distributed dep
+  { name = "py-meson-python"; version = "0.12"; }
   { name = "py-maturin"; version = "0.14"; }
 ];
 
@@ -1812,6 +1812,7 @@ pkgStruct = {
         #py-backports-ssl-match-hostname #conflicts...
         #py-backports-weakref # broken?
         py-biopython
+        py-black
         py-bokeh
         py-bottleneck
         py-cherrypy
@@ -1820,7 +1821,6 @@ pkgStruct = {
         #py-deeptools #pysam broken
         #py-einsum2
         py-emcee
-        py-envisage #qt
         py-fitsio
         py-flask
         py-flask-socketio
@@ -1856,6 +1856,7 @@ pkgStruct = {
         #py-matlab-wrapper
         py-matplotlib
         py-meson-python
+        py-mypy
         py-netcdf4
         py-nbconvert
         py-nose
@@ -1876,11 +1877,10 @@ pkgStruct = {
         py-pybind11
         py-pycairo
         py-pycuda
+        py-cupy
         py-pyfftw
         py-pygments
-        py-cupy
         py-pylint
-        py-pyqt5
         #py-pyreadline
         #py-pysnmp
         #py-pystan
@@ -1889,7 +1889,6 @@ pkgStruct = {
         #py-python-hglib
         py-python-ldap
         py-pyyaml
-        py-qtconsole
         #py-ray #needs bazel 3
         py-ruff
         #py-s3fs # botocore deps
