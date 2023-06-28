@@ -346,10 +346,6 @@ corePacks = import ../packs {
         #glx = false; # ~glx breaks gtkplus
       };
     };
-    libevent = {
-      # for pmix
-      version = "2.1.8";
-    };
     libfabric = {
       variants = {
         fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "mlx"];
