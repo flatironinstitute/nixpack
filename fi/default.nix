@@ -1954,10 +1954,7 @@ pkgStruct = {
       package = {
         compiler = corePacks.pkgs.llvm;
         boost = {
-          variants = {
-            context = true;
-            coroutine = true;
-            cxxstd = "14";
+          variants = corePacks.prefs.package.boost.variants // {
             clanglibcpp = true;
           };
         };

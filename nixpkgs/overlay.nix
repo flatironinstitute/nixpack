@@ -118,12 +118,19 @@ with pkgs;
         # FAIL: test_negate (Cryptodome.SelfTest.PublicKey.test_ECC_25519.TestEccPoint_Ed25519)
         doCheck = false;
       });
+      eventlet = super.eventlet.overridePythonAttrs (old: {
+        # needs libredirect
+        doCheck = false;
+      });
     };
   };
 
-  pipewire = pipewire.override {
+  pipewire = (pipewire.override {
     bluezSupport = false;
-  };
+    rocSupport = false; # temporarily workaround sox broken download (though probably don't need it anyway)
+  }).overrideAttrs (old: {
+    buildInputs = old.buildInputs ++ [libopus];
+  });
 
   blender = blender.overrideAttrs (old: {
     patches = old.patches ++ [ ./blender-sse2.patch ];
