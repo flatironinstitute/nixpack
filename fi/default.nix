@@ -207,6 +207,10 @@ corePacks = import ../packs {
         xft = true;
       };
     };
+    fmt = {
+      # for seacas, for vtk
+      version = "9";
+    };
     gcc = {
       version = "11";
       variants = {
@@ -859,6 +863,10 @@ corePacks = import ../packs {
     slurm = rec {
       extern = "/cm/shared/apps/slurm/current";
       version = lib.capture ["/bin/readlink" "-n" extern] { inherit os; };
+    seacas = {
+      # for vtk
+      version = "2022";
+    };
       variants = {
         sysconfdir = "/cm/shared/apps/slurm/var/etc/slurm";
         pmix = true;
