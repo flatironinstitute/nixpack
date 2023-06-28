@@ -553,6 +553,11 @@ corePacks = import ../packs {
         };
       };
     };
+    py-bigfile = {
+      variants = {
+        mpi = true;
+      };
+    };
     py-blessings = {
       depends = {
         py-setuptools = {
@@ -721,6 +726,11 @@ corePacks = import ../packs {
             toml = true;
           };
         };
+      };
+    };
+    py-runtests = {
+      variants = {
+        mpi = true;
       };
     };
     py-scikit-image = {
@@ -1773,7 +1783,13 @@ pkgStruct = {
         /* ---------- python+mpi modules ---------- */
         view = py.packs.pythonView { pkgs = with py.packs.pkgs; [
           py-mpi4py
+          py-bigfile
           py-h5py
+          py-mpsort
+          py-pfft-python
+          py-pmesh
+          py-runtests
+          py-nbodykit
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && lib.versionMatches comp.compiler.spec.version "10:") (with py.packs.pkgs;
           [(pkgMod triqs // {
@@ -1830,7 +1846,11 @@ pkgStruct = {
         py-black
         py-bokeh
         py-bottleneck
+        py-cachey
         py-cherrypy
+        py-classylss
+        py-corrfunc
+        py-coverage
         py-cython
         py-dask
         #py-deeptools #pysam broken
@@ -1865,6 +1885,7 @@ pkgStruct = {
         py-jupyter-server
         py-jupyterlab
         py-jupyterlab-server
+        py-kdcount
         #py-leveldb
         #py-llfuse
         py-mako
@@ -1872,6 +1893,7 @@ pkgStruct = {
         py-matplotlib
         py-meson-python
         py-mypy
+        py-mcfit
         py-netcdf4
         py-nbconvert
         py-nose
@@ -1914,6 +1936,7 @@ pkgStruct = {
         py-seaborn
         #py-setuptools
         py-shapely
+        py-sharedmem
         #py-sip
         py-sphinx
         py-sqlalchemy
@@ -1954,6 +1977,8 @@ pkgStruct = {
         py-xarray
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
+      ] ++ lib.optionals (lib.versionMatches py.python.version "3.9:") [
+        py-halotools
       ])
       ).overrideView {
         ignoreConflicts = [
