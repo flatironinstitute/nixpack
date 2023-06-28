@@ -2044,7 +2044,7 @@ pkgStruct = {
     }; in [
     /* -------- nixpkgs modules --------- */
     nix
-    (withGL blender)
+    # (withGL blender)
     elinks
     #evince
     feh
