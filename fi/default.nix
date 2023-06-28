@@ -584,10 +584,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-filelock = {
-      # py-setuptools
-      version = ":3.7";
-    };
     py-fsspec = {
       # py-lightning-fabric
       variants = {
