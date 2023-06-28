@@ -80,7 +80,9 @@ corePacks = import ../packs {
     binutils = {
       variants = {
         gold = true;
+        headers = true;
         ld = true;
+        compress_debug_sections = "none";
       };
     };
     blender = {
