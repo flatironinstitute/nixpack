@@ -1652,7 +1652,9 @@ pkgStruct = {
       flexiblas
       gsl
       gmp
+      hdf5-blosc
       healpix
+      highway
       hwloc
       jemalloc
       #libdrm
