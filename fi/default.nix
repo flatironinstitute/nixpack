@@ -1017,6 +1017,14 @@ corePacks = import ../packs {
     fftw = lib64Link;
     gsl = lib64Link;
     hdf5 = lib64Link;
+
+    julia = spec: old: {
+      depends = old.depends // {
+        llvm = {
+          deptype = ["build" "link" "run"];
+        };
+      };
+    };
   };
 };
 
@@ -1326,20 +1334,23 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.8.3";
+      version = "1.9.0";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
           os.symlink("/etc/ssl/certs/ca-certificates.crt", os.path.join(pkg.prefix.share, "julia/cert.pem"))
+          os.symlink(os.path.join(pkg.spec["llvm"].prefix, "bin", "lld"), os.path.join(pkg.prefix.bin, "lld"))
         '';
       };
     };
     compiler = gcc11;
     llvm = {
-      version = "13.0.1";
+      version = "14.0.6";
       variants = {
         internal_unwind = false;
         llvm_dylib = true;
+        lld = true;
+        lldb = false;
         link_llvm_dylib = true;
         targets = {
           none = false;
@@ -1349,13 +1360,9 @@ juliaPacks = corePacks.withPrefs {
           webassembly = true;
         };
         version_suffix = "jl";
-        shlib_symbol_version = "JL_LLVM_13.0";
-        omp_as_runtime = false;
+        shlib_symbol_version = "JL_LLVM_14.0";
       };
-      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch")];
-      depends = {
-        compiler = gcc11;
-      };
+      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff")];
     };
     libuv-julia = {
       version = "1.44.2";
@@ -1368,7 +1375,7 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     nghttp2 = {
-      version = "1.47";
+      version = "1.48";
     };
     openblas = {
       variants = {
@@ -1378,9 +1385,10 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     openlibm = {
-      version = "0.8.1";
+      version = "0.8.1:0.8";
     };
     curl = {
+      version = "7.84:";
       variants = {
         libssh2 = true;
         nghttp2 = true;
@@ -1388,10 +1396,10 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     libblastrampoline = {
-      version = "5.1";
+      version = "5.4:";
     };
     libgit2 = {
-      version = "1.3";
+      version = "1.5";
     };
     libssh2 = {
       version = "1.10";
