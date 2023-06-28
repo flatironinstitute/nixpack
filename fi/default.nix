@@ -857,9 +857,9 @@ corePacks = import ../packs {
     };
     trilinos = {
       variants = {
+        cxxstd = "17";
         openmp = true;
         cuda = false;
-        cxxstd = "14";
         build_type = "Release";
         amesos2 = true;
         rol = true;
@@ -1715,7 +1715,8 @@ pkgStruct = {
         lib.optionals mpi.isCore [
           pvfmm
           stkfmm
-          (trilinos.withPrefs { version = "13.4.1"; })
+          (trilinos.withPrefs { version = "13.4.1"; variants = { cxxstd = "14"; }; })
+          (trilinos.withPrefs { version = "14.0.0"; variants = { cxxstd = "17"; }; })
         ]
         ++
         lib.optionals (comp.isCore && mpi.isCore) [
