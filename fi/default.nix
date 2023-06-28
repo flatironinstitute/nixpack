@@ -899,6 +899,14 @@ corePacks = import ../packs {
   repoPatch = {
     python = spec: old: {
       patches = [./python-ncursesw.patch];
+      build = {
+        post = ''
+          stdlib = f"python{pkg.version.up_to(2)}"
+          os.symlink("/mnt/sw/fi/python/EXTERNALLY-MANAGED",
+            os.path.join(pkg.prefix.lib, stdlib, "EXTERNALLY-MANAGED"),
+            )
+        '';
+      };
     };
     openmpi = spec: old: {
       patches =
