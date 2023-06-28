@@ -690,6 +690,16 @@ corePacks = import ../packs {
         };
       };
     };
+    py-pymol = {
+      build = {
+        post = ''
+        with open(os.path.join(spec.prefix.bin, 'pymol'), 'w') as fp:
+          fp.write('#!/bin/sh\n'
+                   'exec python -m pymol "$@"\n'
+          )
+        '';
+      };
+    };
     py-pytorch-lightning = {
       # py-horovod
       version = "1.5.3";
@@ -1925,6 +1935,8 @@ pkgStruct = {
         py-envisage
         py-pyqt5
         py-qtconsole
+
+        py-pymol
 
         py-torch
         # py-torchaudio  # breaks on import
