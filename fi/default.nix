@@ -601,9 +601,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-greenlet = {
-      version = "1";
-    };
     py-globus-sdk = {
       depends = {
         py-pyjwt = {
@@ -619,10 +616,10 @@ corePacks = import ../packs {
           version = "59";
         };
       };
-      build = {
-        # workaround ipython/ipyparallel#675
-        IPP_DISABLE_JS = "1";
-      };
+    };
+    py-ipython = {
+      # for python 3.8
+      version = "8.11";
     };
     py-jax = {
       variants = {
@@ -640,20 +637,19 @@ corePacks = import ../packs {
         };
       };
     };
-    py-mistune = {
-      # for py-nbconvert, py-m2r
-      version = ":1";
+    # py-jinja2 = {
+    #   version = "3.0.3";
+    # };
+    py-jsonschema = {
+      variants = {
+        format-nongpl = true;
+      };
     };
     py-jupyterhub = {
       version = "3";
     };
     py-jupyterlab = {
       version = "3";
-      depends = {
-        py-jupyter-server = {
-          version = "1";
-        };
-      };
     };
     py-nose = {
       depends = {
@@ -672,10 +668,6 @@ corePacks = import ../packs {
           version = "2";
         };
       };
-    };
-    py-platformdirs = {
-      # for py-virtualenv
-      version = "2";
     };
     py-protobuf = {
       # for py-torch
