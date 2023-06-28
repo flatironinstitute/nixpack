@@ -1947,9 +1947,11 @@ pkgStruct = {
         py-jax
         py-tensorflow
         py-keras
-        # py-pymc  # needs spack package.py update
         py-horovod
+        py-pytensor
+        py-pymc
         py-pytorch-lightning
+        py-xarray
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
       ])
@@ -1981,6 +1983,8 @@ pkgStruct = {
         boost = {
           variants = corePacks.prefs.package.boost.variants // {
             clanglibcpp = true;
+            python = false;
+            numpy = false;
           };
         };
       };
