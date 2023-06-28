@@ -610,6 +610,12 @@ corePacks = import ../packs {
         };
       };
     };
+    py-horovod = {
+      variants = {
+        inherit cuda_arch;
+        frameworks = ["tensorflow" "keras" "pytorch"];
+      };
+    };
     py-ipyparallel = {
       depends = {
         py-setuptools = {
@@ -683,6 +689,10 @@ corePacks = import ../packs {
           version = "59";
         };
       };
+    };
+    py-pytorch-lightning = {
+      # py-horovod
+      version = "1.5.3";
     };
     py-pyqt5 = {
       depends = {
@@ -763,15 +773,25 @@ corePacks = import ../packs {
       };
       depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
     };
-    py-torchaudio = {
+    # py-torchaudio = {
+    #   build = {
+    #     # torchaudio will only build in a git checkout.
+    #     # spack caches git checkouts, without the .git directory.
+    #     # torchaudio will only build without a spack cache!
+    #     # TODO: find a better way to disable cache (installer use_cache=False?)
+    #     setup = ''
+    #       try:
+    #         os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
+    #       except OSError:
+    #         pass
+    #     '';
+    #   };
+    # };
+    py-horovod = {
       build = {
-        # torchaudio will only build in a git checkout.
-        # spack caches git checkouts, without the .git directory.
-        # torchaudio will only build without a spack cache!
-        # TODO: find a better way to disable cache (installer use_cache=False?)
         setup = ''
           try:
-            os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
+            os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "horovod", "horovod.git", "v%s.tar.gz"%(pkg.version)))
           except OSError:
             pass
         '';
@@ -1896,18 +1916,26 @@ pkgStruct = {
         #py-xattr #broken: missing pip dep
         #py-yep
         py-yt
-      ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "10") [
-        # bazel broken with gcc 11
+      ] ++
+      lib.optionals (
+        lib.versionMatches py.python.version "3.9:3.10"
+        )[
+        
+        # needs py-protobuf, won't build from source on 3.11
+        py-envisage
+        py-pyqt5
+        py-qtconsole
+
         py-torch
-        py-torchaudio
+        # py-torchaudio  # breaks on import
         py-torchvision
         py-lightning-fabric
         py-jax
         py-tensorflow
         py-keras
-        # py-horovod  # needs spack package.py update
         # py-pymc  # needs spack package.py update
-        # py-pytorch-lightning  # needs horovod
+        py-horovod
+        py-pytorch-lightning
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
       ])
