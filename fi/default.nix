@@ -841,14 +841,14 @@ corePacks = import ../packs {
       # needs openssl pkgconfig
       build = opensslPkgconfig;
     };
-    shadow = rpmExtern "shadow-utils";
-    slurm = rec {
-      extern = "/cm/shared/apps/slurm/current";
-      version = lib.capture ["/bin/readlink" "-n" extern] { inherit os; };
     seacas = {
       # for vtk
       version = "2022";
     };
+    shadow = rpmExtern "shadow-utils";
+    slurm = rec {
+      extern = "/cm/shared/apps/slurm/current";
+      version = lib.capture ["/bin/readlink" "-n" extern] { inherit os; };
       variants = {
         sysconfdir = "/cm/shared/apps/slurm/var/etc/slurm";
         pmix = true;
