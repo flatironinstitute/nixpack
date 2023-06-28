@@ -433,6 +433,9 @@ corePacks = import ../packs {
         sandboxing = false;
       };
     };
+    node-js = {
+      version = "19";
+    };
     nvhpc = {
       variants = {
         mpi = true;
