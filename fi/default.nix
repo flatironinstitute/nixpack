@@ -819,6 +819,13 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    py-y-py = {
+      depends = {
+        py-maturin = {
+          version = "0.14";
+        };
+      };
+    };
     python = corePython;
     qt = {
       variants = {
@@ -1276,7 +1283,7 @@ pyBlacklist = [
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
   { name = "py-tornado"; version = "6.1"; } # py-distributed dep
-  { name = "py-meson-python"; }  # TODO: why do we need this?
+  { name = "py-maturin"; version = "0.14"; }
 ];
 
 pyView = pl: corePacks.pythonView {
