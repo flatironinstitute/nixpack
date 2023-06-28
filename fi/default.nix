@@ -444,7 +444,7 @@ corePacks = import ../packs {
     };
     ocaml = {
       # for unison
-      version = "4.11";
+      version = "4.10";
       variants = {
         force-safe-string = false;
       };
