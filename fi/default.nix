@@ -956,10 +956,6 @@ corePacks = import ../packs {
       };
     };
     openmpi = spec: old: {
-      patches =
-        lib.optionals (spec.version == "1.10.7")                  [ ./openmpi-1.10.7.PATCH ] ++
-        lib.optionals (lib.versionAtMostSpec spec.version "1.10") [ ./openmpi-1.10-gcc.PATCH ] ++
-        lib.optionals (spec.version == "2.1.6")                   [ ./openmpi-2.1.6.PATCH ];
       build = {
         setup = ''
           builder = getattr(pkg, 'builder', pkg)
