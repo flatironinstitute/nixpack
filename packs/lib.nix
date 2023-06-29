@@ -108,8 +108,10 @@ rec {
     if match == null then true else
     if isList match then all (versionMatches v) match else
     let
-      versionMatch = m: let
-        mr = versionRange m;
+      versionMatch = m:
+        if hasPrefix "=" m then v == substring 1 (-1) m else
+        let
+          mr = versionRange m;
         in versionAtLeast v mr.min &&
            (versionAtMostSpec v mr.max);
     in any versionMatch (splitRegex "," match);
