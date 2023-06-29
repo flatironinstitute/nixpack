@@ -23,3 +23,7 @@ class PyBigfile(PythonPackage):
 
     depends_on("mpi", when="+mpi")
     depends_on("py-mpi4py", type=("build", "run"), when="+mpi")
+
+    def patch(self):
+        # removing cythonized file from sdist
+        remove('bigfile/pyxbigfile.c')

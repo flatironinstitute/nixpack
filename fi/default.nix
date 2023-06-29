@@ -615,6 +615,13 @@ corePacks = import ../packs {
         };
       };
     };
+    py-halotools = {
+      depends = {
+        py-cython = {
+          version = "0.29.32";
+        };
+      };
+    };
     py-horovod = {
       variants = {
         inherit cuda_arch;
@@ -1318,6 +1325,7 @@ mkPythons = base: gen:
 pyBlacklist = [
   { name = "py-setuptools"; version = ":62.5,62.7:"; } # fitsio dep (arbitrary version)
   { name = "py-cython"; version = "0.29.30"; } # py-astropy dep
+  { name = "py-cython"; version = "0.29.32"; } # py-halotools dep
   { name = "py-cython"; version = "3"; } # py-gevent dep
   { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
