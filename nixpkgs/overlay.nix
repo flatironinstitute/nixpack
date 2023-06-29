@@ -66,7 +66,17 @@ with pkgs;
     cmakeFlags = old.cmakeFlags ++ ["-DJPEGTURBO_PATH=${libjpeg.out}"];
   });
 
-  embree = embree.overrideAttrs (old: {
+  openimagedenoise = openimagedenoise.override {
+    tbb = tbb_2021_8;
+  };
+
+  openvdb = openvdb.override {
+    tbb = tbb_2021_8;
+  };
+
+  embree = (embree.override {
+    tbb = tbb_2021_8;
+  }).overrideAttrs (old: {
     # based on spack flags
     cmakeFlags =
       let
@@ -112,6 +122,16 @@ with pkgs;
     configureFlags = old.configureFlags ++ [ "--disable-werror" ];
   });
 
+  opencolorio = opencolorio.overrideAttrs (old: {
+    # various minor numeric failures
+    doCheck = false;
+  });
+
+  openexr_3 = openexr_3.overrideAttrs (old: {
+    # -nan != -nan
+    doCheck = false;
+  });
+
   python310 = python310.override {
     packageOverrides = self: super: {
       pycryptodome = super.pycryptodome.overridePythonAttrs (old: {
@@ -132,9 +152,13 @@ with pkgs;
     buildInputs = old.buildInputs ++ [libopus];
   });
 
-  blender = blender.overrideAttrs (old: {
-    patches = old.patches ++ [ ./blender-sse2.patch ];
-  });
+  pulseaudio = pulseaudio.override {
+    bluetoothSupport = false;
+  };
+
+  blender = blender.override {
+    tbb = tbb_2021_8;
+  };
 
   SDL = SDL.overrideAttrs (old: {
     # this is already patched into configure.in, but not configure
