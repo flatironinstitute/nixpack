@@ -1965,24 +1965,22 @@ pkgStruct = {
         py-pyqt5
         py-qtconsole
 
+        py-halotools
+        py-horovod
+        py-jax
+        py-keras
+        py-lightning-fabric
+        py-pymc
         py-pymol
-
+        py-pytensor
+        py-pytorch-lightning
+        py-tensorflow
         py-torch
         # py-torchaudio  # breaks on import
         py-torchvision
-        py-lightning-fabric
-        py-jax
-        py-tensorflow
-        py-keras
-        py-horovod
-        py-pytensor
-        py-pymc
-        py-pytorch-lightning
         py-xarray
       ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
-      ] ++ lib.optionals (lib.versionMatches py.python.version "3.9:") [
-        py-halotools
       ])
       ).overrideView {
         ignoreConflicts = [
