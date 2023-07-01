@@ -688,10 +688,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-protobuf = {
-      # for py-torch
-      version = "3";
-    };
     py-pybind11 = {
       # for py-torch
       version = "2.10.1";
@@ -1289,6 +1285,11 @@ withPython = packs: py: let
     package = {
       python = py // {
         resolver = deptype: if isRLDep deptype then packs else corePacks;
+      };
+
+      py-protobuf = {
+        # py-torch
+        version = if (lib.versionMatches py.version "3.11") then "3.20.3-whl" else "=3.20.3";
       };
     };
     global = {
