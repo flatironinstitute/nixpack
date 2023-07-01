@@ -1957,32 +1957,38 @@ pkgStruct = {
         #py-xattr #broken: missing pip dep
         #py-yep
         py-yt
-      ] ++
-      lib.optionals (
-        lib.versionMatches py.python.version "3.9:3.10"
-        )[
-        
-        # needs py-protobuf, won't build from source on 3.11
-        py-envisage
-        py-pyqt5
-        py-qtconsole
 
-        py-halotools
+        py-protobuf
+        py-torch
+        py-psycopg2
+        py-tensorflow
+
         py-horovod
         py-jax
         py-keras
         py-lightning-fabric
-        py-pymc
-        py-pymol
         py-pytensor
         py-pytorch-lightning
-        py-tensorflow
-        py-torch
+        
         # py-torchaudio  # breaks on import
         py-torchvision
+      ] ++
+      lib.optionals (
+        lib.versionMatches py.python.version "3.9:"
+        )[
+        py-halotools
+        py-pymc
         py-xarray
-      ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
-        py-psycopg2
+      ] ++
+      lib.optionals (
+        lib.versionMatches py.python.version ":3.10"
+        )[
+        
+        # Uses old py-sip; won't build against 3.11
+        py-envisage
+        py-pymol
+        py-pyqt5
+        py-qtconsole
       ])
       ).overrideView {
         ignoreConflicts = [
