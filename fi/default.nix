@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "b6ff0a1fabde5fae965ef46239bda7d3a4d7e9c3";
+    rev = "f0988de046a7c26968b79660d8cefd1ea06cce0a";
   };
 
   spackConfig = {
@@ -74,10 +74,16 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
+    bazel = {
+      # py-tensorflow family
+      version = "5.3.0";
+    };
     binutils = {
       variants = {
         gold = true;
+        headers = true;
         ld = true;
+        compress_debug_sections = "none";
       };
     };
     blender = {
@@ -115,6 +121,10 @@ corePacks = import ../packs {
         timer = true;
         cxxstd = "14";
       };
+    };
+    botan = {
+      # for keepassxc
+      version = "2";
     };
     c-blosc = {
       # for openvdb
@@ -156,7 +166,7 @@ corePacks = import ../packs {
       };
     };
     cudnn = {
-      version = "8.4";
+      version = "8.9.1.23-11.8";
     };
     curl = {
       version = "7";  # for r
@@ -180,10 +190,6 @@ corePacks = import ../packs {
       variants = {
         ispc = false;
       };
-      depends = {
-        # -mprefer-vector-width=256
-        compiler = corePacks.pkgs.gcc.withPrefs { version = "10"; };
-      };
     };
     ffmpeg = {
       version = "4"; # 5 has incorrect configure args
@@ -202,8 +208,12 @@ corePacks = import ../packs {
         xft = true;
       };
     };
+    fmt = {
+      # for seacas, for vtk
+      version = "9";
+    };
     gcc = {
-      version = if os == "centos7" then "7" else "10";
+      version = "11";
       variants = {
         languages = ["c" "c++" "fortran" "jit"];
       };
@@ -289,6 +299,7 @@ corePacks = import ../packs {
           };
         };
         hdf5 = {
+          version = "1.14";
           variants = {
             java = true;
           };
@@ -302,9 +313,17 @@ corePacks = import ../packs {
           os.symlink("/mnt/sw/fi/licenses/idl/o_licenseserverurl.txt", os.path.join(license_path, "o_licenseserverurl.txt"))
           for d in ["flexera", "flexera-sv"]:
             dir = os.path.join(license_path, d)
-            os.rmdir(dir)
+            try:
+              os.rmdir(dir)
+            except FileNotFoundError:
+              pass
             os.symlink("/tmp", dir)
         '';
+      };
+    };
+    intel-oneapi-compilers = {
+      variants = {
+        codeplay = true;
       };
     };
     libaio = {
@@ -328,13 +347,9 @@ corePacks = import ../packs {
         #glx = false; # ~glx breaks gtkplus
       };
     };
-    libevent = {
-      # for pmix
-      version = "2.1.8";
-    };
     libfabric = {
       variants = {
-        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2"] ++ lib.optionals (os == "centos7") ["psm"] ++ ["mlx"];
+        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "mlx"];
       };
     };
     libffi = {
@@ -355,9 +370,10 @@ corePacks = import ../packs {
       tests = false;
     };
     llvm = {
-      version = "11";
+      version = "14";
       build = {
         # install python bindings
+        # TODO: probably ought to use +python instead, but it's broken
         setup = ''
           cmake_args = pkg.cmake_args()
           cmake_args.append("-DCLANG_PYTHON_BINDINGS_VERSIONS=3")
@@ -411,19 +427,15 @@ corePacks = import ../packs {
         dap = true;
       };
     };
-    neovim = {
-      depends = {
-        lua = {
-          version = "5.1";
-        };
-      };
-    };
     nix = {
       variants = {
         storedir = builtins.getEnv "NIX_STORE_DIR";
         statedir = builtins.getEnv "NIX_STATE_DIR";
         sandboxing = false;
       };
+    };
+    node-js = {
+      version = "19";
     };
     nvhpc = {
       variants = {
@@ -433,7 +445,7 @@ corePacks = import ../packs {
     };
     ocaml = {
       # for unison
-      version = "4.11";
+      version = "4.10";
       variants = {
         force-safe-string = false;
       };
@@ -462,7 +474,7 @@ corePacks = import ../packs {
           none = false;
           ofi = true;
           ucx = true;
-          psm = os == "centos7";
+          psm = false;
           psm2 = true;
           verbs = true;
         };
@@ -517,12 +529,12 @@ corePacks = import ../packs {
     };
     poppler = {
       variants = {
-        glib = true;
+        glib = true;  # for latex2html
+        qt = true;  # for texstudio
       };
     };
     postgresql = {
       # for py-psycopg2
-      version = ":13";
       variants = {
         client_only = true;
       };
@@ -535,12 +547,16 @@ corePacks = import ../packs {
       # for py-protobuf
       version = "3.20";
     };
-    psm = bootstrapPacks.pkgs.psm; # needs old gcc
     py-astropy = {
       depends = {
         py-cython = {
           version = "0.29.30";
         };
+      };
+    };
+    py-bigfile = {
+      variants = {
+        mpi = true;
       };
     };
     py-blessings = {
@@ -554,13 +570,14 @@ corePacks = import ../packs {
       # for py-requests
       version = "2.0";
     };
-    py-globus-sdk = {
-      depends = {
-        py-pyjwt = {
-          variants = {
-            crypto = true;
-          };
-        };
+    py-cryptography = {
+      # py-pyopenssl
+      version = "38";
+    };
+    py-cupy = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
       };
     };
     py-dedalus = {
@@ -573,22 +590,15 @@ corePacks = import ../packs {
         };
       };
     };
-    py-distributed = {
-      depends = {
-        py-tornado = {
-          version = "6.1";
-        };
-      };
-    };
-    py-filelock = {
-      # py-setuptools
-      version = ":3.7";
-    };
     py-fsspec = {
       # py-lightning-fabric
       variants = {
         http = true;
       };
+    };
+    py-gast = {
+      # py-pythran
+      version = "0.5.3";
     };
     py-gevent = {
       depends = {
@@ -597,8 +607,27 @@ corePacks = import ../packs {
         };
       };
     };
-    py-greenlet = {
-      version = "1";
+    py-globus-sdk = {
+      depends = {
+        py-pyjwt = {
+          variants = {
+            crypto = true;
+          };
+        };
+      };
+    };
+    py-halotools = {
+      depends = {
+        py-cython = {
+          version = "0.29.32";
+        };
+      };
+    };
+    py-horovod = {
+      variants = {
+        inherit cuda_arch;
+        frameworks = ["tensorflow" "keras" "pytorch"];
+      };
     };
     py-ipyparallel = {
       depends = {
@@ -606,10 +635,10 @@ corePacks = import ../packs {
           version = "59";
         };
       };
-      build = {
-        # workaround ipython/ipyparallel#675
-        IPP_DISABLE_JS = "1";
-      };
+    };
+    py-ipython = {
+      # for python 3.8
+      version = "8.11";
     };
     py-jax = {
       variants = {
@@ -627,13 +656,19 @@ corePacks = import ../packs {
         };
       };
     };
-    py-mistune = {
-      # for py-nbconvert, py-m2r
-      version = ":1";
+    # py-jinja2 = {
+    #   version = "3.0.3";
+    # };
+    py-jsonschema = {
+      variants = {
+        format-nongpl = true;
+      };
     };
-    py-nbconvert = {
-      # py-nbconvert -> py-mistune dep
-      version = "6";
+    py-jupyterhub = {
+      version = "3";
+    };
+    py-jupyterlab = {
+      version = "3";
     };
     py-nose = {
       depends = {
@@ -643,7 +678,7 @@ corePacks = import ../packs {
       };
     };
     py-numpy = {
-      # for py-numba
+      # for py-tensorflow
       version = ":1.23";
     };
     py-pkgutil-resolve-name = {
@@ -652,14 +687,6 @@ corePacks = import ../packs {
           version = "2";
         };
       };
-    };
-    py-platformdirs = {
-      # for py-virtualenv
-      version = "2";
-    };
-    py-protobuf = {
-      # for py-torch
-      version = "3";
     };
     py-pybind11 = {
       # for py-torch
@@ -671,6 +698,20 @@ corePacks = import ../packs {
           version = "59";
         };
       };
+    };
+    py-pymol = {
+      build = {
+        post = ''
+        with open(os.path.join(spec.prefix.bin, 'pymol'), 'w') as fp:
+          fp.write('#!/bin/sh\n'
+                   'exec python -m pymol "$@"\n'
+          )
+        '';
+      };
+    };
+    py-pytorch-lightning = {
+      # py-horovod
+      version = "1.5.3";
     };
     py-pyqt5 = {
       depends = {
@@ -689,6 +730,11 @@ corePacks = import ../packs {
             toml = true;
           };
         };
+      };
+    };
+    py-runtests = {
+      variants = {
+        mpi = true;
       };
     };
     py-scikit-image = {
@@ -727,35 +773,18 @@ corePacks = import ../packs {
     py-tensorflow = {
       variants = {
         inherit cuda_arch;
-      };
-      depends = {
-        bazel = {
-          version = "5.3.0";
-        };
+        xla = true;
       };
     };
     re2 = {
-      # py-tensorflow
+      # for py-tensorflow
       variants = {
         shared = true;
       };
     };
     py-libclang = {
-      # py-tensorflow
-      # 13 or 14 works, but we have a build for 13
-      version = "13";
-      depends = {
-        llvm = {
-          variants = {
-            # clang = true;
-            omp_as_runtime = false;  # just matching the module build
-          };
-          version = "13";
-          depends = {
-            compiler = gcc11;
-          };
-        };
-      };
+      # for py-tensorflow
+      version = "14";
     };
     py-google-auth-oauthlib = {
       # for py-tensorflow
@@ -768,15 +797,25 @@ corePacks = import ../packs {
       };
       depends = blasVirtuals { name = "openblas"; }; # doesn't find flexiblas
     };
-    py-torchaudio = {
+    # py-torchaudio = {
+    #   build = {
+    #     # torchaudio will only build in a git checkout.
+    #     # spack caches git checkouts, without the .git directory.
+    #     # torchaudio will only build without a spack cache!
+    #     # TODO: find a better way to disable cache (installer use_cache=False?)
+    #     setup = ''
+    #       try:
+    #         os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
+    #       except OSError:
+    #         pass
+    #     '';
+    #   };
+    # };
+    py-horovod = {
       build = {
-        # torchaudio will only build in a git checkout.
-        # spack caches git checkouts, without the .git directory.
-        # torchaudio will only build without a spack cache!
-        # TODO: find a better way to disable cache (installer use_cache=False?)
         setup = ''
           try:
-            os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
+            os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "horovod", "horovod.git", "v%s.tar.gz"%(pkg.version)))
           except OSError:
             pass
         '';
@@ -812,6 +851,13 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    py-y-py = {
+      depends = {
+        py-maturin = {
+          version = "0.14";
+        };
+      };
+    };
     python = corePython;
     qt = {
       variants = {
@@ -839,6 +885,10 @@ corePacks = import ../packs {
       # needs openssl pkgconfig
       build = opensslPkgconfig;
     };
+    seacas = {
+      # for vtk
+      version = "2022";
+    };
     shadow = rpmExtern "shadow-utils";
     slurm = rec {
       extern = "/cm/shared/apps/slurm/current";
@@ -849,30 +899,11 @@ corePacks = import ../packs {
         hwloc = true;
       };
     };
-    texlive = {
-      depends = {
-        poppler = {
-          version = ":0.84";
-        };
-      };
-      variants = {
-        scheme = "full";
-      };
-    };
-    texstudio = {
-      depends = {
-        poppler = {
-          variants = {
-            qt = true;
-          };
-        };
-      };
-    };
     trilinos = {
       variants = {
+        cxxstd = "17";
         openmp = true;
         cuda = false;
-        cxxstd = "14";
         build_type = "Release";
         amesos2 = true;
         rol = true;
@@ -888,8 +919,8 @@ corePacks = import ../packs {
         rc = true;
         dc = true;
         ud = true;
-        mlx5-dv = true;
-        ib-hw-tm = true;
+        mlx5_dv = true;
+        ib_hw_tm = true;
         verbs = true;
         rdmacm = true;
         dm = true;
@@ -912,12 +943,16 @@ corePacks = import ../packs {
   repoPatch = {
     python = spec: old: {
       patches = [./python-ncursesw.patch];
+      build = {
+        post = ''
+          stdlib = f"python{pkg.version.up_to(2)}"
+          os.symlink("/mnt/sw/fi/python/EXTERNALLY-MANAGED",
+            os.path.join(pkg.prefix.lib, stdlib, "EXTERNALLY-MANAGED"),
+            )
+        '';
+      };
     };
     openmpi = spec: old: {
-      patches =
-        lib.optionals (spec.version == "1.10.7")                  [ ./openmpi-1.10.7.PATCH ] ++
-        lib.optionals (lib.versionAtMostSpec spec.version "1.10") [ ./openmpi-1.10-gcc.PATCH ] ++
-        lib.optionals (spec.version == "2.1.6")                   [ ./openmpi-2.1.6.PATCH ];
       build = {
         setup = ''
           builder = getattr(pkg, 'builder', pkg)
@@ -940,7 +975,7 @@ corePacks = import ../packs {
               if spec.satisfies("@4.0:"):
                   f.write("""
           #btl_openib_receive_queues=P,128,2048,1024,32:S,2048,2048,1024,64:S,12288,2048,1024,64:S,65536,2048,1024,64
-          btl=^openib,usnix
+          btl=^openib
           mtl=^psm,ofi
           pml=ucx
           pml_ucx_tls=any
@@ -958,9 +993,37 @@ corePacks = import ../packs {
       '';
       };
     };
-    /* incorrect dependency, see https://github.com/spack/spack/pull/29629 */
-    assimp = spec: old: {
-      depends = builtins.removeAttrs old.depends ["boost"];
+    py-cython = spec: old: {
+      depends = old.depends // {
+        py-setuptools = {
+          deptype = ["build"];
+        };
+      };
+    };
+    py-distributed = spec: old: {
+      depends = old.depends // {
+        py-tornado = {
+          version = "6.0.4:";
+        };
+        py-jinja2 = {
+          version = "2.10.3:";
+        };
+      };
+    };
+    py-jupyterlab = spec: old: {
+      depends = old.depends // {
+        py-jinja2 = {
+          version = "3.0.3:";
+          deptype = ["build" "run"];
+        };
+      };
+    };
+    py-numpy = spec: old: {
+      depends = old.depends // {
+        py-setuptools = {
+          deptype = ["build"];
+        };
+      };
     };
     py-pycuda = spec: old: {
       /* overaggresive variants */
@@ -978,17 +1041,12 @@ corePacks = import ../packs {
         };
       };
     };
-    /* missing openssl dep */
-    openldap = spec: old: {
+    xcb-proto = spec: old: {
       depends = old.depends // {
-        openssl = {
-          deptype = ["build" "link"];
+        python = {
+          deptype = ["build"];
         };
       };
-    };
-    /* doesn't actually need gtk-doc */
-    libcroco = spec: old: {
-      depends = builtins.removeAttrs old.depends ["gtk-doc"];
     };
     /* downloads its own libvips, and spack libvips is broken */
     npm = spec: old: {
@@ -999,6 +1057,14 @@ corePacks = import ../packs {
     fftw = lib64Link;
     gsl = lib64Link;
     hdf5 = lib64Link;
+
+    julia = spec: old: {
+      depends = old.depends // {
+        llvm = {
+          deptype = ["build" "link" "run"];
+        };
+      };
+    };
   };
 };
 
@@ -1013,7 +1079,7 @@ lib64Link = {
 bootstrapPacks = corePacks.withPrefs {
   label = "bootstrap";
   global = {
-    target = if os == "centos7" then "haswell" else target;
+    target = target;
     resolver = null;
     tests = false;
   };
@@ -1037,7 +1103,7 @@ bootstrapPacks = corePacks.withPrefs {
     };
     openssl = opensslExtern;
     perl = rpmExtern "perl";
-    pkgconfig = if os == "centos7" then rpmExtern "pkgconfig" else {};
+    pkgconfig = {};
     psm = {};
     uuid = {
       name = "libuuid";
@@ -1085,7 +1151,6 @@ mkCompilers = base: gen:
     defaulting = pkg: { default = isCore; inherit pkg; };
   }))
   [ /* -------- compilers -------- */
-    (corePacks.pkgs.gcc.withPrefs { version = "10"; })
     gcc11
   ];
 
@@ -1135,8 +1200,8 @@ mkMpis = comp: gen:
             rc = true;
             dc = true;
             ud = true;
-            mlx5-dv = true;
-            ib-hw-tm = true;
+            mlx5_dv = true;
+            ib_hw_tm = true;
             verbs = true;
             rdmacm = true;
             dm = true;
@@ -1221,6 +1286,11 @@ withPython = packs: py: let
       python = py // {
         resolver = deptype: if isRLDep deptype then packs else corePacks;
       };
+
+      py-protobuf = {
+        # py-torch
+        version = if (lib.versionMatches py.version "3.11") then "3.20.3-whl" else "=3.20.3";
+      };
     };
     global = {
       resolver = deptype: ifHasPy pyPacks
@@ -1231,7 +1301,7 @@ withPython = packs: py: let
   };
   in pyPacks;
 
-corePython = { version = if os == "centos7" then "3.8" else "3.9"; };
+corePython = { version = "3.9"; };
 
 mkPythons = base: gen:
   builtins.map (python: gen ({
@@ -1247,18 +1317,19 @@ mkPythons = base: gen:
     { version = "3.8"; }
     { version = "3.9"; }
     { version = "3.10"; }
+    { version = "3.11"; }
   ];
 
 pyBlacklist = [
-# { name = "py-pip"; } # already in python
   { name = "py-setuptools"; version = ":62.5,62.7:"; } # fitsio dep (arbitrary version)
   { name = "py-cython"; version = "0.29.30"; } # py-astropy dep
+  { name = "py-cython"; version = "0.29.32"; } # py-halotools dep
   { name = "py-cython"; version = "3"; } # py-gevent dep
   { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
-  { name = "py-tornado"; version = "6.1"; } # py-distributed dep
-  { name = "py-meson-python"; }  # TODO: why do we need this?
+  { name = "py-meson-python"; version = "0.12"; }
+  { name = "py-maturin"; version = "0.14"; }
 ];
 
 pyView = pl: corePacks.pythonView {
@@ -1309,20 +1380,23 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.8.3";
+      version = "1.9.0";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
           os.symlink("/etc/ssl/certs/ca-certificates.crt", os.path.join(pkg.prefix.share, "julia/cert.pem"))
+          os.symlink(os.path.join(pkg.spec["llvm"].prefix, "bin", "lld"), os.path.join(pkg.prefix.bin, "lld"))
         '';
       };
     };
     compiler = gcc11;
     llvm = {
-      version = "13.0.1";
+      version = "14.0.6";
       variants = {
         internal_unwind = false;
         llvm_dylib = true;
+        lld = true;
+        lldb = false;
         link_llvm_dylib = true;
         targets = {
           none = false;
@@ -1332,13 +1406,9 @@ juliaPacks = corePacks.withPrefs {
           webassembly = true;
         };
         version_suffix = "jl";
-        shlib_symbol_version = "JL_LLVM_13.0";
-        omp_as_runtime = false;
+        shlib_symbol_version = "JL_LLVM_14.0";
       };
-      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/75e33f71c2dae584b13a7d1186ae0a038ba98838...2f4460bd46aa80d4fe0d80c3dabcb10379e8d61b.patch")];
-      depends = {
-        compiler = gcc11;
-      };
+      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff")];
     };
     libuv-julia = {
       version = "1.44.2";
@@ -1351,7 +1421,7 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     nghttp2 = {
-      version = "1.47";
+      version = "1.48";
     };
     openblas = {
       variants = {
@@ -1361,9 +1431,10 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     openlibm = {
-      version = "0.8.1";
+      version = "0.8.1:0.8";
     };
     curl = {
+      version = "7.84:";
       variants = {
         libssh2 = true;
         nghttp2 = true;
@@ -1371,10 +1442,10 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     libblastrampoline = {
-      version = "5.1";
+      version = "5.4:";
     };
     libgit2 = {
-      version = "1.3";
+      version = "1.5";
     };
     libssh2 = {
       version = "1.10";
@@ -1407,34 +1478,13 @@ pkgStruct = {
       '';
     }
     (gcc.withPrefs { version = "7"; })
-    (gcc11.withPrefs { version = "12"; })
+    (gcc.withPrefs { version = "10"; })
+    (gcc11.withPrefs { version = "12.2"; })  # 12.3 won't bootstrap
     { pkg = llvm;
       default = true;
     }
-    { pkg = llvm.withPrefs { version = "13";
-        depends = {
-          compiler = gcc11;
-        };
-        variants = {
-          omp_as_runtime = false;
-        };
-      };
-    }
     { pkg = llvm.withPrefs {
-        version = "15";
-        depends = {
-          compiler = gcc11;
-        };
-        variants = {
-          cuda_arch = cuda_arch // { "90" = false; };
-          # omp_as_runtime = false; # tries to build duplicate OMP targets and fails
-          cuda = true;
-        };
-      };
-      environment = {
-        append_path = {
-          LD_LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
-        };
+        version = "16";
       };
       autoload = [hwloc];
     }
@@ -1459,10 +1509,26 @@ pkgStruct = {
     blast-plus
     #blender
     cmake
-    (cmake.withPrefs { version = "3.20"; }) # https://gitlab.kitware.com/cmake/cmake/-/issues/22723
     { pkg = cuda; default = true; }
     (mkCuda12 corePacks).pkgs.cuda
-    cudnn
+    { pkg = cudnn;
+      default = true;
+      postscript = ''
+        depends_on("cuda/11.8")
+      '';
+    }
+    { pkg = cudnn.withPrefs {
+        version = "8.9.1.23-12.0";
+        depends = {
+          cuda = {
+            version = "12";
+          };
+        };
+      };
+      postscript = ''
+        depends_on("cuda/12.0")
+      '';
+    }
     curl
     disBatch
     distcc
@@ -1480,22 +1546,11 @@ pkgStruct = {
     gnuplot
     gperftools
     gpu-burn
-    { pkg = gromacs;
-      projection = "{name}/singlegpunode-{version}";
-      environment = {
-        set = { GMX_GPU_DD_COMMS = "true";
-                GMX_GPU_PME_PP_COMMS = "true";
-                GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
-        };
-      };
-      default = true;
-    }
     grace
     graphviz
     hdfview
     imagemagick
     (blasPkg intel-mkl)
-    (blasPkg (intel-mkl.withPrefs { version = "2017.4.239"; }))
     intel-tbb
     intel-parallel-studio
     intel-oneapi-compilers
@@ -1512,10 +1567,7 @@ pkgStruct = {
     libtirpc
     libzmq
     likwid
-    #magma
     mercurial
-    #mplayer
-    #mpv
     mupdf
     {
       pkg = music.withPrefs {variants = { single_prec = false; }; };
@@ -1526,7 +1578,6 @@ pkgStruct = {
       projection = "{name}/single-{version}";
     }
     nccl
-    #neovim
     #nix #too old/broken
     node-js
     npm
@@ -1582,14 +1633,13 @@ pkgStruct = {
     vmd
     vtk
     wecall
-    #xscreensaver
     zsh
   ]
   ++
   map (v: mathematica.withPrefs
     { version = v;
     })
-    ["12.3.0" "13.1.0"]
+    ["12.3.0" "13.2.1"]
   ++
   map (v: matlab.withPrefs
     { version = v;
@@ -1597,7 +1647,7 @@ pkgStruct = {
         key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
       };
     })
-    ["R2022b"]
+    ["R2022b" "R2023a"]
   ++
   map (v: idl.withPrefs
     { version = v;
@@ -1618,7 +1668,9 @@ pkgStruct = {
       flexiblas
       gsl
       gmp
+      hdf5-blosc
       healpix
+      highway
       hwloc
       jemalloc
       #libdrm
@@ -1712,7 +1764,8 @@ pkgStruct = {
         lib.optionals mpi.isCore [
           pvfmm
           stkfmm
-          (trilinos.withPrefs { version = "13.4.1"; })
+          (trilinos.withPrefs { version = "13.4.1"; variants = { cxxstd = "14"; }; })
+          (trilinos.withPrefs { version = "14.0.0"; variants = { cxxstd = "17"; }; })
         ]
         ++
         lib.optionals (comp.isCore && mpi.isCore) [
@@ -1723,7 +1776,6 @@ pkgStruct = {
           { pkg = netlib-scalapack;  # MKL provies Intel ScaLAPACK
             projection = "scalapack/{version}"; }
           plumed
-          #(relion.withPrefs { version = "3"; })
           (relion.withPrefs { version = "4"; })
         ]
         ++
@@ -1737,7 +1789,13 @@ pkgStruct = {
         /* ---------- python+mpi modules ---------- */
         view = py.packs.pythonView { pkgs = with py.packs.pkgs; [
           py-mpi4py
+          py-bigfile
           py-h5py
+          py-mpsort
+          py-pfft-python
+          py-pmesh
+          py-runtests
+          py-nbodykit
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && lib.versionMatches comp.compiler.spec.version "10:") (with py.packs.pkgs;
           [(pkgMod triqs // {
@@ -1791,15 +1849,19 @@ pkgStruct = {
         #py-backports-ssl-match-hostname #conflicts...
         #py-backports-weakref # broken?
         py-biopython
+        py-black
         py-bokeh
         py-bottleneck
+        py-cachey
         py-cherrypy
+        py-classylss
+        py-corrfunc
+        py-coverage
         py-cython
         py-dask
         #py-deeptools #pysam broken
         #py-einsum2
         py-emcee
-        py-envisage #qt
         py-fitsio
         py-flask
         py-flask-socketio
@@ -1829,12 +1891,15 @@ pkgStruct = {
         py-jupyter-server
         py-jupyterlab
         py-jupyterlab-server
+        py-kdcount
         #py-leveldb
         #py-llfuse
         py-mako
         #py-matlab-wrapper
         py-matplotlib
         py-meson-python
+        py-mypy
+        py-mcfit
         py-netcdf4
         py-nbconvert
         py-nose
@@ -1855,10 +1920,10 @@ pkgStruct = {
         py-pybind11
         py-pycairo
         py-pycuda
+        py-cupy
         py-pyfftw
         py-pygments
         py-pylint
-        py-pyqt5
         #py-pyreadline
         #py-pysnmp
         #py-pystan
@@ -1867,8 +1932,8 @@ pkgStruct = {
         #py-python-hglib
         py-python-ldap
         py-pyyaml
-        py-qtconsole
         #py-ray #needs bazel 3
+        py-ruff
         #py-s3fs # botocore deps
         #py-scikit-cuda
         py-scikit-image
@@ -1877,6 +1942,7 @@ pkgStruct = {
         py-seaborn
         #py-setuptools
         py-shapely
+        py-sharedmem
         #py-sip
         py-sphinx
         py-sqlalchemy
@@ -1891,21 +1957,38 @@ pkgStruct = {
         #py-xattr #broken: missing pip dep
         #py-yep
         py-yt
-      ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "10") [
-        # bazel broken with gcc 11
+
+        py-protobuf
         py-torch
-        py-torchaudio
-        py-torchvision
-        py-lightning-fabric
-      ] ++ lib.optionals (lib.versionMatches comp.compiler.spec.version "11") [
-        py-jax
-        py-tensorflow
-        py-keras
-        # py-horovod  # needs spack package.py update
-        # py-pymc  # needs spack package.py update
-        # py-pytorch-lightning  # needs horovod
-      ] ++ lib.optionals (lib.versionMatches py.python.version ":3.9") [
         py-psycopg2
+        py-tensorflow
+
+        py-horovod
+        py-jax
+        py-keras
+        py-lightning-fabric
+        py-pytensor
+        py-pytorch-lightning
+        
+        # py-torchaudio  # breaks on import
+        py-torchvision
+      ] ++
+      lib.optionals (
+        lib.versionMatches py.python.version "3.9:"
+        )[
+        py-halotools
+        py-pymc
+        py-xarray
+      ] ++
+      lib.optionals (
+        lib.versionMatches py.python.version ":3.10"
+        )[
+        
+        # Uses old py-sip; won't build against 3.11
+        py-envisage
+        py-pymol
+        py-pyqt5
+        py-qtconsole
       ])
       ).overrideView {
         ignoreConflicts = [
@@ -1935,6 +2018,8 @@ pkgStruct = {
         boost = {
           variants = corePacks.prefs.package.boost.variants // {
             clanglibcpp = true;
+            python = false;
+            numpy = false;
           };
         };
       };
@@ -1973,15 +2058,6 @@ pkgStruct = {
     packs = mkSkylake corePacks;
     mpiPacks = mkSkylake (findCore (findCore pkgStruct.compilers).mpis).packs;
     pkgs = [
-      { pkg = packs.pkgs.gromacs;
-        projection = "{name}/skylake-singlegpunode-{version}";
-        environment = {
-          set = { GMX_GPU_DD_COMMS = "true";
-                  GMX_GPU_PME_PP_COMMS = "true";
-                  GMX_FORCE_UPDATE_DEFAULT_GPU = "true";
-          };
-        };
-      }
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
         projection = "{name}/skylake-mpi-{version}";
       }
@@ -2027,6 +2103,7 @@ pkgStruct = {
     #meshlab
     (withGL mplayer // { name = builtins.replaceStrings ["-unstable"] [""] mplayer.name; })
     (withGL mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
+    neovim
     #pass
     #pdftk
     rav1e

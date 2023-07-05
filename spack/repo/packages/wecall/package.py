@@ -14,7 +14,7 @@ class Wecall(MakefilePackage):
     depends_on('zlib')
     depends_on('boost+regex+test')
     depends_on('cmake', type='build')
-    depends_on('texlive scheme=full', type='build')
+    depends_on('texlive', type='build')
     depends_on('python', type='build')
 
     def install(self, spec, prefix):
