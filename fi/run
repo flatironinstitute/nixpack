@@ -101,9 +101,8 @@ case "$cmd" in
 			path=$path.lua
 		fi
 		# fixups
-		nix-build -o singularity -A pkgs.singularity $nixargs
 		nix-build -o apptainer -A pkgs.apptainer $nixargs
-		for fix in singularity/bin/spack_perms_fix.sh apptainer/bin/spack_perms_fix.sh ; do
+		for fix in apptainer/bin/spack_perms_fix.sh ; do
 			sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
 		done
 		# release
