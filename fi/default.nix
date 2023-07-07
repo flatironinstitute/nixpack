@@ -1673,6 +1673,7 @@ pkgStruct = {
       highway
       hwloc
       jemalloc
+      libiconv
       #libdrm
       magma
       #mesa
