@@ -1301,7 +1301,7 @@ withPython = packs: py: let
   };
   in pyPacks;
 
-corePython = { version = "3.9"; };
+corePython = { version = "3.10"; };
 
 mkPythons = base: gen:
   builtins.map (python: gen ({
