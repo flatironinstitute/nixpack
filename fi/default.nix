@@ -115,6 +115,7 @@ corePacks = import ../packs {
         regex = true;
         serialization = true;
         signals = true;
+        stacktrace = true;
         system = true;
         test = true;
         thread = true;
@@ -907,9 +908,12 @@ corePacks = import ../packs {
         build_type = "Release";
         amesos2 = true;
         rol = true;
-        stk = false;
+        stk = true;
+        shards = true;
         zoltan = true;
         zoltan2 = true;
+
+        hdf5 = true;
       };
     };
     ucx = {
