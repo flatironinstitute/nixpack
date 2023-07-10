@@ -2158,6 +2158,7 @@ pkgStruct = {
           "perl5" = "perl/5";
           "python3" = "python/3";
           "qt5" = "qt/5";
+          "singularity" = "apptainer";
         }; in
         # reloading identical aliases triggers a bug in old lmod
         # wrap in hacky conditional (since old lmod runs modulerc without sandbox, somehow)
