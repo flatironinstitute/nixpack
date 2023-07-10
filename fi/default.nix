@@ -115,6 +115,7 @@ corePacks = import ../packs {
         regex = true;
         serialization = true;
         signals = true;
+        stacktrace = true;
         system = true;
         test = true;
         thread = true;
@@ -166,7 +167,7 @@ corePacks = import ../packs {
       };
     };
     cudnn = {
-      version = "8.9.1.23-11.8";
+      version = "8.9.2.26-11.x";
     };
     curl = {
       version = "7";  # for r
@@ -907,9 +908,12 @@ corePacks = import ../packs {
         build_type = "Release";
         amesos2 = true;
         rol = true;
-        stk = false;
+        stk = true;
+        shards = true;
         zoltan = true;
         zoltan2 = true;
+
+        hdf5 = true;
       };
     };
     ucx = {
@@ -1301,7 +1305,7 @@ withPython = packs: py: let
   };
   in pyPacks;
 
-corePython = { version = "3.9"; };
+corePython = { version = "3.10"; };
 
 mkPythons = base: gen:
   builtins.map (python: gen ({
@@ -1514,11 +1518,11 @@ pkgStruct = {
     { pkg = cudnn;
       default = true;
       postscript = ''
-        depends_on("cuda/11.8")
+        depends_on("cuda/11")
       '';
     }
     { pkg = cudnn.withPrefs {
-        version = "8.9.1.23-12.0";
+        version = "8.9.2.26-12.x";
         depends = {
           cuda = {
             version = "12";
@@ -1526,7 +1530,7 @@ pkgStruct = {
         };
       };
       postscript = ''
-        depends_on("cuda/12.0")
+        depends_on("cuda/12")
       '';
     }
     curl
@@ -1673,6 +1677,7 @@ pkgStruct = {
       highway
       hwloc
       jemalloc
+      libiconv
       #libdrm
       magma
       #mesa

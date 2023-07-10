@@ -2,14 +2,14 @@ from spack.package import *
 import spack.pkg.builtin.cudnn as builtin
 
 class Cudnn(builtin.Cudnn):
-    version("8.9.1.23-11.8",
-            url="file:///mnt/sw/pkg/cudnn-linux-x86_64-8.9.1.23_cuda11-archive.tar.xz",
-            sha256='a6d9887267e28590c9db95ce65cbe96a668df0352338b7d337e0532ded33485c',
+    version("8.9.2.26-11.x",
+            url="file:///mnt/sw/pkg/cudnn-linux-x86_64-8.9.2.26_cuda11-archive.tar.xz",
+            sha256='39883d1bcab4bd2bf3dac5a2172b38533c1e777e45e35813100059e5091406f6',
             )
-    version("8.9.1.23-12.0",
-            url="file:///mnt/sw/pkg/cudnn-linux-x86_64-8.9.1.23_cuda12-archive.tar.xz",
-            sha256='35163c5c542be0c511738b27e25235193cbeedc5e0e006e44b1cdeaf1922e83e',
+    version("8.9.2.26-12.x",
+            url="file:///mnt/sw/pkg/cudnn-linux-x86_64-8.9.2.26_cuda12-archive.tar.xz",
+            sha256='ccafd7d15c2bf26187d52d79d9ccf95104f4199980f5075a7c1ee3347948ce32',
             )
     
-    depends_on('cuda@11', when='@8.9.1.23-11.8')
-    depends_on('cuda@12', when='@8.9.1.23-12.0')
+    depends_on('cuda@11', when='@8.9.2.26-11.x')
+    depends_on('cuda@12', when='@8.9.2.26-12.x')
