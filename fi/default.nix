@@ -167,7 +167,7 @@ corePacks = import ../packs {
       };
     };
     cudnn = {
-      version = "8.9.1.23-11.8";
+      version = "8.9.2.26-11.x";
     };
     curl = {
       version = "7";  # for r
@@ -1518,11 +1518,11 @@ pkgStruct = {
     { pkg = cudnn;
       default = true;
       postscript = ''
-        depends_on("cuda/11.8")
+        depends_on("cuda/11")
       '';
     }
     { pkg = cudnn.withPrefs {
-        version = "8.9.1.23-12.0";
+        version = "8.9.2.26-12.x";
         depends = {
           cuda = {
             version = "12";
@@ -1530,7 +1530,7 @@ pkgStruct = {
         };
       };
       postscript = ''
-        depends_on("cuda/12.0")
+        depends_on("cuda/12")
       '';
     }
     curl
