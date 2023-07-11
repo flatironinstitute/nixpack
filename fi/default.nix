@@ -1134,6 +1134,8 @@ format_cudaarch = (dot: sep: builtins.concatStringsSep sep
   )
 );
 
+cudnn-meta-ver = "${builtins.elemAt (lib.splitRegex "-" corePacks.pkgs.cudnn.spec.version) 0}";
+
 mkSkylake = base: base.withPrefs {
   global = {
     target = "skylake_avx512";
@@ -1513,13 +1515,23 @@ pkgStruct = {
     blast-plus
     #blender
     cmake
-    { pkg = cuda; default = true; }
-    (mkCuda12 corePacks).pkgs.cuda
-    { pkg = cudnn;
+    { pkg = cuda;
       default = true;
       postscript = ''
-        depends_on("cuda/11")
+        if ( isloaded("cudnn") ) then
+          load("cudnn/${cudnn-meta-ver}")
+        end
       '';
+    }
+    { pkg = (mkCuda12 corePacks).pkgs.cuda;
+      postscript = ''
+        if ( isloaded("cudnn") ) then
+          load("cudnn/${cudnn-meta-ver}")
+        end
+      '';
+    }
+    { pkg = cudnn;
+      default = false;
     }
     { pkg = cudnn.withPrefs {
         version = "8.9.2.26-12.x";
@@ -1529,9 +1541,7 @@ pkgStruct = {
           };
         };
       };
-      postscript = ''
-        depends_on("cuda/12")
-      '';
+      default = false;
     }
     curl
     disBatch
@@ -2181,6 +2191,20 @@ pkgStruct = {
           hide_version("${n.spec.name}/${n.spec.version}")
         '') (with corePacks.pkgs; [ ilmbase openexr ]))
         ;
+    }
+
+    { name = "cudnn";
+      version = cudnn-meta-ver;
+      default = true;
+      postscript = ''
+      whatis("Short description: cudnn meta-module that selects the version appropriate for the loaded cuda")
+      help([[cudnn meta-module that selects the version appropriate for the loaded cuda]])
+      if ( isloaded("cuda/12.1.1") ) then
+        load("cudnn/${cudnn-meta-ver}-12.x")
+      else
+        load("cudnn/${cudnn-meta-ver}-11.x")
+      end
+      '';
     }
   ];
 
