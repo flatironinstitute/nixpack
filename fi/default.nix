@@ -1513,13 +1513,19 @@ pkgStruct = {
     blast-plus
     #blender
     cmake
-    { pkg = cuda; default = true; }
-    (mkCuda12 corePacks).pkgs.cuda
-    { pkg = cudnn;
+    { pkg = cuda;
       default = true;
       postscript = ''
-        depends_on("cuda/11")
+        load("cudnn")
       '';
+    }
+    { pkg = (mkCuda12 corePacks).pkgs.cuda;
+      postscript = ''
+        load("cudnn")
+      '';
+    }
+    { pkg = cudnn;
+      default = false;
     }
     { pkg = cudnn.withPrefs {
         version = "8.9.2.26-12.x";
@@ -1529,9 +1535,7 @@ pkgStruct = {
           };
         };
       };
-      postscript = ''
-        depends_on("cuda/12")
-      '';
+      default = false;
     }
     curl
     disBatch
@@ -2180,6 +2184,20 @@ pkgStruct = {
           hide_version("${n.spec.name}/${n.spec.version}")
         '') (with corePacks.pkgs; [ ilmbase openexr ]))
         ;
+    }
+
+    { name = "cudnn";
+      version = builtins.elemAt (lib.splitRegex "-" corePacks.pkgs.cudnn.spec.version) 0;
+      default = true;
+      postscript = ''
+      whatis("Short description: cudnn meta-module that selects the version appropriate for the loaded cuda")
+      help([[cudnn meta-module that selects the version appropriate for the loaded cuda]])
+      if ( isloaded("cuda/12.1.1") ) then
+        load("cudnn/8.9.2.26-12.x")
+      else
+        load("cudnn/8.9.2.26-11.x")
+      end
+      '';
     }
   ];
 
