@@ -1134,6 +1134,8 @@ format_cudaarch = (dot: sep: builtins.concatStringsSep sep
   )
 );
 
+cudnn-meta-ver = "${builtins.elemAt (lib.splitRegex "-" corePacks.pkgs.cudnn.spec.version) 0}";
+
 mkSkylake = base: base.withPrefs {
   global = {
     target = "skylake_avx512";
@@ -1516,12 +1518,16 @@ pkgStruct = {
     { pkg = cuda;
       default = true;
       postscript = ''
-        load("cudnn")
+        if ( isloaded("cudnn") ) then
+          load("cudnn/${cudnn-meta-ver}")
+        end
       '';
     }
     { pkg = (mkCuda12 corePacks).pkgs.cuda;
       postscript = ''
-        load("cudnn")
+        if ( isloaded("cudnn") ) then
+          load("cudnn/${cudnn-meta-ver}")
+        end
       '';
     }
     { pkg = cudnn;
@@ -2187,15 +2193,15 @@ pkgStruct = {
     }
 
     { name = "cudnn";
-      version = builtins.elemAt (lib.splitRegex "-" corePacks.pkgs.cudnn.spec.version) 0;
+      version = cudnn-meta-ver;
       default = true;
       postscript = ''
       whatis("Short description: cudnn meta-module that selects the version appropriate for the loaded cuda")
       help([[cudnn meta-module that selects the version appropriate for the loaded cuda]])
       if ( isloaded("cuda/12.1.1") ) then
-        load("cudnn/8.9.2.26-12.x")
+        load("cudnn/${cudnn-meta-ver}-12.x")
       else
-        load("cudnn/8.9.2.26-11.x")
+        load("cudnn/${cudnn-meta-ver}-11.x")
       end
       '';
     }
