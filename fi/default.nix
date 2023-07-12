@@ -900,6 +900,16 @@ corePacks = import ../packs {
         hwloc = true;
       };
     };
+    suite-sparse = {
+      variants = {
+        openmp = true;
+      };
+      depends = {
+        mpfr = {
+          version = "4:";
+        };
+      };
+    };
     trilinos = {
       variants = {
         cxxstd = "17";
@@ -1723,6 +1733,7 @@ pkgStruct = {
           help([[Andrew Wetzel's rockstar-galaxies (https://bitbucket.org/awetzel/rockstar-galaxies)]])
         '';
       }
+      suite-sparse
       ucx
     ] ++
     optMpiPkgs comp.packs
