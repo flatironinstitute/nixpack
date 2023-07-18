@@ -16,6 +16,7 @@ class PyJupyterhub(builtin.PyJupyterhub):
     depends_on("py-entrypoints", when="@1.0.0:2", type=("build", "run"))
     depends_on("py-importlib_metadata@3.6:", when="python@:3.9")
     depends_on("py-packaging")
+    depends_on("npm", type=("build",))
 
     depends_on("py-setuptools@61:", type=("build",), when="@4:")
     depends_on("py-setuptools-scm", type=("build",), when="@4:")
