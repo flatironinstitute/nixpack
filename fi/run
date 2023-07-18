@@ -112,6 +112,7 @@ case "$cmd" in
 		fi
 		;& # fall-thru
 	(cache)
+		rm $lmodbase/cacheDir/spiderT.old.lua*
 		$lmodbase/lmod/lmod/libexec/update_lmod_system_cache_files -d $lmodbase/cacheDir -t $lmodbase/cacheTS.txt $lmodbase/modules:$(realpath $lmodbase/lmod/lmod/modulefiles/Core)
 		;;
 	(spack)
