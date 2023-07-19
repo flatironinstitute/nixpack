@@ -528,6 +528,9 @@ corePacks = import ../packs {
         superlu-dist = false;
       };
     };
+    pmix = {
+      version = "4.1";
+    };
     poppler = {
       variants = {
         glib = true;  # for latex2html
