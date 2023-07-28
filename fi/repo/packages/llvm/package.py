@@ -14,7 +14,7 @@ import spack.util.executable
 from spack.package import *
 
 
-class Llvm(CMakePackage, CudaPackage):
+class SpackLlvm(CMakePackage, CudaPackage):
     """The LLVM Project is a collection of modular and reusable compiler and
     toolchain technologies. Despite its name, LLVM has little to do
     with traditional virtual machines, though it does provide helpful
@@ -839,3 +839,15 @@ def get_llvm_targets_to_build(spec):
         llvm_targets.add("PowerPC")
 
     return list(llvm_targets)
+
+
+class Llvm(SpackLlvm):
+
+    def cmake_args(self):
+        args = [
+            "-DCLANG_PYTHON_BINDINGS_VERSIONS:STRING=3",
+            "-DLLDB_ENABLE_PYTHON:BOOL=ON",
+            "-DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR:BOOL=OFF",
+        ]
+        args = list(super().cmake_args()) + args
+        return args

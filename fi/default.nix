@@ -372,16 +372,6 @@ corePacks = import ../packs {
     };
     llvm = {
       version = "14";
-      build = {
-        # install python bindings
-        # TODO: probably ought to use +python instead, but it's broken
-        setup = ''
-          cmake_args = pkg.cmake_args()
-          cmake_args.append("-DCLANG_PYTHON_BINDINGS_VERSIONS=3")
-          cmake_args.append("-DLLDB_ENABLE_PYTHON:BOOL=ON")
-          pkg.cmake_args = lambda: cmake_args
-        '';
-      };
     };
     magma = {
       variants = {
@@ -1504,6 +1494,11 @@ pkgStruct = {
     }
     { pkg = llvm.withPrefs {
         version = "16";
+      };
+      environment = {
+        append_path = {
+          LD_LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
+        };
       };
       autoload = [hwloc];
     }
