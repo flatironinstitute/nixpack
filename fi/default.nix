@@ -1,7 +1,7 @@
 /* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
 { os ? "rocky8"
 , target ? "broadwell"
-, cudaarch ? "60,70,80,90"
+, cudaarch ? "70,80,90"
 , gitrev ? null
 }:
 
