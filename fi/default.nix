@@ -1201,6 +1201,7 @@ mkMpis = comp: gen:
     };
     isOpenmpi = mpi.name == "openmpi";
     isCore = mpi == { name = "openmpi"; };
+    isCudaAware = (mpi.variants or {}).cuda or false;
   })
   ([ /* -------- mpis -------- */
     { name = "openmpi"; }
@@ -1811,14 +1812,16 @@ pkgStruct = {
         ]
         ++
         lib.optionals (comp.isCore && mpi.isCore) [
-          # these are broken with intel...
+          { pkg = netlib-scalapack;  # MKL provies Intel ScaLAPACK
+            projection = "scalapack/{version}"; }
+          (relion.withPrefs { version = "4"; })
+        ]
+        ++
+        lib.optionals mpi.isCudaAware [
           gromacs
           { pkg = gromacs.withPrefs { version = "2022.5"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
-          { pkg = netlib-scalapack;  # MKL provies Intel ScaLAPACK
-            projection = "scalapack/{version}"; }
           plumed
-          (relion.withPrefs { version = "4"; })
         ]
         ++
         lib.optionals comp.isCore [
@@ -2098,13 +2101,21 @@ pkgStruct = {
 
   skylake = rec {
     packs = mkSkylake corePacks;
-    mpiPacks = mkSkylake (findCore (findCore pkgStruct.compilers).mpis).packs;
+    mpiPacks = mkSkylake (builtins.head
+        (builtins.filter (x: x.isCudaAware) (findCore pkgStruct.compilers).mpis)
+      ).packs;
     pkgs = [
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
         projection = "{name}/skylake-mpi-{version}";
+        postscript = ''
+          depends_on("openmpi-opa")
+        '';
       }
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "2022.5"; variants = { mpi = true; plumed = true; }; };
         projection = "{name}/skylake-mpi-plumed-{version}";
+        postscript = ''
+          depends_on("openmpi-opa")
+        '';
       }
     ];
   };
