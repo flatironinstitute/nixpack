@@ -675,6 +675,23 @@ corePacks = import ../packs {
       # for py-tensorflow
       version = ":1.23";
     };
+    libwebp = {
+      # for py-pillow
+      variants = {
+        libwebpmux = true;
+        libwebpdemux = true;
+      };
+    };
+    py-pillow = {
+      variants = {
+        freetype = true;
+        tiff = true;
+        webp = true;
+        webpmux = true;
+        jpeg2000 = true;
+        imagequant = true;
+      };
+    };
     py-pkgutil-resolve-name = {
       depends = {
         py-flit-core = {
@@ -1557,6 +1574,7 @@ pkgStruct = {
     doxygen
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
     fio
+    freetype
     gdal
     gdb
     gdrcopy
