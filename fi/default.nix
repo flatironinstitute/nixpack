@@ -2331,6 +2331,9 @@ modPkgs = with pkgStruct;
           ''
             conflict("hdf5/${py.packs.pkgs.hdf5.spec.version}")
           '';
+        env = {
+          PYTHONNOUSERSITE = "1";
+        };
       }] ++ py.pkgs) pythons
     ) mpis
     ++
