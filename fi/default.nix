@@ -1507,6 +1507,7 @@ pkgStruct = {
     (gcc.withPrefs { version = "7"; })
     (gcc.withPrefs { version = "10"; })
     (gcc11.withPrefs { version = "12.2"; })  # 12.3 won't bootstrap
+    (gcc11.withPrefs { version = "13"; })
     { pkg = llvm;
       default = true;
     }
