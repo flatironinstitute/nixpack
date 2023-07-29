@@ -156,9 +156,11 @@ with pkgs;
     bluetoothSupport = false;
   };
 
-  blender = blender.override {
+  blender = (blender.override {
     tbb = tbb_2021_8;
-  };
+  }).overrideAttrs (old: {
+    cmakeFlags = old.cmakeFlags ++ ["-DWITH_OPENAL=OFF"];
+  });
 
   SDL = SDL.overrideAttrs (old: {
     # this is already patched into configure.in, but not configure
