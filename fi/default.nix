@@ -2108,15 +2108,9 @@ pkgStruct = {
     pkgs = [
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
         projection = "{name}/skylake-mpi-{version}";
-        postscript = ''
-          depends_on("openmpi-opa")
-        '';
       }
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "2022.5"; variants = { mpi = true; plumed = true; }; };
         projection = "{name}/skylake-mpi-plumed-{version}";
-        postscript = ''
-          depends_on("openmpi-opa")
-        '';
       }
     ];
   };
