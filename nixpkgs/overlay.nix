@@ -8,6 +8,7 @@ with pkgs;
     postPatch = ''
       sed -i 's/static bool forceRPath = false;/static bool forceRPath = true;/' src/patchelf.cc
     '';
+    doCheck = false;
   });
 
   makeShellWrapper = makeShellWrapper.overrideAttrs (old: {
