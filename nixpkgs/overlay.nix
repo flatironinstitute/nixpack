@@ -4,6 +4,13 @@ with pkgs;
 {
   nss_sss = callPackage sssd/nss-client.nix { };
 
+  patchelf = patchelf.overrideAttrs (old: {
+    postPatch = ''
+      sed -i 's/static bool forceRPath = false;/static bool forceRPath = true;/' src/patchelf.cc
+    '';
+    doCheck = false;
+  });
+
   makeShellWrapper = makeShellWrapper.overrideAttrs (old: {
     # avoid infinite recursion by escaping to system (hopefully it's good enough)
     shell = "/bin/sh";
