@@ -132,3 +132,6 @@ To do a release:
 2. Release should now show up as new `modules` version, which you can load to test.
 3. Update default symlink in /cm/shared/sw/lmod/modules/modules when ready.
 4. Run `fi/run modules` to update cache (after any change to modules).
+
+## Branches
+`fi` corresponds to the current modules set; `main` is the upcoming set.

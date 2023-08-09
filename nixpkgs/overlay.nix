@@ -4,8 +4,16 @@ with pkgs;
 {
   nss_sss = callPackage sssd/nss-client.nix { };
 
-  libuv = libuv.overrideAttrs (old: {
-    doCheck = false; # failure
+  patchelf = patchelf.overrideAttrs (old: {
+    postPatch = ''
+      sed -i 's/static bool forceRPath = false;/static bool forceRPath = true;/' src/patchelf.cc
+    '';
+    doCheck = false;
+  });
+
+  makeShellWrapper = makeShellWrapper.overrideAttrs (old: {
+    # avoid infinite recursion by escaping to system (hopefully it's good enough)
+    shell = "/bin/sh";
   });
 
   coreutils = (coreutils.override {
@@ -49,8 +57,6 @@ with pkgs;
     '';
   });
 
-  # openssl = self.openssl_1_1;
-
   # we don't need libredirect for anything (just openssh tests), and it's broken
   libredirect = "/var/empty";
 
@@ -58,12 +64,26 @@ with pkgs;
     doCheck = false; # strange environment mismatch
   });
 
+  libuv = libuv.overrideAttrs (old: {
+    doCheck = false; # failure
+  });
+
   openimageio = openimageio.overrideAttrs (old: {
     # avoid finding system libjpeg.so
     cmakeFlags = old.cmakeFlags ++ ["-DJPEGTURBO_PATH=${libjpeg.out}"];
   });
 
-  embree = embree.overrideAttrs (old: {
+  openimagedenoise = openimagedenoise.override {
+    tbb = tbb_2021_8;
+  };
+
+  openvdb = openvdb.override {
+    tbb = tbb_2021_8;
+  };
+
+  embree = (embree.override {
+    tbb = tbb_2021_8;
+  }).overrideAttrs (old: {
     # based on spack flags
     cmakeFlags =
       let
@@ -93,9 +113,30 @@ with pkgs;
     });
     in { inherit tools; } // tools);
 
+  llvmPackages_15 = llvmPackages_15 // (let
+    tools = llvmPackages_15.tools.extend (self: super: {
+      # broken glob test?
+      libllvm = super.libllvm.overrideAttrs (old: {
+        postPatch = old.postPatch + ''
+          rm test/Other/ChangePrinters/DotCfg/print-changed-dot-cfg.ll
+        '';
+      });
+    });
+    in { inherit tools; } // tools);
+
   libxcrypt = libxcrypt.overrideAttrs (old: {
     /* sign-conversion warnings: */
     configureFlags = old.configureFlags ++ [ "--disable-werror" ];
+  });
+
+  opencolorio = opencolorio.overrideAttrs (old: {
+    # various minor numeric failures
+    doCheck = false;
+  });
+
+  openexr_3 = openexr_3.overrideAttrs (old: {
+    # -nan != -nan
+    doCheck = false;
   });
 
   python310 = python310.override {
@@ -104,14 +145,34 @@ with pkgs;
         # FAIL: test_negate (Cryptodome.SelfTest.PublicKey.test_ECC_25519.TestEccPoint_Ed25519)
         doCheck = false;
       });
+      eventlet = super.eventlet.overridePythonAttrs (old: {
+        # needs libredirect
+        doCheck = false;
+      });
     };
   };
 
-  pipewire = pipewire.override {
+  pipewire = (pipewire.override {
     bluezSupport = false;
+    rocSupport = false; # temporarily workaround sox broken download (though probably don't need it anyway)
+  }).overrideAttrs (old: {
+    buildInputs = old.buildInputs ++ [libopus];
+  });
+
+  pulseaudio = pulseaudio.override {
+    bluetoothSupport = false;
   };
 
-  blender = blender.overrideAttrs (old: {
-    patches = old.patches ++ [ ./blender-sse2.patch ];
+  blender = (blender.override {
+    tbb = tbb_2021_8;
+  }).overrideAttrs (old: {
+    cmakeFlags = old.cmakeFlags ++ ["-DWITH_OPENAL=OFF"];
+  });
+
+  SDL = SDL.overrideAttrs (old: {
+    # this is already patched into configure.in, but not configure
+    postConfigure = ''
+      sed -i '/SDL_VIDEO_DRIVER_X11_CONST_PARAM_XDATA32/s/.*/#define SDL_VIDEO_DRIVER_X11_CONST_PARAM_XDATA32 1/' include/SDL_config.h
+    '';
   });
 }

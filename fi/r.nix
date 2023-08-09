@@ -8,6 +8,7 @@ with packs.pkgs; [
   r-biasedurn
   r-biocinstaller
   r-biocmanager
+  r-cairo
   r-deseq2
   r-dt
   #r-diffbind
@@ -62,6 +63,7 @@ with packs.pkgs; [
   r-genefilter
   r-getopt
   r-ggplot2
+  r-ggrastr
   r-glmnet
   r-glue
   r-gplots
@@ -129,6 +131,7 @@ with packs.pkgs; [
   r-snow
   r-sourcetools
   r-sys
+  r-terra
   r-tibble
   r-tidyr
   r-tidyselect
