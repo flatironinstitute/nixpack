@@ -2280,12 +2280,6 @@ jupyter = jupyterBase.extendView (
             env = builtins.mapAttrs (var: path:
               py.packs.pkgs.openblas + path) flexiBlases.openblas;
           })
-          (k // {
-            prefix = k.prefix + "-mkl";
-            note = k.note+"+mkl";
-            env = builtins.mapAttrs (var: path:
-              py.packs.pkgs.intel-oneapi-mkl + path) flexiBlases.intel-oneapi-mkl;
-          })
         ]
       ) pythons
     ) compilers
