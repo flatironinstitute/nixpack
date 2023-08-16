@@ -932,8 +932,17 @@ corePacks = import ../packs {
         shards = true;
         zoltan = true;
         zoltan2 = true;
+        exodus = true;
 
         hdf5 = true;
+      };
+      depends = {
+        netcdf-c = {
+          variants = {
+            mpi = true;
+            parallel-netcdf = true;
+          };
+        };
       };
     };
     ucx = {
