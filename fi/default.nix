@@ -74,6 +74,41 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
+    ascent = {
+      variants = {
+        vtkh = false;
+        raja = true;
+        cuda = true;
+        inherit cuda_arch;
+        python = true;
+      };
+    };
+    conduit = {
+      variants = {
+        hdf5_compat = false;
+        python = true;
+      };
+    };
+    camp = {
+      variants = {
+        openmp = true;
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
+    raja = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
+    umpire = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+        shared = false;
+      };
+    };
     bazel = {
       # py-tensorflow family
       version = "5.3.0";
@@ -1833,6 +1868,7 @@ pkgStruct = {
           { pkg = gromacs.withPrefs { version = "2022.5"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
           plumed
+          ascent
         ]
         ++
         lib.optionals comp.isCore [
