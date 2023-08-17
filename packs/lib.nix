@@ -228,10 +228,7 @@ rec {
       intersectors = {
         version = versionsIntersect;
         variants = mergeWith (a: b: if a == b then a else
-          if isList a then if isList b then union a b
-                                       else union a [b]
-                      else if isList b then union [a] b
-                                       else [a b]);
+          union (toList a) (toList b));
         patches = a: b: a ++ b;
         depends = mergeWith prefsIntersect;
         extern = scalar;
