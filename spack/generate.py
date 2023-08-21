@@ -82,6 +82,33 @@ class AttrSet(Nix, dict):
             out.write(' '*indent)
         out.write('}')
 
+class Select(Nix):
+    prec = 1
+    def __init__(self, val, *attr: str):
+        self.val = val
+        self.attr = attr
+    def print(self, indent, out):
+        if isinstance(self.val, str):
+            out.write(self.val)
+        else:
+            self.paren(self.val, indent, out)
+        for a in self.attr:
+            out.write('.')
+            if isident(a):
+                out.write(a)
+            else:
+                self.paren(a, indent, out)
+
+class SelectOr(Select):
+    prec = 1
+    def __init__(self, val, attr: str, ore):
+        super().__init__(val, attr)
+        self.ore = ore
+    def print(self, indent, out):
+        super().print(indent, out)
+        out.write(' or ')
+        self.paren(self.ore, indent, out)
+
 class Fun(Nix):
     prec = 16 # not actually listed?
     def __init__(self, var: str, expr):
@@ -146,6 +173,16 @@ class Eq(Nix):
         out.write(' == ')
         self.paren(self.b, indent, out)
 
+class Ne(Nix):
+    prec = 11
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+    def print(self, indent, out):
+        self.paren(self.a, indent, out)
+        out.write(' != ')
+        self.paren(self.b, indent, out)
+
 nixStrEsc = str.maketrans({'"': '\\"', '\\': '\\\\', '$': '\\$', '\n': '\\n', '\r': '\\r', '\t': '\\t'})
 def printNix(x, indent=0, out=sys.stdout):
     if isinstance(x, Nix):
@@ -195,24 +232,24 @@ def depPrefs(d):
 
 def conditions(c, p, s, dep=None):
     def addConditions(a, s):
+        deps = Select(a,'depends')
         if s.versions != any_version:
-            c.append(App("versionMatches", Expr(a+'.version'), str(s.versions)))
+            c.append(App("versionMatches", Select(a,'version'), str(s.versions)))
         if s.variants:
             for n, v in sorted(s.variants.items()):
-                c.append(App("variantMatches", Expr(a+'.variants.'+n), unlist(v.value)))
+                c.append(App("variantMatches", Select(a,'variants',n), unlist(v.value)))
         if s.compiler:
-            notExtern = Eq(Expr(a+'.extern'), None)
+            notExtern = Eq(Select(a,'extern'), None)
             if s.compiler.name:
-                c.append(And(notExtern, Eq(Expr(a+'.depends.compiler.spec.name'), s.compiler.name)))
+                c.append(And(notExtern, Eq(Select(deps,'compiler','spec','name'), s.compiler.name)))
             if s.compiler.versions != any_version:
-                c.append(And(notExtern, App("versionMatches", Expr(a+'.depends.compiler.spec.version'), str(s.compiler.versions))))
+                c.append(And(notExtern, App("versionMatches", Select(deps,'compiler','spec','version'), str(s.compiler.versions))))
         for d in s.dependencies():
             if dep and d.name == dep.spec.name:
                 print(f"{dep}: skipping recursive dependency conditional {d}", file=sys.stderr)
                 continue
-            dp = a+'.depends.'+d.name
-            c.append(Expr(dp + " or null != null", 11))
-            addConditions(dp+'.spec', d)
+            c.append(Ne(SelectOr(deps,d.name,None),None))
+            addConditions(Select(deps,d.name,'spec'), d)
         if s.architecture:
             if s.architecture.os:
                 c.append(Eq(Expr('os'), s.architecture.os))
