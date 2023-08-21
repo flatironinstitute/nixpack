@@ -73,7 +73,7 @@ class AttrSet(Nix, dict):
     def print(self, indent, out):
         out.write('{')
         first = True
-        for k, v in self.items():
+        for k, v in sorted(self.items()):
             if first:
                 out.write('\n')
                 first = False
@@ -198,7 +198,7 @@ def conditions(c, p, s, dep=None):
         if s.versions != any_version:
             c.append(App("versionMatches", Expr(a+'.version'), str(s.versions)))
         if s.variants:
-            for n, v in s.variants.items():
+            for n, v in sorted(s.variants.items()):
                 c.append(App("variantMatches", Expr(a+'.variants.'+n), unlist(v.value)))
         if s.compiler:
             notExtern = Eq(Expr(a+'.extern'), None)
@@ -278,7 +278,7 @@ def variant(p, v):
         return variant1(p, v)
 
 def depend(p, d):
-    c = [whenCondition(p, w, depPrefs(s), s) for w, s in d.items()]
+    c = [whenCondition(p, w, depPrefs(s), s) for w, s in sorted(d.items())]
     if len(c) == 1:
         return c[0]
     return List(c)
@@ -316,11 +316,11 @@ for p in spack.repo.path.all_package_classes():
     if p.dependencies:
         desc['depends'] = {n: depend(p, d) for n, d in p.dependencies.items()}
     if p.conflicts:
-        desc['conflicts'] = [conflict(p, c, w, m) for c, wm in p.conflicts.items() for w, m in wm]
+        desc['conflicts'] = [conflict(p, c, w, m) for c, wm in sorted(p.conflicts.items()) for w, m in wm]
     if p.provided:
         provides = defaultdict(list)
-        for v, cs in p.provided.items():
-            provides[v.name].extend((c, v.versions) for c in cs)
+        for v, cs in sorted(p.provided.items()):
+            provides[v.name].extend((c, v.versions) for c in sorted(cs))
             virtuals[v.name].add(p.name)
         desc['provides'] = {v: provide(p, c) for v, c in provides.items()}
     if getattr(p, 'family', None) == 'compiler':
@@ -331,7 +331,7 @@ print(f"Generated {n} packages")
 
 # use spack config for provider ordering
 prefs = spack.config.get("packages:all:providers", {})
-for v, providers in virtuals.items():
+for v, providers in sorted(virtuals.items()):
     prov = []
     for p in prefs.get(v, []):
         n = spack.spec.Spec(p).name
@@ -340,7 +340,7 @@ for v, providers in virtuals.items():
         except KeyError:
             continue
         prov.append(n)
-    prov.extend(providers)
+    prov.extend(sorted(providers))
     output(v, prov)
 print(f"Generated {len(virtuals)} virtuals")
 
