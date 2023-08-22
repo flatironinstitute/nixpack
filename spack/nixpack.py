@@ -301,7 +301,7 @@ class NixSpec(spack.spec.Spec):
                     assert cdep.spec == dep, f"{self.name}.{n}: conflicting dependencies on {dep.name}"
                     cdep.update_deptypes(dtype)
                 else:
-                    self._add_dependency(dep, deptypes=dtype)
+                    self._add_dependency(dep, deptypes=dtype, virtuals=())
             if not ('link' in dtype or 'run' in dtype):
                 # trim build dep references
                 del nixspec['depends'][n]
