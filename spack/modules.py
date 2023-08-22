@@ -177,7 +177,7 @@ config = {
     }
 }
 spack.config.set('modules', config, 'command_line')
-spack.repo.path.provider_index # precompute
+spack.repo.PATH.provider_index # precompute
 
 print(f"Generating {len(specs)} {modtype} modules in {root}...")
 def write(s):

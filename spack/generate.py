@@ -332,7 +332,7 @@ def conflict(p, c, w, m):
     conditions(l, p, w)
     return App('when', And(*l), str(c) + (' ' + m if m else ''))
 
-namespaces = ', '.join(r.namespace for r in spack.repo.path.repos)
+namespaces = ', '.join(r.namespace for r in spack.repo.PATH.repos)
 print(f"Generating package repo for {namespaces}...")
 f = open(os.environ['out'], 'w')
 print("spackLib: with spackLib; {", file=f)
@@ -341,7 +341,7 @@ def output(k, v):
 
 virtuals = defaultdict(set)
 n = 0
-for p in spack.repo.path.all_package_classes():
+for p in spack.repo.PATH.all_package_classes():
     desc = dict()
     desc['namespace'] = p.namespace;
     vers = [(i.get('preferred',False), not (v.isdevelop() or i.get('deprecated',False)), v)

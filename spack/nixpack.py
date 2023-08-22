@@ -60,8 +60,8 @@ class NixStore():
 spack.store.store = NixStore()
 
 spack.config.command_line_scopes = getVar('spackConfig').split()
-spack.config.config.remove_scope('system')
-spack.config.config.remove_scope('user')
+spack.config.CONFIG.remove_scope('system')
+spack.config.CONFIG.remove_scope('user')
 
 spack.config.set('config:build_stage', [getVar('NIX_BUILD_TOP')], 'command_line')
 enableParallelBuilding = bool(getVar('enableParallelBuilding', True))
@@ -84,7 +84,7 @@ for i, r in enumerate(repos):
         repos[i] = repo
         dynRepos[repo.namespace] = repo
 repoPath = spack.repo.RepoPath(*repos)
-spack.repo.path.put_first(repoPath)
+spack.repo.PATH.put_first(repoPath)
 
 cache = getVar('spackCache', None)
 if cache:
@@ -312,7 +312,7 @@ class NixSpec(spack.spec.Spec):
             patches = self.package_class.patches.setdefault(spack.directives.make_when_spec(True), [])
             for i, p in enumerate(nixspec['patches']):
                 patches.append(spack.patch.FilePatch(self.package_class, p, 1, '.', ordering_key = ('~nixpack', i)))
-            spack.repo.path.patch_index.update_package(self.fullname)
+            spack.repo.PATH.patch_index.update_package(self.fullname)
 
     def supports_target(self, target):
         try:
