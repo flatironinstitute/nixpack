@@ -59,11 +59,10 @@ class NixStore():
     unpadded_root = spack.paths.prefix
 spack.store.STORE = NixStore()
 
-spack.config.command_line_scopes = getVar('spackConfig').split()
+spack.config.COMMAND_LINE_SCOPES = getVar('spackConfig').split()
 spack.config.CONFIG.remove_scope('system')
 spack.config.CONFIG.remove_scope('user')
 
-spack.config.set('config:locks', False, 'command_line')
 spack.config.set('config:build_stage', [getVar('NIX_BUILD_TOP')], 'command_line')
 enableParallelBuilding = bool(getVar('enableParallelBuilding', True))
 cores = 1
