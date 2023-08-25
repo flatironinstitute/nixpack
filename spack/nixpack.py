@@ -57,7 +57,7 @@ class NixStore():
     layout = NixLayout()
     # this is used to find bin/sbang:
     unpadded_root = spack.paths.prefix
-spack.store.store = NixStore()
+spack.store.STORE = NixStore()
 
 spack.config.command_line_scopes = getVar('spackConfig').split()
 spack.config.CONFIG.remove_scope('system')

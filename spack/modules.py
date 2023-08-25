@@ -176,7 +176,6 @@ config = {
         modtype: modconf
     }
 }
-spack.config.set('config:locks', False, 'command_line')
 spack.config.set('modules', config, 'command_line')
 spack.repo.PATH.provider_index # precompute
 
