@@ -23,9 +23,10 @@ corePacks = import ../packs {
 
   spackSrc = {
     /* -------- upstream spack version -------- */
-    url = "https://github.com/flatironinstitute/spack";
+    # url = "https://github.com/flatironinstitute/spack";
+    url = "/mnt/home/lgarrison/scc/repo/spack";
     ref = "fi-nixpack";
-    rev = "180fb7a37f0b47056776830d8170b296d96d993f";
+    rev = "058d1ee17570eca42a620417ce673a0f1463de76";
   };
 
   spackConfig = {
@@ -76,11 +77,18 @@ corePacks = import ../packs {
     };
     ascent = {
       variants = {
-        vtkh = false;
+        vtkh = true;
         raja = true;
         cuda = true;
         inherit cuda_arch;
         python = true;
+      };
+    };
+    vtk-m = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+        fpic = true;
       };
     };
     conduit = {
@@ -753,6 +761,10 @@ corePacks = import ../packs {
         };
       };
     };
+    py-pybind11 = {
+      # for py-torch
+      version = "2.10.1";
+    };
     py-pyfftw = {
       depends = {
         py-setuptools = {
@@ -804,13 +816,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-sqlalchemy = {
-      depends = {
-        py-typing-extensions = {
-          version = "4.2.0";
-        };
-      };
-    };
     py-runtests = {
       variants = {
         mpi = true;
@@ -844,11 +849,8 @@ corePacks = import ../packs {
         xla = true;
       };
       depends = {
-        py-gast = {
-          version = "0.4.0";
-        };
-        py-typing-extensions = {
-          version = "4.5";
+        py-setuptools = {
+          version = ":61";  # for platform_system!="Darwin"
         };
       };
     };
@@ -867,12 +869,7 @@ corePacks = import ../packs {
         inherit cuda_arch;
         valgrind = false;
       };
-      depends = {
-        py-pybind11 = {
-          # for py-torch
-          version = "2.10.1";
-        };
-      } // blasVirtuals {
+      depends = blasVirtuals {
         name = "openblas";
       }; # doesn't find flexiblas
     };
@@ -884,7 +881,7 @@ corePacks = import ../packs {
     #     # TODO: find a better way to disable cache (installer use_cache=False?)
     #     setup = ''
     #       try:
-    #         os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
+    #         os.unlink(os.path.join(spack.caches.FETCH_CACHE.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
     #       except OSError:
     #         pass
     #     '';
@@ -894,10 +891,17 @@ corePacks = import ../packs {
       build = {
         setup = ''
           try:
-            os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "horovod", "horovod.git", "v%s.tar.gz"%(pkg.version)))
+            os.unlink(os.path.join(spack.caches.FETCH_CACHE.root, "_source-cache", "git", "horovod", "horovod.git", "v%s.tar.gz"%(pkg.version)))
           except OSError:
             pass
         '';
+      };
+    };
+    py-scipy = {
+      depends = {
+        py-pybind11 = {
+          version = "2.10.4";
+        };
       };
     };
     py-torch-cluster = {
@@ -1043,7 +1047,7 @@ corePacks = import ../packs {
 
   repoPatch = {
     python = spec: old: {
-      patches = [./python-ncursesw.patch];
+      patches = if lib.versionMatches spec.version "3.11.4:" then [./python-ncursesw-py-3.11.4.patch] else [./python-ncursesw.patch];
       build = {
         post = ''
           stdlib = f"python{pkg.version.up_to(2)}"
@@ -1149,6 +1153,30 @@ corePacks = import ../packs {
         };
       };
     };
+    py-tensorflow = spec: old: {
+      depends = old.depends // {
+        patchelf = {
+          deptype = ["build"];
+        };
+        py-typing-extensions = {
+          version = "3.6.6:";
+          deptype = ["build" "run"];
+        };
+        py-gast = {
+          # https://github.com/tensorflow/tensorflow/pull/61134
+          version = "0.5.3";
+          deptype = ["build" "run"];
+        };
+      };
+    };
+    py-sqlalchemy = spec: old: {
+      depends = old.depends // {
+        py-typing-extensions = {
+          version = "4.2.0:";
+          deptype = ["build" "run"];
+        };
+      };
+    };
     /* downloads its own libvips, and spack libvips is broken */
     npm = spec: old: {
       depends = builtins.removeAttrs old.depends ["libvips"];
@@ -1231,7 +1259,7 @@ format_cudaarch = (dot: sep: builtins.concatStringsSep sep
   )
 );
 
-cudnn-meta-ver = "${builtins.elemAt (lib.splitRegex "-" corePacks.pkgs.cudnn.spec.version) 0}";
+# cudnn-meta-ver = "${builtins.elemAt (lib.splitRegex "-" corePacks.pkgs.cudnn.spec.version) 0}";
 
 mkSkylake = base: base.withPrefs {
   global = {
@@ -1315,16 +1343,16 @@ mkMpis = comp: gen:
     }
   ]);
 
-mkCuda12 = base: base.withPrefs {
-  package = {
-    cuda = {
-      version = "12";
-      depends = {
-        libxml2 = rpmExtern "libxml2";
-      };
-    };
-  };
-};
+# mkCuda12 = base: base.withPrefs {
+#   package = {
+#     cuda = {
+#       version = "12";
+#       depends = {
+#         libxml2 = rpmExtern "libxml2";
+#       };
+#     };
+#   };
+# };
 
 flexiBlases = {
   openblas = {
@@ -1418,9 +1446,9 @@ mkPythons = base: gen:
     });
   }))
   [ /* -------- pythons -------- */
-    { version = "3.9"; }
+    # { version = "3.9"; }
     { version = "3.10"; }
-    { version = "3.11"; }
+    # { version = "3.11"; }
   ];
 
 pyBlacklist = [
@@ -1433,6 +1461,7 @@ pyBlacklist = [
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
   { name = "py-meson-python"; version = "0.12"; }
   { name = "py-maturin"; version = "0.14"; }
+  { name = "py-pybind11"; version = "2.10.4"; }  # scipy dep
 ];
 
 pyView = pl: corePacks.pythonView {
@@ -1621,32 +1650,33 @@ pkgStruct = {
     cmake
     { pkg = cuda;
       default = true;
-      postscript = ''
-        if ( isloaded("cudnn") ) then
-          load("cudnn/${cudnn-meta-ver}")
-        end
-      '';
+      # postscript = ''
+      #   if ( isloaded("cudnn") ) then
+      #     load("cudnn/${cudnn-meta-ver}")
+      #   end
+      # '';
     }
-    { pkg = (mkCuda12 corePacks).pkgs.cuda;
-      postscript = ''
-        if ( isloaded("cudnn") ) then
-          load("cudnn/${cudnn-meta-ver}")
-        end
-      '';
-    }
-    { pkg = cudnn;
-      default = false;
-    }
-    { pkg = cudnn.withPrefs {
-        version = "8.9.2.26-12.x";
-        depends = {
-          cuda = {
-            version = "12";
-          };
-        };
-      };
-      default = false;
-    }
+    # { pkg = (mkCuda12 corePacks).pkgs.cuda;
+    #   postscript = ''
+    #     if ( isloaded("cudnn") ) then
+    #       load("cudnn/${cudnn-meta-ver}")
+    #     end
+    #   '';
+    # }
+    # { pkg = cudnn;
+    #   default = false;
+    # }
+    # { pkg = cudnn.withPrefs {
+    #     version = "8.9.2.26-12.x";
+    #     depends = {
+    #       cuda = {
+    #         version = "12";
+    #       };
+    #     };
+    #   };
+    #   default = false;
+    # }
+    cudnn
     curl
     disBatch
     distcc
@@ -1742,7 +1772,7 @@ pkgStruct = {
     subversion
     swig
     texlive
-    texstudio
+    # texstudio  # TODO qt 6 incompatibility?
     tmux
     udunits
     unison
@@ -2109,10 +2139,10 @@ pkgStruct = {
         )[
         
         # Uses old py-sip; won't build against 3.11
-        py-envisage
-        py-pymol
-        py-pyqt5
-        py-qtconsole
+        # py-envisage
+        # py-pymol
+        # py-pyqt5
+        # py-qtconsole
       ])
       ).overrideView {
         ignoreConflicts = [
@@ -2304,19 +2334,19 @@ pkgStruct = {
         ;
     }
 
-    { name = "cudnn";
-      version = cudnn-meta-ver;
-      default = true;
-      postscript = ''
-      whatis("Short description: cudnn meta-module that selects the version appropriate for the loaded cuda")
-      help([[cudnn meta-module that selects the version appropriate for the loaded cuda]])
-      if ( isloaded("cuda/12.1.1") ) then
-        load("cudnn/${cudnn-meta-ver}-12.x")
-      else
-        load("cudnn/${cudnn-meta-ver}-11.x")
-      end
-      '';
-    }
+    # { name = "cudnn";
+    #   version = cudnn-meta-ver;
+    #   default = true;
+    #   postscript = ''
+    #   whatis("Short description: cudnn meta-module that selects the version appropriate for the loaded cuda")
+    #   help([[cudnn meta-module that selects the version appropriate for the loaded cuda]])
+    #   if ( isloaded("cuda/12.1.1") ) then
+    #     load("cudnn/${cudnn-meta-ver}-12.x")
+    #   else
+    #     load("cudnn/${cudnn-meta-ver}-11.x")
+    #   end
+    #   '';
+    # }
   ];
 
 };
