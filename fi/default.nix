@@ -74,13 +74,19 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
+
     ascent = {
       variants = {
-        vtkh = false;
-        raja = true;
         cuda = true;
         inherit cuda_arch;
         python = true;
+      };
+    };
+    vtk-m = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+        fpic = true;
       };
     };
     conduit = {
