@@ -77,44 +77,9 @@ corePacks = import ../packs {
     };
     ascent = {
       variants = {
-        vtkh = true;
-        raja = true;
         cuda = true;
         inherit cuda_arch;
         python = true;
-      };
-    };
-    vtk-m = {
-      variants = {
-        cuda = true;
-        inherit cuda_arch;
-        fpic = true;
-      };
-    };
-    conduit = {
-      variants = {
-        hdf5_compat = false;
-        python = true;
-      };
-    };
-    camp = {
-      variants = {
-        openmp = true;
-        cuda = true;
-        inherit cuda_arch;
-      };
-    };
-    raja = {
-      variants = {
-        cuda = true;
-        inherit cuda_arch;
-      };
-    };
-    umpire = {
-      variants = {
-        cuda = true;
-        inherit cuda_arch;
-        shared = false;
       };
     };
     bazel = {
@@ -183,6 +148,19 @@ corePacks = import ../packs {
         pdf = true;
         png = true;
         svg = false;
+      };
+    };
+    camp = {
+      variants = {
+        openmp = true;
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
+    conduit = {
+      variants = {
+        hdf5_compat = false;
+        python = true;
       };
     };
     cfitsio = {
@@ -958,6 +936,12 @@ corePacks = import ../packs {
         XMLSEC_CONFIG = "/bin/false";
       };
     };
+    raja = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
     relion = {
       variants = {
         inherit cuda_arch;
@@ -1031,9 +1015,23 @@ corePacks = import ../packs {
         dm = true;
       };
     };
+    umpire = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+        shared = false;
+      };
+    };
     visit = {
       variants = {
         python = false; # needs python2
+      };
+    };
+    vtk-m = {
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+        fpic = true;
       };
     };
     zstd = {
