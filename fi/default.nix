@@ -1690,6 +1690,13 @@ pkgStruct = {
     node-js
     npm
     (rec { pkg = nvhpc;
+      # nvhpc ships with multiple cuda versions - manually pick the latest for the nvhpc version we're deploying
+      environment = let nvhpcCudaVersion = { "23.5" = "12.1"; }; in {
+        prepend_path = {
+          LD_LIBRARY_PATH = "{prefix}/Linux_x86_64/{version}/cuda/${nvhpcCudaVersion."${pkg.spec.version}"}/targets/x86_64-linux/lib";
+          LIBRARY_PATH = "{prefix}/Linux_x86_64/{version}/cuda/${nvhpcCudaVersion."${pkg.spec.version}"}/targets/x86_64-linux/lib";
+        };
+      };
       context = {
         # no compiler, no sub-modules
         provides = ["mpi"];
