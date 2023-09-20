@@ -1732,7 +1732,7 @@ pkgStruct = {
     subversion
     swig
     texlive
-    texstudio
+    texstudio  # TODO qt 6 incompatibility?
     tmux
     udunits
     unison
