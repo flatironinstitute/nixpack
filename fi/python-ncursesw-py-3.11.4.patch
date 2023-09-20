@@ -1,0 +1,24 @@
+--- python/configure.ac.orig	2022-07-25 16:01:43.547382695 -0400
++++ python/configure.ac	2022-07-25 16:02:15.427530089 -0400
+@@ -5021,10 +5021,6 @@
+ 
+ # first curses header check
+ ac_save_cppflags="$CPPFLAGS"
+-if test "$cross_compiling" = no; then
+-  CPPFLAGS="$CPPFLAGS -I/usr/include/ncursesw"
+-fi
+-
+ AC_CHECK_HEADERS(curses.h ncurses.h)
+ 
+ # On Solaris, term.h requires curses.h
+--- python/setup.py.orig	2022-07-25 16:07:43.893049824 -0400
++++ python/setup.py	2022-07-25 16:07:48.429070837 -0400
+@@ -955,8 +955,6 @@
+         panel_library = 'panel'
+         if curses_library == 'ncursesw':
+             curses_defines.append(('HAVE_NCURSESW', '1'))
+-            if not CROSS_COMPILING:
+-                curses_includes.append('/usr/include/ncursesw')
+             # Bug 1464056: If _curses.so links with ncursesw,
+             # _curses_panel.so must link with panelw.
+             panel_library = 'panelw'
