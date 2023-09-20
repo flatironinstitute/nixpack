@@ -753,6 +753,10 @@ corePacks = import ../packs {
         };
       };
     };
+    py-pybind11 = {
+      # for py-torch
+      version = "2.10.1";
+    };
     py-pyfftw = {
       depends = {
         py-setuptools = {
@@ -804,13 +808,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-sqlalchemy = {
-      depends = {
-        py-typing-extensions = {
-          version = "4.2.0";
-        };
-      };
-    };
     py-runtests = {
       variants = {
         mpi = true;
@@ -844,11 +841,8 @@ corePacks = import ../packs {
         xla = true;
       };
       depends = {
-        py-gast = {
-          version = "0.4.0";
-        };
-        py-typing-extensions = {
-          version = "4.5";
+        py-setuptools = {
+          version = ":61";  # for platform_system!="Darwin"
         };
       };
     };
@@ -867,12 +861,7 @@ corePacks = import ../packs {
         inherit cuda_arch;
         valgrind = false;
       };
-      depends = {
-        py-pybind11 = {
-          # for py-torch
-          version = "2.10.1";
-        };
-      } // blasVirtuals {
+      depends = blasVirtuals {
         name = "openblas";
       }; # doesn't find flexiblas
     };
@@ -898,6 +887,13 @@ corePacks = import ../packs {
           except OSError:
             pass
         '';
+      };
+    };
+    py-scipy = {
+      depends = {
+        py-pybind11 = {
+          version = "2.10.4";
+        };
       };
     };
     py-torch-cluster = {
@@ -1146,6 +1142,30 @@ corePacks = import ../packs {
       depends = old.depends // {
         python = {
           deptype = ["build"];
+        };
+      };
+    };
+    py-tensorflow = spec: old: {
+      depends = old.depends // {
+        patchelf = {
+          deptype = ["build"];
+        };
+        py-typing-extensions = {
+          version = "3.6.6:";
+          deptype = ["build" "run"];
+        };
+        py-gast = {
+          # https://github.com/tensorflow/tensorflow/pull/61134
+          version = "0.5.3";
+          deptype = ["build" "run"];
+        };
+      };
+    };
+    py-sqlalchemy = spec: old: {
+      depends = old.depends // {
+        py-typing-extensions = {
+          version = "4.2.0:";
+          deptype = ["build" "run"];
         };
       };
     };
@@ -1433,6 +1453,7 @@ pyBlacklist = [
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
   { name = "py-meson-python"; version = "0.12"; }
   { name = "py-maturin"; version = "0.14"; }
+  { name = "py-pybind11"; version = "2.10.4"; }  # scipy dep
 ];
 
 pyView = pl: corePacks.pythonView {
