@@ -1039,7 +1039,7 @@ corePacks = import ../packs {
 
   repoPatch = {
     python = spec: old: {
-      patches = [./python-ncursesw.patch];
+      patches = if lib.versionMatches spec.version "3.11.4:" then [./python-ncursesw-py-3.11.4.patch] else [./python-ncursesw.patch];
       build = {
         post = ''
           stdlib = f"python{pkg.version.up_to(2)}"
