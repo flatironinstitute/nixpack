@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "180fb7a37f0b47056776830d8170b296d96d993f";
+    rev = "058d1ee17570eca42a620417ce673a0f1463de76";
   };
 
   spackConfig = {
@@ -884,7 +884,7 @@ corePacks = import ../packs {
     #     # TODO: find a better way to disable cache (installer use_cache=False?)
     #     setup = ''
     #       try:
-    #         os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
+    #         os.unlink(os.path.join(spack.caches.FETCH_CACHE.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
     #       except OSError:
     #         pass
     #     '';
@@ -894,7 +894,7 @@ corePacks = import ../packs {
       build = {
         setup = ''
           try:
-            os.unlink(os.path.join(spack.caches.fetch_cache.root, "_source-cache", "git", "horovod", "horovod.git", "v%s.tar.gz"%(pkg.version)))
+            os.unlink(os.path.join(spack.caches.FETCH_CACHE.root, "_source-cache", "git", "horovod", "horovod.git", "v%s.tar.gz"%(pkg.version)))
           except OSError:
             pass
         '';
