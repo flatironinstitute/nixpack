@@ -1731,7 +1731,7 @@ pkgStruct = {
     subversion
     swig
     texlive
-    texstudio  # TODO qt 6 incompatibility?
+    # texstudio  # TODO qt 6 incompatibility? fix for modules/2.3
     tmux
     udunits
     unison
@@ -2098,10 +2098,11 @@ pkgStruct = {
         )[
         
         # Uses old py-sip; won't build against 3.11
-        py-envisage
-        py-pymol
-        py-pyqt5
-        py-qtconsole
+        # TODO fix for modules/2.3
+        # py-envisage
+        # py-pymol
+        # py-pyqt5
+        # py-qtconsole
       ])
       ).overrideView {
         ignoreConflicts = [
