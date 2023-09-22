@@ -285,12 +285,19 @@ class NixSpec(spack.spec.Spec):
         self.compiler = self.get(compiler, top=False).as_compiler if compiler else nullCompiler
 
         for n, d in sorted(depends.items()):
-            dtype = spack.dependency.canonical_deptype(nixspec['deptypes'].get(n) or ())
+            dtype = nixspec['deptypes'].get(n) or ()
+            try:
+                dtype = spack.deptypes.canonicalize(dtype)
+            except AttributeError:
+                dtype = spack.dependency.canonical_deptype(dtype)
             if d:
                 dep = self.get(d, top=False)
                 cdep = None # any current dep on this package
                 if hasattr(self, 'add_dependency_edge'):
-                    cdeps = self._dependencies.select(child=dep.name, deptypes=dtype)
+                    try:
+                        cdeps = self._dependencies.select(child=dep.name, depflag=dtype)
+                    except TypeError:
+                        cdeps = self._dependencies.select(child=dep.name, deptypes=dtype)
                     if len(cdeps) == 1:
                         # if multiple somehow, _add_dependency should catch it
                         cdep = cdeps[0]
@@ -300,8 +307,15 @@ class NixSpec(spack.spec.Spec):
                     assert cdep.spec == dep, f"{self.name}.{n}: conflicting dependencies on {dep.name}"
                     cdep.update_deptypes(dtype)
                 else:
-                    self._add_dependency(dep, deptypes=dtype, virtuals=())
-            if not ('link' in dtype or 'run' in dtype):
+                    try:
+                        self._add_dependency(dep, depflag=dtype, virtuals=())
+                    except TypeError:
+                        self._add_dependency(dep, deptypes=dtype, virtuals=())
+            try:
+                lrdep = dtype & (spack.deptypes.LINK | spack.deptypes.RUN)
+            except AttributeError:
+                lrdep = 'link' in dtype or 'run' in dtype
+            if not lrdep:
                 # trim build dep references
                 del nixspec['depends'][n]
 
