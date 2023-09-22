@@ -1691,10 +1691,13 @@ pkgStruct = {
     npm
     (rec { pkg = nvhpc;
       # nvhpc ships with multiple cuda versions - manually pick the latest for the nvhpc version we're deploying
-      environment = let nvhpcCudaVersion = { "23.5" = "12.1"; }; in {
+      environment = let
+        cudaVersion = { "23.5" = "12.1"; "23.7" = "12.2"; }."${pkg.spec.version}";
+        cudaLib = "{prefix}/Linux_x86_64/{version}/cuda/${cudaVersion}/targets/x86_64-linux/lib";
+      in {
         prepend_path = {
-          LD_LIBRARY_PATH = "{prefix}/Linux_x86_64/{version}/cuda/${nvhpcCudaVersion."${pkg.spec.version}"}/targets/x86_64-linux/lib";
-          LIBRARY_PATH = "{prefix}/Linux_x86_64/{version}/cuda/${nvhpcCudaVersion."${pkg.spec.version}"}/targets/x86_64-linux/lib";
+          LD_LIBRARY_PATH = cudaLib;
+          LIBRARY_PATH = cudaLib;
         };
       };
       context = {
