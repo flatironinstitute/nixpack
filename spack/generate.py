@@ -225,7 +225,10 @@ def specPrefs(s):
 
 def depPrefs(d):
     p = specPrefs(d.spec)
-    p['deptype'] = d.type
+    try:
+        p['deptype'] = spack.deptypes.flag_to_tuple(d.depflag)
+    except AttributeError:
+        p['deptype'] = d.type
     if d.patches:
         print(f"{d} has unsupported dependency patches", file=sys.stderr)
     return p
