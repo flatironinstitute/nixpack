@@ -16,6 +16,14 @@ isRLDep = d: isLDep d || isRDep d;
 rpmVersion = pkg: lib.capture ["/bin/rpm" "-q" "--queryformat=%{VERSION}" pkg] { inherit os; };
 rpmExtern = pkg: { extern = "/usr"; version = rpmVersion pkg; };
 
+spackPkgsSrc = builtins.fetchGit {
+  name = "spack-pkgs";
+  /* -------- spack repo for packages -------- */
+  url = "https://github.com/flatironinstitute/spack";
+  ref = "fi-pkgs";
+  rev = "c05bc40bdd954af3ffc280713ba84661ba793945";
+};
+
 corePacks = import ../packs {
   label = "core";
   system = builtins.currentSystem;
@@ -25,7 +33,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "058d1ee17570eca42a620417ce673a0f1463de76";
+    rev = "92ffd7651c8995f69026d0e6810313629abd2ff0";
   };
 
   spackConfig = {
@@ -41,14 +49,15 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
-    url = "https://github.com/dylex/nixpkgs";
+    url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.05";
-    rev = "21dfd940e8c4be72135892f2927d78238d2504b1";
+    rev = "31ed632c692e6a36cfc18083b88ece892f863ed4";
   };
 
   repos = [
     ./repo
     ../spack/repo
+    "${spackPkgsSrc}/var/spack/repos/builtin"
   ];
 
   global = {
