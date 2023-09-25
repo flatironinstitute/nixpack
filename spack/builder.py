@@ -73,6 +73,12 @@ else:
     for phase in builder:
         phase.execute = functools.partial(wrapPhase, phase.name, phase.execute)
 
+if not opts['verbose']:
+    def print_log(pkg, phase, log):
+        with open(log, 'r') as f:
+            print(f.read())
+    spack.hooks.on_phase_error = print_log
+
 # make sure cache is group-writable (should be configurable, ideally in spack)
 os.umask(0o002)
 # do the actual install
