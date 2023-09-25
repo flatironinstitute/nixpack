@@ -190,7 +190,7 @@ corePacks = import ../packs {
     };
     cuda = {
       # make sure this is <= image driver
-      version = "12";
+      version = "12.2";
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
@@ -268,6 +268,10 @@ corePacks = import ../packs {
     };
     gdrcopy = {
       version = "2.3"; # match kernel module
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
     };
     gnuplot = {
       variants = {
