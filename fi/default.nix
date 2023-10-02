@@ -16,14 +16,6 @@ isRLDep = d: isLDep d || isRDep d;
 rpmVersion = pkg: lib.capture ["/bin/rpm" "-q" "--queryformat=%{VERSION}" pkg] { inherit os; };
 rpmExtern = pkg: { extern = "/usr"; version = rpmVersion pkg; };
 
-spackPkgsSrc = builtins.fetchGit {
-  name = "spack-pkgs";
-  /* -------- spack repo for packages -------- */
-  url = "https://github.com/flatironinstitute/spack";
-  ref = "fi-pkgs";
-  rev = "c05bc40bdd954af3ffc280713ba84661ba793945";
-};
-
 corePacks = import ../packs {
   label = "core";
   system = builtins.currentSystem;
@@ -33,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "92ffd7651c8995f69026d0e6810313629abd2ff0";
+    rev = "009fccb5cb53271104dd869cead8a9aa8b18dc18";
   };
 
   spackConfig = {
@@ -57,7 +49,6 @@ corePacks = import ../packs {
   repos = [
     ./repo
     ../spack/repo
-    "${spackPkgsSrc}/var/spack/repos/builtin"
   ];
 
   global = {
@@ -316,7 +307,7 @@ corePacks = import ../packs {
       };
     };
     hdf5 = {
-      version = "1.10";
+      version = "1.12";
       variants = {
         hl = true;
         fortran = true;
@@ -368,6 +359,7 @@ corePacks = import ../packs {
       # for elfutils
       variants = {
         iconv = false;
+        crypto = "mbedtls"; # messy avoid propagating openssl dep
       };
       depends = {
         mbedtls = {
@@ -479,6 +471,10 @@ corePacks = import ../packs {
         threads = "pthreads";
       };
     };
+    openexr = {
+      # for openvdb
+      version = "3.1";
+    };
     opengl = {
       version = "4.6";
       extern = "/usr";
@@ -507,7 +503,7 @@ corePacks = import ../packs {
           slurm = true;
         };
         pmi = true;
-        pmix = true;
+        pmix = false;
         static = false;
         legacylaunchers = true;
       };
@@ -554,9 +550,6 @@ corePacks = import ../packs {
         hypre = false;
         superlu-dist = false;
       };
-    };
-    pmix = {
-      version = "4.1";
     };
     poppler = {
       variants = {
@@ -680,7 +673,7 @@ corePacks = import ../packs {
     };
     py-ipython = {
       # for python 3.8
-      version = "8.11";
+      #version = "8.11";
     };
     py-jax = {
       variants = {
@@ -750,6 +743,16 @@ corePacks = import ../packs {
           version = "2";
         };
       };
+    };
+    py-protobuf = {
+      # for py-tensorflow
+      variants = {
+        cpp = true;
+      };
+    };
+    py-py-cpuinfo = {
+      # for py-hdf5plugin
+      version = "8.0.0";
     };
     py-pybind11 = {
       # for py-torch
@@ -843,6 +846,10 @@ corePacks = import ../packs {
           version = ":61";  # for platform_system!="Darwin"
         };
       };
+    };
+    py-versioneer = {
+      # for py-distributed
+      version = "0.28";
     };
     re2 = {
       # for py-tensorflow
@@ -974,7 +981,7 @@ corePacks = import ../packs {
       version = lib.capture ["/bin/readlink" "-n" extern] { inherit os; };
       variants = {
         sysconfdir = "/cm/shared/apps/slurm/var/etc/slurm";
-        pmix = true;
+        #pmix = true;
         hwloc = true;
       };
     };
@@ -1086,6 +1093,8 @@ corePacks = import ../packs {
 
           btl_openib_if_exclude = i40iw0,i40iw1,mlx5_1
           btl_openib_warn_nonexistent_if = 0
+
+          mpi_yield_when_idle = 1
           """)
               if spec.satisfies("@4.0:"):
                   f.write("""
@@ -1162,6 +1171,10 @@ corePacks = import ../packs {
           deptype = ["build"];
         };
       };
+    };
+    py-protobuf = spec: old: {
+      # kill 3.11 conflict (using whl instead)
+      conflicts = [];
     };
     py-tensorflow = spec: old: {
       depends = old.depends // {
@@ -1321,6 +1334,7 @@ mkMpis = comp: gen:
   ] ++ lib.optionals comp.isCore [
     /* { name = "intel-mpi"; } */
     { name = "intel-oneapi-mpi"; }
+    { name = "openmpi"; version = "4.1"; }
     { name = "openmpi";
       variants = {
         cuda = true;
@@ -1419,6 +1433,9 @@ withPython = packs: py: let
       py-protobuf = {
         # py-torch
         version = if (lib.versionMatches py.version "3.11") then "3.20.3-whl" else "=3.20.3";
+        variants = {
+          cpp = true;
+        };
       };
     };
     global = {
@@ -1475,10 +1492,10 @@ hdf5Pkgs = packs: with packs.pkgs; [
     # spack has decided that 1.8+fortran+shared is broken for some reason #29132
     variants = { fortran = false; };
   })
-  { pkg = hdf5; # default 1.10
+  (hdf5.withPrefs { version = "1.10"; })
+  { pkg = hdf5; # default 1.12
     default = true;
   }
-  (hdf5.withPrefs { version = "1.12"; })
   (hdf5.withPrefs { version = "1.14"; })
 ];
 
