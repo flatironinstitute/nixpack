@@ -1868,6 +1868,7 @@ pkgStruct = {
         lib.optionals mpi.isOpenmpi ([
           { pkg = mpi.packs.pkgs.mpi; # others are above, compiler-independent
             projection = if mpi.packs.pkgs.mpi.spec.variants.cuda then "{name}/cuda-{version}" else "{name}/{version}";
+            default = mpi.isCore;
           }
         ] ++
           /* static mpi env modules */
