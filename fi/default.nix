@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.05";
-    rev = "31ed632c692e6a36cfc18083b88ece892f863ed4";
+    rev = "e49c28b3baa3a93bdadb8966dd128f9985ea0a09";
   };
 
   repos = [
@@ -235,6 +235,7 @@ corePacks = import ../packs {
     };
     gcc = {
       version = "11";
+      target = if target == "skylake-avx512" then "skylake" else target;
       variants = {
         languages = ["c" "c++" "fortran" "jit"];
       };
@@ -1107,6 +1108,10 @@ corePacks = import ../packs {
         '';
       };
     };
+    intel-oneapi-mpi = spec: old: {
+      /* hack so we can have a separate set of intel-mpi packages (intel compiler + intel mpi vs. core compiler + intel mpi) */
+      depends = removeAttrs old.depends ["compiler"];
+    };
     /* Blender dependency. Wants ccache and tries to build with -Werror. Override that. */
     openimageio = { build =
       { setup = ''
@@ -1289,50 +1294,48 @@ mkSkylake = base: base.withPrefs {
   };
 };
 
-gcc11 = corePacks.pkgs.gcc.withPrefs {
-  version = "11";
-  target = if target == "skylake-avx512" then "skylake" else target;
+mkCompiler = base: compiler: rec {
+  inherit compiler;
+  isCore = compiler == { name = "gcc"; };
+  packs = if isCore then base else
+    base.withCompiler compiler;
+  defaulting = pkg: { default = isCore; inherit pkg; };
 };
 
 mkCompilers = base: gen:
-  builtins.map (compiler: gen (rec {
-    inherit compiler;
-    isCore = compiler.name == corePacks.pkgs.compiler.name;
-    packs = if isCore then base else
-      base.withCompiler compiler;
-    defaulting = pkg: { default = isCore; inherit pkg; };
-  }))
+  builtins.map (comp: gen (mkCompiler base comp))
   [ /* -------- compilers -------- */
-    gcc11
+    { name = "gcc"; }
   ];
 
-mkMpis = comp: gen:
-  builtins.map (mpi: gen {
-    inherit mpi;
-    packs = comp.packs.withPrefs {
-      global = {
+mkMpi = comp: mpi: {
+  inherit mpi;
+  packs = comp.packs.withPrefs {
+    global = {
+      variants = {
+        mpi = true;
+      };
+    };
+    package = {
+      mpi = builtins.removeAttrs mpi ["package"];
+      fftw = {
         variants = {
-          mpi = true;
+          openmp = true;
+          precision = ["float" "double" "long_double"];
         };
       };
-      package = {
-        mpi = builtins.removeAttrs mpi ["package"];
-        fftw = {
-          variants = {
-            openmp = true;
-            precision = ["float" "double" "long_double"];
-          };
-        };
-      } // mpi.package or {};
-    };
-    isOpenmpi = mpi.name == "openmpi";
-    isCore = mpi == { name = "openmpi"; };
-    isCudaAware = (mpi.variants or {}).cuda or false;
-  })
+    } // mpi.package or {};
+  };
+  isOpenmpi = mpi.name == "openmpi";
+  isCore = mpi == { name = "openmpi"; };
+  isCudaAware = (mpi.variants or {}).cuda or false;
+};
+
+mkMpis = comp: gen:
+  builtins.map (mpi: gen (mkMpi comp mpi))
   ([ /* -------- mpis -------- */
     { name = "openmpi"; }
   ] ++ lib.optionals comp.isCore [
-    /* { name = "intel-mpi"; } */
     { name = "intel-oneapi-mpi"; }
     { name = "openmpi"; version = "4.1"; }
     { name = "openmpi";
@@ -1535,7 +1538,6 @@ juliaPacks = corePacks.withPrefs {
         '';
       };
     };
-    compiler = gcc11;
     llvm = {
       version = "14.0.6";
       variants = {
@@ -1623,10 +1625,9 @@ pkgStruct = {
         add_property("lmod","sticky")
       '';
     }
-    (gcc.withPrefs { version = "7"; })
     (gcc.withPrefs { version = "10"; })
-    (gcc11.withPrefs { version = "12.2"; })  # 12.3 won't bootstrap
-    (gcc11.withPrefs { version = "13"; })
+    (gcc.withPrefs { version = "12.2"; })  # 12.3 won't bootstrap
+    (gcc.withPrefs { version = "13"; })
     { pkg = llvm;
       default = true;
     }
@@ -1951,7 +1952,7 @@ pkgStruct = {
           py-runtests
           py-nbodykit
         ]; };
-        pkgs = lib.optionals (py.isCore && mpi.isCore && lib.versionMatches comp.compiler.spec.version "10:") (with py.packs.pkgs;
+        pkgs = lib.optionals (py.isCore && mpi.isCore && comp.isCore) (with py.packs.pkgs;
           [(pkgMod triqs // {
             postscript = ''
               depends_on("fftw/mpi-${fftw.spec.version}")
@@ -2160,54 +2161,42 @@ pkgStruct = {
     });
   });
 
-  /* does not work
-  intel = rec {
-    packs = corePacks.withCompiler corePacks.pkgs.intel-oneapi-compilers;
-    pkgs = hdf5Pkgs packs;
-  }; */
-
-  clangcpp = rec {
-    packs = corePacks.withPrefs {
-      package = {
-        compiler = corePacks.pkgs.llvm;
-        boost = {
-          variants = corePacks.prefs.package.boost.variants // {
-            clanglibcpp = true;
-            python = false;
-            numpy = false;
-          };
-        };
-      };
+  intel = let comp = mkCompiler corePacks corePacks.pkgs.intel-oneapi-compilers; in comp // rec {
+    pkgs = hdf5Pkgs comp.packs ++ [mpi.packs.pkgs.mpi];
+    mpi = let mpi = mkMpi comp comp.packs.pkgs.intel-oneapi-mpi; in mpi // {
+      pkgs = with mpi.packs.pkgs; [
+        osu-micro-benchmarks
+      ] ++ optMpiPkgs mpi.packs;
     };
-    pkgs = with packs.pkgs; [
-      /* -------- clang libcpp modules --------- */
-      boost
+  };
+
+  /* -------- clang libcpp modules --------- */
+  clangcpp = let comp = mkCompiler corePacks corePacks.pkgs.llvm; in comp // {
+    pkgs = [
+      (comp.packs.pkgs.boost.withPrefs {
+        variants = corePacks.prefs.package.boost.variants // {
+          clanglibcpp = true;
+          python = false;
+          numpy = false;
+        };
+      })
     ];
   };
 
-  nvhpc = rec {
-    packs = corePacks.withPrefs {
-      package = {
-        compiler = corePacks.pkgs.nvhpc;
-        mpi = corePacks.pkgs.nvhpc;
-        fftw = {
+  nvhpc = let
+    comp = mkCompiler corePacks corePacks.pkgs.nvhpc;
+    mpi = mkMpi comp corePacks.pkgs.nvhpc;
+    in comp // mpi // {
+      pkgs = with mpi.packs.pkgs; [
+        (fftw.withPrefs {
           variants = {
             openmp = true;
             precision = ["float" "double" "long_double"];
           };
-        };
-      } // blasVirtuals corePacks.pkgs.nvhpc;
-      global = {
-        variants = {
-          mpi = true;
-        };
-      };
+        })
+        osu-micro-benchmarks
+      ];
     };
-    pkgs = (with packs.pkgs; [
-      fftw
-      osu-micro-benchmarks
-    ]);
-  };
 
   skylake = rec {
     packs = mkSkylake corePacks;
@@ -2428,6 +2417,12 @@ modPkgs = with pkgStruct;
       }
     ]) pythons
   ) compilers
+  ++
+  map (pkg: pkgMod pkg // { projection = "{name}/intel-{version}"; })
+    intel.pkgs
+  ++
+  map (pkg: pkgMod pkg // { projection = "{name}/intel-mpi-{version}"; })
+    intel.mpi.pkgs
   ++
   map (pkg: pkgMod pkg // { projection = "{name}/libcpp-{version}";
     autoload = [clangcpp.packs.pkgs.compiler]; })
