@@ -1021,6 +1021,48 @@ corePacks = import ../packs {
         };
       };
     };
+    triqs = {
+      depends = {
+        compiler = {
+          version = "12.2";
+        };
+      };
+    };
+    triqs-cthyb = {
+      depends = {
+        compiler = {
+          version = "12.2";
+        };
+      };
+    };
+    triqs-dft-tools = {
+      depends = {
+        compiler = {
+          version = "12.2";
+        };
+      };
+    };
+    triqs-maxent = {
+      depends = {
+        compiler = {
+          version = "12.2";
+        };
+      };
+    };
+    triqs-omegamaxent-interface = {
+      depends = {
+        compiler = {
+          version = "12.2";
+        };
+      };
+    };
+    triqs-tprf = {
+      depends = {
+        compiler = {
+          version = "12.2";
+        };
+      };
+    };
     ucx = {
       variants = {
         thread_multiple = true;
@@ -1307,6 +1349,8 @@ mkCompilers = base: gen:
   [ /* -------- compilers -------- */
     { name = "gcc"; }
   ];
+
+gcc12 = corePacks.pkgs.gcc.withPrefs { version = "12.2"; }; # 12.3 fails to bootstrap
 
 mkMpi = comp: mpi: {
   inherit mpi;
@@ -1626,7 +1670,7 @@ pkgStruct = {
       '';
     }
     (gcc.withPrefs { version = "10"; })
-    (gcc.withPrefs { version = "12.2"; })  # 12.3 won't bootstrap
+    gcc12
     (gcc.withPrefs { version = "13"; })
     { pkg = llvm;
       default = true;
@@ -1969,23 +2013,24 @@ pkgStruct = {
             triqs-maxent
             #triqs-omegamaxent-interface
             triqs-tprf
-        ] ++
-        [
-          {
-            pkg = py-dedalus.withPrefs { version = "3"; };
-            projection = "dedalus/{version}-py{^python.version}";
-            postscript = ''
-              depends_on("python-mpi/${python.spec.version}")
-            '';
-          }
-          {
-            pkg = py-dedalus.withPrefs { version = "2"; };
-            projection = "dedalus/{version}-py{^python.version}";
-            postscript = ''
-              depends_on("python-mpi/${python.spec.version}")
-            '';
-          }
-        ]);
+          ] ++
+          [
+            {
+              pkg = py-dedalus.withPrefs { version = "3"; };
+              projection = "dedalus/{version}-py{^python.version}";
+              postscript = ''
+                depends_on("python-mpi/${python.spec.version}")
+              '';
+            }
+            {
+              pkg = py-dedalus.withPrefs { version = "2"; };
+              projection = "dedalus/{version}-py{^python.version}";
+              postscript = ''
+                depends_on("python-mpi/${python.spec.version}")
+              '';
+            }
+          ]
+        );
       });
     });
 
