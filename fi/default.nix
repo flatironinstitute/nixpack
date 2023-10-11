@@ -2316,6 +2316,7 @@ pkgStruct = {
       };
     })))
     #wecall
+    xmedcon
     xscreensaver
   ];
 
