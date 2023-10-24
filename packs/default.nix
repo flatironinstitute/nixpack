@@ -124,8 +124,8 @@ lib.fix (packs: with packs; {
       then if attrs.withRepos
         then repos
         else null
-      else map (r: (builtins.path { path=r + "/repo.yaml";})) repos;
-    spackCache = if attrs.withRepos or false then spackCacheRepos else spackCache;
+      else map (r: (builtins.path { name="repo.yaml"; path=r + "/repo.yaml";})) repos;
+    #spackCache = if attrs.withRepos or false then spackCacheRepos else spackCache;
   } // attrs)) ["PYTHONPATH" "PATH" "LC_ALL" "spackConfig" "spackCache" "passAsFile"];
 
   /* pre-generated spack repo index cache (both with and without overlay repos) */
@@ -137,8 +137,8 @@ lib.fix (packs: with packs; {
       inherit withRepos;
     }));
 
-  spackCache      = makeSpackCache false;
-  spackCacheRepos = makeSpackCache true;
+  #spackCache      = makeSpackCache false;
+  #spackCacheRepos = makeSpackCache true;
 
   isVirtual = name: builtins.isList repo.${name} or null;
 
