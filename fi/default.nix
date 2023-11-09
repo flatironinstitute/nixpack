@@ -1550,6 +1550,7 @@ pkgStruct = {
       };
     }
     apptainer
+    binutils
     blast-plus
     #blender
     cmake
