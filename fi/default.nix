@@ -548,6 +548,9 @@ corePacks = import ../packs {
         };
       };
     };
+    py-batchspawner = {
+      version = "main.2023-11-01";
+    };
     py-bigfile = {
       variants = {
         mpi = true;
