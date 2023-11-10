@@ -291,6 +291,16 @@ corePacks = import ../packs {
       };
     };
     hdfview = {
+      build = {
+        post = ''
+          java_bin = os.path.join(pkg.spec["java"].prefix, "bin", "java")
+          hdfview_root = spec.prefix
+          with open(os.path.join(hdfview_root, 'bin', 'hdfview'), 'w') as f:
+            f.write('#!/bin/bash\n'
+                    f'exec {java_bin} -Xmx1024m -Djava.library.path="{hdfview_root}" '
+                    f'-Dhdfview.root="{hdfview_root}" -cp "{hdfview_root}/*" hdf.view.HDFView "$@"\n')
+        '';
+      };
       depends = {
         hdf = {
           variants = {
@@ -1543,6 +1553,7 @@ pkgStruct = {
       };
     }
     apptainer
+    binutils
     blast-plus
     #blender
     cmake
