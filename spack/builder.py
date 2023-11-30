@@ -7,6 +7,13 @@ import json
 import nixpack
 import spack
 
+try:
+    from spack.context import Context
+except ImportError:
+    class Context:
+        BUILD = 'build'
+        TEST = 'test'
+
 # disable pre_ and post_install hooks (sbang, permissions, licensing)
 def noop_hook(*args, **kwargs):
     pass
@@ -56,7 +63,7 @@ if setup:
 
 origenv = os.environ.copy()
 # create and stash some metadata
-spack.build_environment.setup_package(pkg, True, context='build')
+spack.build_environment.setup_package(pkg, True, context=Context.BUILD)
 os.makedirs(pkg.metadata_dir, exist_ok=True)
 
 # log build phases to nix
@@ -87,7 +94,7 @@ spack.installer.build_process(pkg, opts)
 # we do this even if not testing as it may create more things (e.g., perl "extensions")
 os.environ.clear()
 os.environ.update(origenv)
-spack.build_environment.setup_package(pkg, True, context='test')
+spack.build_environment.setup_package(pkg, True, context=Context.TEST)
 
 with open(os.path.join(spec.prefix, nixpack.NixSpec.nixSpecFile), 'w') as sf:
     json.dump(spec.nixspec, sf)
