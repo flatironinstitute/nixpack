@@ -165,6 +165,8 @@ rec {
       deptype = if spec ? deptype
         then " [" + deptypeChars spec.deptype + "]"
         else "";
+      flags = concatStringsSep "" (map (f: " ${f}=\""+(concatStringsSep " " spec.flags.${f})+"\"")
+        (attrNames spec.flags));
     };
     in replaceStrings (map (n: "{${n}}") (attrNames fmts)) (attrValues fmts) fmt;
 
@@ -172,7 +174,7 @@ rec {
   specName = specFormat "{name}@{version}";
 
   /* like spack default format */
-  specToString = specFormat "{name}@{version}{variants}{deptype}";
+  specToString = specFormat "{name}@{version}{variants}{flags}{deptype}";
 
   /* check that a given spec conforms to the specified preferences */
   specMatches = spec:
@@ -204,6 +206,7 @@ rec {
         variants = mergeWith (a: b:
           if isAttrs a && isAttrs b then a // b
           else b);
+        flags = a: b: a // b;
         patches = scalar;
         depends = mergeWith prefsUpdate;
         extern = scalar;
@@ -229,6 +232,7 @@ rec {
         version = versionsIntersect;
         variants = mergeWith (a: b: if a == b then a else
           union (toList a) (toList b));
+        flags = mergeWith scalar;
         patches = a: b: a ++ b;
         depends = mergeWith prefsIntersect;
         extern = scalar;

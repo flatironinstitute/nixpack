@@ -272,6 +272,10 @@ class NixSpec(spack.spec.Spec):
             else:
                 v = spack.variant.SingleValuedVariant(n, s)
             self.variants[n] = v
+        valid_flags = self.compiler_flags.valid_compiler_flags()
+        for n, s in nixspec['flags'].items():
+            assert n in valid_flags and type(s) is list, f"{self.name} has invalid compiler flag {n}"
+            self.compiler_flags[n] = s
         self.tests = nixspec['tests']
         self.paths = {n: p and os.path.join(prefix, p) for n, p in nixspec['paths'].items()}
         if self.external:
@@ -420,6 +424,7 @@ nullCompilerSpec = NixSpec({
         'version': '0',
         'extern': '/null-compiler',
         'variants': {},
+        'flags': {},
         'tests': False,
         'paths': {
             'cc': None,
