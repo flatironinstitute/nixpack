@@ -207,6 +207,7 @@ rec {
         patches = scalar;
         depends = mergeWith prefsUpdate;
         extern = scalar;
+        modules = scalar;
         tests = scalar;
         fixedDeps = scalar;
         resolver = scalar;
@@ -232,6 +233,7 @@ rec {
         patches = a: b: a ++ b;
         depends = mergeWith prefsIntersect;
         extern = scalar;
+        modules = scalar;
         tests = scalar;
         fixedDeps = scalar;
         resolver = scalar;
@@ -256,7 +258,7 @@ rec {
   /* traverse all dependencies of given package(s) that satisfy pred recursively and return them as a list (in bredth-first order) */
   findDeps = pred:
     let
-      adddeps = s: pkgs: add s 
+      adddeps = s: pkgs: add s
         (foldl' (deps: p:
           (deps ++ filter (d: d != null && ! (elem d s) && ! (elem d deps) && pred d)
             (attrValues p.spec.depends)))
