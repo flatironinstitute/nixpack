@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "d6faddf5463a5f5f3fb2ec97a1ce5f1006340185";
+    rev = "e1e10fddda07181a745bdd81ae5f85529083b1a5";
   };
 
   spackConfig = {
@@ -42,8 +42,8 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
-    ref = "release-23.05";
-    rev = "e49c28b3baa3a93bdadb8966dd128f9985ea0a09";
+    ref = "release-23.11";
+    rev = "8610bf52dcaffa5694f3df9b7027c6153c3d6a72";
   };
 
   repos = [
@@ -83,7 +83,7 @@ corePacks = import ../packs {
     };
     bazel = {
       # py-tensorflow family
-      version = "5.3.0";
+      version = "6.1.0";
     };
     binutils = {
       variants = {
@@ -265,6 +265,13 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    gloo = {
+      # for py-torch
+      variants = {
+        cuda = true;
+        inherit cuda_arch;
+      };
+    };
     gnuplot = {
       variants = {
         X = true;
@@ -427,6 +434,10 @@ corePacks = import ../packs {
       };
       tests = false;
     };
+    meson = {
+      # for py-pandas
+      version = "1.2.1";
+    };
     mpc = {
       # for gcc via mpfr
       version = "1.1";
@@ -498,6 +509,12 @@ corePacks = import ../packs {
         sasl = false;
       };
     };
+    openmm = {
+      variants = {
+        inherit cuda_arch;
+        cuda = true;
+      };
+    };
     openmpi = {
       version = "4.0";
       variants = {
@@ -561,6 +578,9 @@ corePacks = import ../packs {
         hypre = false;
         superlu-dist = false;
       };
+    };
+    pmix = {
+      version = "4.2.2";
     };
     poppler = {
       variants = {
@@ -719,6 +739,13 @@ corePacks = import ../packs {
     py-jupyterlab = {
       version = "3";
     };
+    py-matplotlib = {
+      # for numpy constraint
+      version = "3.7";
+    };
+    py-ml-dtypes = {
+      version = "0.2.0";
+    };
     py-nose = {
       depends = {
         py-setuptools = {
@@ -749,7 +776,7 @@ corePacks = import ../packs {
     };
     py-pip = {
       # for py-astropy and others that require --install-options
-      version = ":23.0";
+      version = "23.0";
     };
     py-pkgutil-resolve-name = {
       depends = {
@@ -770,7 +797,7 @@ corePacks = import ../packs {
     };
     py-pybind11 = {
       # for py-torch
-      version = "2.10.1";
+      version = "2.11.0";
     };
     py-pyfftw = {
       depends = {
@@ -861,6 +888,10 @@ corePacks = import ../packs {
         };
       };
     };
+    py-urllib3 = {
+      # for py-google-auth
+      version = "1";
+    };
     py-versioneer = {
       # for py-distributed
       version = "0.28";
@@ -910,8 +941,8 @@ corePacks = import ../packs {
     };
     py-scipy = {
       depends = {
-        py-pybind11 = {
-          version = "2.10.4";
+        py-pip = {
+          version = "23.1";
         };
       };
     };
@@ -944,6 +975,14 @@ corePacks = import ../packs {
         cuda = true;
         inherit cuda_arch;
       };
+    };
+    py-wheel = {
+      # for py-astroid, py-pylint, and others
+      version = "0.37";
+    };
+    py-wrapt = {
+      # for py-tensorflow
+      version = "1.14";
     };
     py-y-py = {
       depends = {
@@ -990,6 +1029,10 @@ corePacks = import ../packs {
       version = "2022";
     };
     shadow = rpmExtern "shadow-utils";
+    sleef = {
+      # for py-torch
+      version = "3.5.1_2020-12-22";
+    };
     slurm = rec {
       extern = "/cm/shared/apps/slurm/current";
       version = lib.capture ["/bin/readlink" "-n" extern] { inherit os; };
@@ -1535,7 +1578,6 @@ pyBlacklist = [
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
   { name = "py-meson-python"; version = "0.12"; }
   { name = "py-maturin"; version = "0.14"; }
-  { name = "py-pybind11"; version = "2.10.4"; }  # scipy dep
 ];
 
 pyView = pl: corePacks.pythonView {
@@ -1779,10 +1821,8 @@ pkgStruct = {
     node-js
     npm
     (rec { pkg = nvhpc;
-      # nvhpc ships with multiple cuda versions - manually pick the latest for the nvhpc version we're deploying
       environment = let
-        cudaVersion = { "23.5" = "12.1"; "23.7" = "12.2"; }."${pkg.spec.version}";
-        cudaLib = "{prefix}/Linux_x86_64/{version}/cuda/${cudaVersion}/targets/x86_64-linux/lib";
+        cudaLib = "{prefix}/Linux_x86_64/{version}/cuda/lib64";
       in {
         prepend_path = {
           LD_LIBRARY_PATH = cudaLib;
@@ -2177,7 +2217,7 @@ pkgStruct = {
         py-psycopg2
         py-tensorflow
 
-        py-horovod
+        #py-horovod #incompatible py-torch 2.1
         py-jax
         py-keras
         py-lightning-fabric

@@ -1,6 +1,6 @@
 { stdenv
 , fetchurl
-, pkgconfig
+, pkg-config
 , glibc, pam, openldap, kerberos, dnsutils, cyrus_sasl, nss
 , popt, talloc, tdb, tevent, ldb, ding-libs, pcre, c-ares
 , glib, dbus
@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
   };
 
   # libnss_sss.so does not in fact use any of these -- they're just needed for configure
-  nativeBuildInputs = [ pkgconfig
+  nativeBuildInputs = [ pkg-config
     pam openldap kerberos dnsutils cyrus_sasl nss
     popt talloc tdb tevent ldb ding-libs pcre c-ares
     glib dbus
