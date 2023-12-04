@@ -77,6 +77,7 @@ packsWithPrefs =
   , os ? "unknown"
   , label ? "packs"
   , spackSrc ? {}
+  , spackCache ? true
   , spackConfig ? {}
   , spackPython ? "/usr/bin/python3"
   , spackEnv ? {
@@ -121,11 +122,9 @@ lib.fix (packs: with packs; {
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external:${spack}/lib/spack/external/_vendoring";
     LC_ALL = "en_US.UTF-8"; # work around spack bugs processing log files
     repos = if attrs ? withRepos
-      then if attrs.withRepos
-        then repos
-        else null
-      else map (r: r + "/repo.yaml") repos;
-    spackCache = if attrs.withRepos or false then spackCacheRepos else spackCache;
+      then lib.when attrs.withRepos repos
+      else map (r: (builtins.path { name="repo.yaml"; path="${r}/repo.yaml"; })) repos;
+    spackCache = lib.when packPrefs.spackCache (if attrs.withRepos or false then spackCacheRepos else spackCache);
   } // attrs)) ["PYTHONPATH" "PATH" "LC_ALL" "spackConfig" "spackCache" "passAsFile"];
 
   /* pre-generated spack repo index cache (both with and without overlay repos) */
@@ -299,8 +298,8 @@ lib.fix (packs: with packs; {
           verbose = pprefs.verbose or false;
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
-          repoPkgs = map (r: let p = r + "/packages/${pname}"; in
-            lib.when (builtins.pathExists p) p) repos;
+          repoPkgs = map (r: let p = "${r}/packages/${pname}"; in
+            lib.when (builtins.pathExists p) (builtins.path { name="repo-pkgs-${pname}"; path=p; })) repos;
         } // desc.build // pprefs.build or {}) // {
           inherit spec;
           withPrefs = p: resolvePackage pname gen (lib.prefsUpdate pprefs p);
