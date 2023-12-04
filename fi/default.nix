@@ -21,12 +21,7 @@ corePacks = import ../packs {
   system = builtins.currentSystem;
   inherit os;
 
-  spackSrc = {
-    /* -------- upstream spack version -------- */
-    url = "https://github.com/flatironinstitute/spack";
-    ref = "fi-nixpack";
-    rev = "e1e10fddda07181a745bdd81ae5f85529083b1a5";
-  };
+  spackSrc = ./spack;
 
   spackConfig = {
     config = {
