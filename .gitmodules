@@ -1,4 +1,4 @@
 [submodule "spack"]
 	path = fi/spack
 	url = https://github.com/flatironinstitute/spack
-	branch = fi-nixpack
+	branch = fi-pkgs
