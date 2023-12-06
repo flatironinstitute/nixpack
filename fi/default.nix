@@ -192,7 +192,6 @@ corePacks = import ../packs {
       version = "8.9.2.26-12.x";
     };
     curl = {
-      version = "7";  # for r
       variants = {
         libidn2 = true;
         nghttp2 = true;  # for rust

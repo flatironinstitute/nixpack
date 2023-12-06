@@ -37,6 +37,7 @@ class FakeSpec(nixpack.NixSpec):
             'namespace': 'dummy',
             'version': '0',
             'variants': {},
+            'flags': {},
             'tests': False,
             'paths': {},
             'depends': desc.get('depends', {}),
