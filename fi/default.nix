@@ -28,7 +28,6 @@ corePacks = import ../packs {
     rev = "e1e10fddda07181a745bdd81ae5f85529083b1a5";
   };
 
-  spackCache = false;
   spackConfig = {
     config = {
       source_cache = "/mnt/home/spack/cache";

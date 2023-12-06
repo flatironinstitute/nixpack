@@ -77,7 +77,6 @@ packsWithPrefs =
   , os ? "unknown"
   , label ? "packs"
   , spackSrc ? {}
-  , spackCache ? true
   , spackConfig ? {}
   , spackPython ? "/usr/bin/python3"
   , spackEnv ? {
@@ -124,17 +123,17 @@ lib.fix (packs: with packs; {
     repos = if attrs ? withRepos
       then lib.when attrs.withRepos repos
       else map (r: (builtins.path { name="repo.yaml"; path="${r}/repo.yaml"; })) repos;
-    spackCache = lib.when packPrefs.spackCache (if attrs.withRepos or false then spackCacheRepos else spackCache);
+    spackCache = lib.when (packPrefs.spackCache or true) (if packPrefs.spackCacheRepos or true && attrs.withRepos or false then spackCacheRepos else spackCache);
   } // attrs)) ["PYTHONPATH" "PATH" "LC_ALL" "spackConfig" "spackCache" "passAsFile"];
 
   /* pre-generated spack repo index cache (both with and without overlay repos) */
   makeSpackCache = withRepos: lib.when (builtins.isAttrs spackSrc)
-    (spackBuilder ({
+    (spackBuilder {
       name = "spack-cache" + (if withRepos then "-repos" else "");
       args = [../spack/cache.py];
       spackCache = null;
       inherit withRepos;
-    }));
+    });
 
   spackCache      = makeSpackCache false;
   spackCacheRepos = makeSpackCache true;
