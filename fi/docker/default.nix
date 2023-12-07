@@ -19,6 +19,7 @@ let docker = derivation rec {
     sha256 = "13wyshzlw3dd2800629qkshwykcvmxi49qp268nzxjh5nkxsz0rw";
   };
   PATH = "/bin:/usr/bin";
+  setupsh = ./setup.sh;
   builder = ./builder.sh;
 }; in
 
@@ -41,8 +42,7 @@ docker // {
         end
       end
 
-      execute {cmd="/bin/systemctl --user --force link ${docker}/config/systemd/user/docker.service", modeA={"load"}}
-      execute {cmd="/bin/systemctl --user start docker", modeA={"load"}}
+      execute {cmd="${docker}/bin/dockerd-rootless-setup.sh && /bin/systemctl --user start docker", modeA={"load"}}
       execute {cmd="/bin/systemctl --user stop docker", modeA={"unload"}}
       setenv("DOCKER_HOST", "unix://" .. pathJoin(xdg_runtime_dir, "docker.sock"))
     '';
