@@ -2374,6 +2374,8 @@ pkgStruct = {
     xscreensaver
   ];
 
+  docker = (import ./docker corePacks);
+
   static = [
     /* -------- misc modules --------- */
     { path = ".modulerc";
@@ -2546,6 +2548,8 @@ modPkgs = with pkgStruct;
     };
     projection = "{name}/{version}-nix";
   } // p.module or {}) nixpkgs
+  ++
+  [ docker.module ]
   ++
   static
 ;
