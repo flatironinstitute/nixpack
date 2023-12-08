@@ -6,8 +6,8 @@ class PyNumpy(spack.pkg.builtin.py_numpy.PyNumpy):
     def install(self, spec, prefix):
         # Skip if no BLAS/LAPACK requested
         spec = self.spec
-        if '+blas' not in spec or spec['blas'].name != 'flexiblas':
-            return
+        if spec['blas'].name != 'flexiblas':
+            return super().install(spec, prefix)
 
         def write_library_dirs(f, dirs):
             f.write('library_dirs = {0}\n'.format(dirs))
@@ -46,7 +46,7 @@ class PyNumpy(spack.pkg.builtin.py_numpy.PyNumpy):
 
     def setup_build_environment(self, env):
         super().setup_build_environment(env)
-        if '+blas' not in self.spec or self.spec['blas'].name != 'flexiblas':
+        if self.spec['blas'].name != 'flexiblas':
             return
         env.set('NPY_BLAS_ORDER', 'atlas')
         env.set('NPY_LAPACK_ORDER', 'atlas')
