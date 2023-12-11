@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.11";
-    rev = "8610bf52dcaffa5694f3df9b7027c6153c3d6a72";
+    rev = "246f841d931d04ff6b84f1666a0dc18484b38f55";
   };
 
   repos = [
@@ -413,6 +413,10 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
+    likwid = {
+      # 5.3.0 patch errors
+      version = "5.2";
+    };
     llvm = {
       version = "14";
     };
@@ -511,8 +515,9 @@ corePacks = import ../packs {
     };
     openmm = {
       variants = {
-        inherit cuda_arch;
-        cuda = true;
+        # cuda build fails with internal gcc compiler error
+        #inherit cuda_arch;
+        #cuda = true;
       };
     };
     openmpi = {
@@ -548,6 +553,10 @@ corePacks = import ../packs {
       variants = {
         python = true;
       };
+    };
+    osu-micro-benchmarks = {
+      # 7.3 doesn't work with intel (MPI_Allgather_init)
+      version = "7.2";
     };
     pango = {
       variants = {
@@ -601,6 +610,10 @@ corePacks = import ../packs {
     protobuf = {
       # for py-protobuf
       version = "3.20";
+    };
+    py-anyio = {
+      # for py-jupyter-server
+      version = "3";
     };
     py-astroid = {
       depends = {
@@ -705,10 +718,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-ipython = {
-      # for python 3.8
-      #version = "8.11";
-    };
     py-jax = {
       variants = {
         inherit cuda_arch;
@@ -725,18 +734,20 @@ corePacks = import ../packs {
         };
       };
     };
-    # py-jinja2 = {
-    #   version = "3.0.3";
-    # };
     py-jsonschema = {
       variants = {
         format-nongpl = true;
       };
     };
+    py-jupyter-server = {
+      # for py-jupyterlab 3
+      version = "1";
+    };
     py-jupyterhub = {
       version = "3";
     };
     py-jupyterlab = {
+      # for py-ipyparallel, various widgets
       version = "3";
     };
     py-matplotlib = {
@@ -1152,6 +1163,7 @@ corePacks = import ../packs {
         fpic = true;
       };
     };
+    zlib-api = { name = "zlib"; };
     zstd = {
       variants = {
         multithread = false;
@@ -1253,14 +1265,6 @@ corePacks = import ../packs {
       };
     };
     py-pycuda = spec: old: {
-      /* overaggresive variants */
-      depends = old.depends // {
-        boost = if old.depends.boost == null then null else old.depends.boost // {
-          variants = {};
-        };
-      };
-    };
-    valgrind = spec: old: {
       /* overaggresive variants */
       depends = old.depends // {
         boost = if old.depends.boost == null then null else old.depends.boost // {
@@ -1628,7 +1632,7 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.9.0";
+      version = "1.9.3";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
