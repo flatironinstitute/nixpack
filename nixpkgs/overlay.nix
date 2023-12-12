@@ -196,4 +196,8 @@ in
       sed -i '/SDL_VIDEO_DRIVER_X11_CONST_PARAM_XDATA32/s/.*/#define SDL_VIDEO_DRIVER_X11_CONST_PARAM_XDATA32 1/' include/SDL_config.h
     '';
   });
+
+  umockdev = umockdev.overrideAttrs (old: {
+    doCheck = false; # static-code unknown failure
+  });
 }

@@ -995,13 +995,6 @@ corePacks = import ../packs {
       # for py-tensorflow
       version = "1.14";
     };
-    py-y-py = {
-      depends = {
-        py-maturin = {
-          version = "0.14";
-        };
-      };
-    };
     python = corePython;
     qt = {
       variants = {
@@ -1577,6 +1570,7 @@ pyBlacklist = [
   { name = "py-cython"; version = "0.29.30"; } # py-astropy dep
   { name = "py-cython"; version = "0.29.32"; } # py-halotools dep
   { name = "py-cython"; version = "3"; } # py-gevent dep
+  { name = "py-pip"; version = "23.1:"; } # py-scipy dep
   { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
