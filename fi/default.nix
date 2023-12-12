@@ -1581,6 +1581,7 @@ pyBlacklist = [
 pyView = pl: corePacks.pythonView {
   pkgs = builtins.filter (x: !(builtins.any (lib.specMatches x.spec) pyBlacklist))
     (lib.findDeps (x: lib.hasPrefix "py-" x.name) pl);
+  exclude = "npm-cache";
 };
 
 rView = corePacks.view {
