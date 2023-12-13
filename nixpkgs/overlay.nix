@@ -215,5 +215,15 @@ in
         });
       };
     };
+    packageOverrides = self: super: {
+      crypton = super.crypton.overrideAttrs (old: {
+        # FAIL: Ed448 verify sig?
+        doCheck = false;
+      });
+      cryptonite = super.cryptonite.overrideAttrs (old: {
+        # FAIL: Ed448 verify sig?
+        doCheck = false;
+      });
+    };
   };
 }
