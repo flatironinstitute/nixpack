@@ -200,4 +200,20 @@ in
   umockdev = umockdev.overrideAttrs (old: {
     doCheck = false; # static-code unknown failure
   });
+
+  libproxy = libproxy.overrideAttrs (old: {
+    cmakeFlags = old.cmakeFlags ++ ["-DWITH_PERL=no"];
+  });
+
+  haskell = haskell // {
+    packages = haskell.packages // {
+      ghc8107Binary = haskell.packages.ghc8107Binary.override {
+        ghc = haskell.packages.ghc8107Binary.ghc.overrideAttrs (old: {
+          postUnpack = old.postUnpack + ''
+            patchShebangs ghc-${old.version}/inplace/bin
+          '';
+        });
+      };
+    };
+  };
 }
