@@ -2027,6 +2027,17 @@ pkgStruct = {
           gromacs
           { pkg = gromacs.withPrefs { version = "2022.5"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
+          { pkg = trilinos.withPrefs {
+              version = "14.2.0";
+              variants = {
+                cxxstd = "17";
+                cuda_arch = { "90" = true; none = false; };
+                cuda = true;
+                wrapper = true;
+              };
+            };
+            projection = "{name}/mpi-h100-{version}";
+          }
           plumed
           ascent
         ]
