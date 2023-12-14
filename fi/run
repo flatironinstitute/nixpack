@@ -100,11 +100,6 @@ case "$cmd" in
 		if [[ $path != *.lua ]] ; then
 			path=$path.lua
 		fi
-		# fixups
-		nix-build -o apptainer -A pkgs.apptainer $nixargs
-		for fix in apptainer/bin/spack_perms_fix.sh ; do
-			sudo $fix || echo "YOU MUST RUN: sudo `realpath $fix`"
-		done
 		# release
 		nix-build -o $path -A modsMod $nixargs
 		if [[ -n $tag ]] ; then
