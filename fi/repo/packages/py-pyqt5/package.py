@@ -9,4 +9,5 @@ class PyPyqt5(builtin.PyPyqt5):
         return super().configure_args() + [
             '--no-designer-plugin',
             '--no-qml-plugin',
+            '--no-tools'
         ]

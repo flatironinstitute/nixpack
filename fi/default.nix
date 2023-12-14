@@ -1550,19 +1550,20 @@ withPython = packs: py: let
 corePython = { version = "3.10"; };
 
 mkPythons = base: gen:
-  builtins.map (python: gen ({
-    python = python;
-    isCore = python == corePython;
-    packs = withPython base (python // {
-      variants = (python.variants or {}) // {
-        tkinter = true;
+  builtins.map (version: let python = {
+      inherit version;
+      variants = {
+        tkinter = true; # break dependency cycle
       };
-    });
-  }))
+    }; in gen {
+    python = python;
+    isCore = version == corePython.version;
+    packs = withPython base python;
+  })
   [ /* -------- pythons -------- */
-    { version = "3.9"; }
-    { version = "3.10"; }
-    { version = "3.11"; }
+    "3.9"
+    "3.10"
+    "3.11"
   ];
 
 pyBlacklist = [
@@ -2233,7 +2234,7 @@ pkgStruct = {
         py-lightning-fabric
         py-pytensor
         py-pytorch-lightning
-        
+
         # py-torchaudio  # breaks on import
         py-torchvision
       ] ++
@@ -2247,13 +2248,11 @@ pkgStruct = {
       lib.optionals (
         lib.versionMatches py.python.version ":3.10"
         )[
-        
         # Uses old py-sip; won't build against 3.11
-        # TODO fix for modules/2.3
-        # py-envisage
-        # py-pymol
-        # py-pyqt5
-        # py-qtconsole
+        py-envisage
+        py-pymol
+        py-pyqt5
+        py-qtconsole
       ])
       ).overrideView {
         ignoreConflicts = [
