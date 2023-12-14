@@ -2359,6 +2359,7 @@ pkgStruct = {
     (withGL mplayer // { name = builtins.replaceStrings ["-unstable"] [""] mplayer.name; })
     (withGL mpv // { name = builtins.replaceStrings ["-with-scripts"] [""] mpv.name; })
     neovim
+    pandoc
     #pass
     #pdftk
     rav1e

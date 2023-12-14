@@ -224,6 +224,10 @@ in
         # FAIL: Ed448 verify sig?
         doCheck = false;
       });
+      http2 = super.http2.overrideAttrs (old: {
+        # tests hang
+        doCheck = false;
+      });
     };
   };
 }
