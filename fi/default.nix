@@ -1192,8 +1192,8 @@ corePacks = import ../packs {
           mca_conf_path = os.path.join(pkg.prefix.etc, "openmpi-mca-params.conf")
           with open(mca_conf_path, 'a') as f:
               f.write("""
-          oob_tcp_if_exclude = idrac,lo,ib0
-          btl_tcp_if_exclude = idrac,lo,ib0
+          oob_tcp_if_exclude = idrac,lo,ib0,10.250.112.0/20
+          btl_tcp_if_exclude = idrac,lo,ib0,10.250.112.0/20
 
           btl_openib_if_exclude = i40iw0,i40iw1,mlx5_1
           btl_openib_warn_nonexistent_if = 0
