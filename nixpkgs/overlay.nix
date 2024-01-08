@@ -205,6 +205,10 @@ in
     cmakeFlags = old.cmakeFlags ++ ["-DWITH_PERL=no"];
   });
 
+  libpsl = libpsl.overrideAttrs (old: {
+    doCheck = false; # valgrind unknown instruction
+  });
+
   haskell = haskell // {
     packages = haskell.packages // {
       ghc8107Binary = haskell.packages.ghc8107Binary.override {
