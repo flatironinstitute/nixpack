@@ -353,7 +353,8 @@ corePacks = import ../packs {
       build = {
         post = ''
           license_path = pkg.prefix.license
-          os.symlink("/mnt/sw/fi/licenses/idl/o_licenseserverurl.txt", os.path.join(license_path, "o_licenseserverurl.txt"))
+          license_file = "lic_server.dat" if spec.satisfies("@8.9:") else "o_licenseserverurl.txt"
+          os.symlink(os.path.join("/mnt/sw/fi/licenses/idl",license_file), os.path.join(license_path, license_file))
           for d in ["flexera", "flexera-sv"]:
             dir = os.path.join(license_path, d)
             try:
@@ -1899,7 +1900,7 @@ pkgStruct = {
   map (v: idl.withPrefs
     { version = v;
     })
-    ["8.9"]
+    ["9.0"]
   ;
 
   compilers = mkCompilers corePacks (comp: comp // {
