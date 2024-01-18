@@ -56,7 +56,7 @@ class List(Nix):
 class Attr(Nix):
     def __init__(self, key, val):
         if not isinstance(key, str):
-            raise TypeError(self.key)
+            raise TypeError(key)
         self.key = key
         self.val = val
     def print(self, indent, out):
@@ -318,7 +318,7 @@ def variant(p, v):
         return variant1(p, v)
 
 def depend(p, d):
-    c = [whenCondition(p, w, depPrefs(s), s) for w, s in sorted(d.items())]
+    c = [whenCondition(p, w, depPrefs(s), s) for w, l in sorted(d.items()) for s in l]
     if len(c) == 1:
         return c[0]
     return List(c)
@@ -354,15 +354,16 @@ for p in spack.repo.PATH.all_package_classes():
     if p.variants:
         desc['variants'] = {n: variant(p, entry) for n, entry in p.variants.items()}
     if p.dependencies:
-        desc['depends'] = {n: depend(p, d) for n, d in p.dependencies.items()}
+        desc['depends'] = {n: depend(p, d) for n, d in p.dependencies_by_name(when=True).items()}
     if p.conflicts:
         desc['conflicts'] = [conflict(p, c, w, m) for c, wm in sorted(p.conflicts.items()) for w, m in wm]
     if p.provided:
         provides = defaultdict(list)
-        for v, cs in sorted(p.provided.items()):
-            provides[v.name].extend((c, v.versions) for c in sorted(cs))
-            virtuals[v.name].add(p.name)
-        desc['provides'] = {v: provide(p, c) for v, c in provides.items()}
+        for w, vs in sorted(p.provided.items()):
+            for v in vs:
+                provides[v.name].append((w, v.versions))
+                virtuals[v.name].add(p.name)
+        desc['provides'] = {v: provide(p, c) for v, c in sorted(provides.items())}
     if getattr(p, 'family', None) == 'compiler':
         desc.setdefault('provides', {}).setdefault('compiler', ':')
     output(p.name, Fun('spec', desc))
