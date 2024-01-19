@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.11";
-    rev = "246f841d931d04ff6b84f1666a0dc18484b38f55";
+    rev = "3d7dbcfb56a1cff0729280da3f1185044628975b";
   };
 
   repos = [
@@ -188,7 +188,7 @@ corePacks = import ../packs {
       };
     };
     cudnn = {
-      version = "8.9.2.26-12.x";
+      version = "8.9.7.29-12";
     };
     curl = {
       variants = {
@@ -365,11 +365,6 @@ corePacks = import ../packs {
         '';
       };
     };
-    intel-oneapi-compilers = {
-      # variants = {
-      #   codeplay = true;
-      # };
-    };
     libaio = {
       # needs mke2fs?
       tests = false;
@@ -442,14 +437,6 @@ corePacks = import ../packs {
     meson = {
       # for py-pandas
       version = "1.2.1";
-    };
-    mpc = {
-      # for gcc via mpfr
-      version = "1.1";
-    };
-    mpfr = {
-      # for gcc
-      version = "3.1.6";
     };
     mpi = {
       name = "openmpi";
@@ -751,6 +738,10 @@ corePacks = import ../packs {
       # for py-ipyparallel, various widgets
       version = "3";
     };
+    py-keras = {
+      # 3 has dependency problems: requires too-new tensorflow 2.16 or too-old torch 2.1.1
+      version = "2";
+    };
     py-matplotlib = {
       # for numpy constraint
       version = "3.7";
@@ -1028,6 +1019,9 @@ corePacks = import ../packs {
     rust = {
       # needs openssl pkgconfig
       build = opensslPkgconfig;
+      variants = {
+        dev = true;
+      };
     };
     seacas = {
       # for vtk
@@ -1050,11 +1044,6 @@ corePacks = import ../packs {
     suite-sparse = {
       variants = {
         openmp = true;
-      };
-      depends = {
-        mpfr = {
-          version = "4:";
-        };
       };
     };
     trilinos = {
@@ -1701,8 +1690,8 @@ juliaPacks = corePacks.withPrefs {
         crypto = "mbedtls";
       };
     };
-    mpfr = {
-      version = "4";
+    suite-sparse = {
+      version = "5.10";
     };
   } // blasVirtuals {
     /* don't use flexiblas */
@@ -1790,7 +1779,7 @@ pkgStruct = {
     graphviz
     hdfview
     imagemagick
-    (blasPkg intel-mkl)
+    #(blasPkg intel-mkl)
     intel-tbb
     intel-parallel-studio
     intel-oneapi-compilers
