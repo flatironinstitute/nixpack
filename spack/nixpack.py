@@ -327,7 +327,7 @@ class NixSpec(spack.spec.Spec):
             self.compiler_flags[f] = []
 
         if nixspec['patches']:
-            patches = self.package_class.patches.setdefault(spack.directives.make_when_spec(True), [])
+            patches = self.package_class.patches.setdefault(spack.spec.Spec(), [])
             for i, p in enumerate(nixspec['patches']):
                 patches.append(spack.patch.FilePatch(self.package_class, p, 1, '.', ordering_key = ('~nixpack', i)))
             spack.repo.PATH.patch_index.update_package(self.fullname)

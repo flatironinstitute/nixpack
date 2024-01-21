@@ -1781,7 +1781,7 @@ pkgStruct = {
     imagemagick
     #(blasPkg intel-mkl)
     intel-tbb
-    intel-parallel-studio
+    #intel-parallel-studio
     intel-oneapi-compilers
     intel-oneapi-advisor
     (blasPkg intel-oneapi-mkl)
