@@ -9,6 +9,10 @@ let
       '';
     };
   };
+  /* nipack can't deal with the conditional dependencies in LuaPackage so just censor luajit for now (should really depend on variant setting) */
+  noluajit = spec: old: {
+    depends = removeAttrs old.depends ["lua-luajit" "lua-luajit-openresty"];
+  };
 in
 {
   /* compiler pseudo-virtual */
@@ -179,4 +183,12 @@ in
   ghostscript-fonts = nocompiler;
   matlab = nocompiler;
   mathematica = nocompiler;
+
+  lua-bit32 = noluajit;
+  lua-bitlib = noluajit;
+  lua-lpeg = noluajit;
+  lua-luafilesystem = noluajit;
+  lua-luaposix = noluajit;
+  lua-mpack = noluajit;
+  lua-sol2 = noluajit;
 }

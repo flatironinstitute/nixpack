@@ -503,7 +503,7 @@ corePacks = import ../packs {
     };
     openmm = {
       variants = {
-        # cuda build fails with internal gcc compiler error
+        # cuda build fails with internal gcc compiler error (11, 12.2)
         #inherit cuda_arch;
         #cuda = true;
       };
