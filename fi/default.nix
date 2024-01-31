@@ -2571,7 +2571,9 @@ mods = corePacks.modules {
     };
     projections = {
       all = "{name}/{version}";
-      "^mpi" = "{name}/mpi-{version}";
+      "^mpi" = "{name}/mpi-{version}"; # no longer works
+      "^openmpi" = "{name}/mpi-{version}";
+      "^intel-oneapi-mpi" = "{name}/mpi-{version}";
     };
     all = {
       autoload = "none";
