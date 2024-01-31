@@ -2054,12 +2054,14 @@ pkgStruct = {
         pkgs = lib.optionals (py.isCore && mpi.isCore && comp.isCore) (with py.packs.pkgs;
           [(pkgMod triqs // {
             postscript = ''
+              depends_on("openmpi/${openmpi.spec.version}")
               depends_on("fftw/mpi-${fftw.spec.version}")
               depends_on("hdf5/mpi-${hdf5.spec.version}")
               depends_on("python-mpi/${python.spec.version}")
             '';
+            core = true; # avoid hiding behind gcc/12
           })] ++
-          map (p: pkgMod p // { postscript = ''depends_on("triqs")''; }) [
+          map (p: pkgMod p // { postscript = ''depends_on("triqs")''; core = true; }) [
             triqs-cthyb
             { pkg = triqs-cthyb.withPrefs { variants = { complex = true; }; };
               projection = "{name}-complex/{version}";
