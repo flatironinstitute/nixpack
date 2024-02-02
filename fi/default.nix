@@ -1539,17 +1539,20 @@ withPython = packs: py: let
 
 corePython = { version = "3.10"; };
 
-mkPythons = base: gen:
-  builtins.map (version: let python = {
+mkPython = base: version:
+  let python = {
       inherit version;
       variants = {
         tkinter = true; # break dependency cycle
       };
-    }; in gen {
+    }; in {
     python = python;
     isCore = version == corePython.version;
     packs = withPython base python;
-  })
+  };
+  
+mkPythons = base: gen:
+  builtins.map (version: gen (mkPython base version))
   [ /* -------- pythons -------- */
     "3.9"
     "3.10"
@@ -1892,7 +1895,7 @@ pkgStruct = {
     ["9.0"]
   ;
 
-  compilers = mkCompilers corePacks (comp: comp // {
+  compilers = mkCompilers corePacks (comp: comp // rec {
     pkgs = with comp.packs.pkgs; [
       /* ---------- compiler modules ---------- */
       (comp.defaulting compiler)
@@ -2039,7 +2042,9 @@ pkgStruct = {
           valgrind
         ];
 
-      pythons = mkPythons mpi.packs (py: py // {
+      pythons = map (basePython:
+        let py = mkPython mpi.packs basePython.python.version; in
+        py // {
         /* ---------- python+mpi modules ---------- */
         view = py.packs.pythonView { pkgs = with py.packs.pkgs; [
           py-mpi4py
@@ -2059,9 +2064,14 @@ pkgStruct = {
               depends_on("hdf5/mpi-${hdf5.spec.version}")
               depends_on("python-mpi/${python.spec.version}")
             '';
+            environment = {
+              append_path = {
+                PYTHONPATH = "${basePython.view}/lib/python${basePython.python.version}/site-packages";
+              };
+            };
             core = true; # avoid hiding behind gcc/12
           })] ++
-          map (p: pkgMod p // { postscript = ''depends_on("triqs")''; core = true; }) [
+          map (p: pkgMod p // { postscript = ''depends_on("triqs/mpi-${triqs.spec.version}")''; core = true; }) [
             triqs-cthyb
             { pkg = triqs-cthyb.withPrefs { variants = { complex = true; }; };
               projection = "{name}-complex/{version}";
@@ -2088,7 +2098,7 @@ pkgStruct = {
             }
           ]
         );
-      });
+      }) pythons;
     });
 
     pythons = mkPythons comp.packs (py: py // {
