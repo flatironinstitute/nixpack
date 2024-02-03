@@ -1157,6 +1157,16 @@ corePacks = import ../packs {
   // blasVirtuals { name = "flexiblas"; };
 
   repoPatch = {
+    gcc = spec: old: {
+      build = {
+        setup = ''
+          builder = getattr(pkg, 'builder', pkg)
+          configure_args = builder.configure_args()
+          configure_args.extend(('--with-arch=${spec.target}', '--with-tune=${spec.target}'))
+          builder.configure_args = lambda: configure_args
+        '';
+      };
+    };
     python = spec: old: {
       patches = if lib.versionMatches spec.version "3.11.4:" then [./python-ncursesw-py-3.11.4.patch] else [./python-ncursesw.patch];
       build = {
