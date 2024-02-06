@@ -263,6 +263,8 @@ class NixSpec(spack.spec.Spec):
         if not self.external:
             assert variants.keys() == self.package_class.variants.keys(), f"{self.name} has mismatching variants {variants.keys()} vs. {self.package_class.variants.keys()}"
         for n, s in variants.items():
+            if s is None:
+                continue
             if isinstance(s, bool):
                 v = spack.variant.BoolValuedVariant(n, s)
             elif isinstance(s, list):
