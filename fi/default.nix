@@ -1061,6 +1061,7 @@ corePacks = import ../packs {
         cuda = false;
         build_type = "Release";
         amesos2 = true;
+        nox = true;
         rol = true;
         stk = true;
         shards = true;
