@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "3c159a0377cb6af291b49e660784f8416e9b2397";
+    rev = "1ab659f9ba74492f1f0d709fe0c686e634c4f72d";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.11";
-    rev = "3d7dbcfb56a1cff0729280da3f1185044628975b";
+    rev = "470882506cac36ddbe4aa1518b0c21fac2e996c6";
   };
 
   repos = [
@@ -100,6 +100,10 @@ corePacks = import ../packs {
         ffmpeg = true;
         opensubdiv = true;
       };
+    };
+    blt = {
+      # for raja
+      version = "0.5";
     };
     boost = {
       variants = {
@@ -409,6 +413,13 @@ corePacks = import ../packs {
       # failing
       tests = false;
     };
+    libwebp = {
+      # for py-pillow
+      variants = {
+        libwebpmux = true;
+        libwebpdemux = true;
+      };
+    };
     likwid = {
       # 5.3.0 patch errors
       version = "5.2";
@@ -647,7 +658,7 @@ corePacks = import ../packs {
       };
     };
     py-cython = {
-      # for numpy
+      # for py-pyyaml, py-mpi4py
       version = "0.29";
     };
     py-dedalus = {
@@ -758,14 +769,11 @@ corePacks = import ../packs {
     };
     py-numpy = {
       # for py-tensorflow
-      version = ":1.24.3";
+      version = "1.24.3";
     };
-    libwebp = {
-      # for py-pillow
-      variants = {
-        libwebpmux = true;
-        libwebpdemux = true;
-      };
+    py-pandas = {
+      # for py-cython
+      version = "2.1";
     };
     py-pillow = {
       variants = {
@@ -1073,44 +1081,32 @@ corePacks = import ../packs {
     };
     triqs = {
       depends = {
-        compiler = {
-          version = "12.2";
-        };
+        compiler = gcc12;
       };
     };
     triqs-cthyb = {
       depends = {
-        compiler = {
-          version = "12.2";
-        };
+        compiler = gcc12;
       };
     };
     triqs-dft-tools = {
       depends = {
-        compiler = {
-          version = "12.2";
-        };
+        compiler = gcc12;
       };
     };
     triqs-maxent = {
       depends = {
-        compiler = {
-          version = "12.2";
-        };
+        compiler = gcc12;
       };
     };
     triqs-omegamaxent-interface = {
       depends = {
-        compiler = {
-          version = "12.2";
-        };
+        compiler = gcc12;
       };
     };
     triqs-tprf = {
       depends = {
-        compiler = {
-          version = "12.2";
-        };
+        compiler = gcc12;
       };
     };
     ucx = {
@@ -1866,6 +1862,7 @@ pkgStruct = {
       postscript = rExtensions rView;
     }
     rclone
+    ruby
     rust
     smartmontools
     sra-tools
@@ -1881,7 +1878,7 @@ pkgStruct = {
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
     #visit #needs qt <= 5.14.2, vtk dep patches?
     vmd
-    vtk
+    #vtk #FIXME currently broken #42505
     wecall
     zsh
   ]
@@ -2043,7 +2040,7 @@ pkgStruct = {
             projection = "{name}/mpi-h100-{version}";
           }
           plumed
-          ascent
+          #ascent # FIXME raja+cuda build broken "contains a vector, which is not supported in device code"
         ]
         ++
         lib.optionals comp.isCore [
