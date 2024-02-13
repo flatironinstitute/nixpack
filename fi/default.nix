@@ -426,6 +426,10 @@ corePacks = import ../packs {
     };
     llvm = {
       version = "14";
+      variants = {
+        lua = false;
+        libcxx = "project";
+      };
     };
     magma = {
       variants = {
@@ -752,6 +756,13 @@ corePacks = import ../packs {
     py-keras = {
       # 3 has dependency problems: requires too-new tensorflow 2.16 or too-old torch 2.1.1
       version = "2";
+    };
+    py-m2r = {
+      depends = {
+        py-mistune = {
+          version = ":1";
+        };
+      };
     };
     py-matplotlib = {
       # for numpy constraint
@@ -1137,6 +1148,8 @@ corePacks = import ../packs {
       };
     };
     vtk-m = {
+      # for ascent
+      version = "2.0";
       variants = {
         cuda = true;
         inherit cuda_arch;
@@ -1300,6 +1313,10 @@ corePacks = import ../packs {
     /* downloads its own libvips, and spack libvips is broken */
     npm = spec: old: {
       depends = builtins.removeAttrs old.depends ["libvips"];
+    };
+    texlive = spec: old: {
+      # not really sure, but this is what we had
+      depends = removeAttrs old.depends ["poppler"];
     };
     /* fix LIBRARY_PATH ordering wrt system /lib64 for libraries with different major versions */
     boost = lib64Link;
@@ -1643,8 +1660,8 @@ juliaPacks = corePacks.withPrefs {
         internal_unwind = false;
         llvm_dylib = true;
         lld = true;
-        lldb = false;
         link_llvm_dylib = true;
+        lua = false;
         targets = {
           none = false;
           amdgpu = true;
@@ -1655,7 +1672,7 @@ juliaPacks = corePacks.withPrefs {
         version_suffix = "jl";
         shlib_symbol_version = "JL_LLVM_14.0";
       };
-      patches = [(builtins.fetchurl "https://github.com/JuliaLang/llvm-project/compare/f28c006a5895fc0e329fe15fead81e37457cb1d1...381043941d2c7a5157a011510b6d0386c171aae7.diff")];
+      patches = [(builtins.fetchurl "https://raw.githubusercontent.com/spack/patches/master/julia/f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099.patch")];
     };
     libuv-julia = {
       version = "1.44.2";
@@ -1732,6 +1749,9 @@ pkgStruct = {
     }
     { pkg = llvm.withPrefs {
         version = "16";
+        variants = {
+          libcxx = "runtime";
+        };
       };
       environment = {
         append_path = {
@@ -2448,10 +2468,6 @@ pkgStruct = {
   ];
 
 };
-
-# TODO:
-#  amd/aocl (amdblis, amdlibflame, amdfftw, amdlibm, aocl-sparse, amdscalapack)
-#  amd/uprof
 
 jupyterBase = pyView (with corePacks.pkgs; [
   python
