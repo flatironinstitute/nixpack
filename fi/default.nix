@@ -1013,6 +1013,7 @@ corePacks = import ../packs {
         opengl = true;
       };
     };
+    qmake = { name = "qt"; };
     r = {
       variants = {
         X = true;
@@ -1891,7 +1892,7 @@ pkgStruct = {
     subversion
     swig
     texlive
-    # texstudio  # TODO qt 6 incompatibility? fix for modules/2.3
+    texstudio  # TODO qt 6 incompatibility? fix for modules/2.3
     tmux
     udunits
     unison
