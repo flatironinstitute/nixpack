@@ -1892,7 +1892,7 @@ pkgStruct = {
     subversion
     swig
     texlive
-    texstudio  # TODO qt 6 incompatibility? fix for modules/2.3
+    texstudio
     tmux
     udunits
     unison
@@ -2426,6 +2426,7 @@ pkgStruct = {
           "amd/aocc" = "aocc";
           "healpix-cxx" = "healpix";
           "intel/mkl" = "intel-mkl";
+          "latex" = "texlive";
           "lib/arpack" = "arpack-ng";
           "lib/boost" = "boost";
           "lib/eigen" = "eigen";
