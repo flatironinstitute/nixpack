@@ -742,6 +742,9 @@ corePacks = import ../packs {
         format-nongpl = true;
       };
     };
+    py-jupyter-remote-desktop-proxy = {
+      version = "main";
+    };
     py-jupyter-server = {
       # for py-jupyterlab 3
       version = "1";
@@ -997,6 +1000,9 @@ corePacks = import ../packs {
         cuda = true;
         inherit cuda_arch;
       };
+    };
+    py-websockify = {
+      version = "master";
     };
     py-wheel = {
       # for py-astroid, py-pylint, and others
@@ -1840,7 +1846,9 @@ pkgStruct = {
     nccl
     #nix #too old/broken
     node-js
-    npm
+    { pkg = npm;
+      autoload = [node-js];
+    }
     (rec { pkg = nvhpc;
       environment = let
         cudaLib = "{prefix}/Linux_x86_64/{version}/cuda/lib64";
@@ -2478,6 +2486,7 @@ jupyterBase = pyView (with corePacks.pkgs; [
   py-batchspawner
   node-js
   py-bash-kernel
+  py-jupyter-remote-desktop-proxy
 ]);
 
 jupyter = jupyterBase.extendView (
