@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "1ab659f9ba74492f1f0d709fe0c686e634c4f72d";
+    rev = "27e13fdc063d4d3787ace9c22950ebeb365d53d9";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.11";
-    rev = "470882506cac36ddbe4aa1518b0c21fac2e996c6";
+    rev = "dceb0c46f869f13ce987cdb726dfccc1a9bce2c1";
   };
 
   repos = [
@@ -744,6 +744,9 @@ corePacks = import ../packs {
     };
     py-jupyter-remote-desktop-proxy = {
       version = "main";
+    };
+    py-jupyter-server-proxy = {
+      version = "=4.0";
     };
     py-jupyter-server = {
       # for py-jupyterlab 3
