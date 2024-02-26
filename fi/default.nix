@@ -2532,7 +2532,17 @@ jupyter = jupyterBase.extendView (
         };
       }
     ]
-  )
+  ) ++
+  [ (corePacks.nixpkgs.x11vnc.overrideAttrs (old: {
+      patches = old.patches ++ [
+        (corePacks.nixpkgs.fetchpatch {
+          name = "resize.patch";
+          url = "https://github.com/LibVNC/x11vnc/pull/107/commits/4b64054bbc05395478cd97012ed5a004338d46ab.patch";
+          sha256 = "XYD0s4hsgaBwwtI8f+EF5wLWVhjDbCMQEDBl9CtTosM=";
+        })
+      ];
+    }))
+  ]
 );
 
 pkgMod = p: if p ? pkg then p else { pkg = p; };
