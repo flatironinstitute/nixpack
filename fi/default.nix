@@ -2009,23 +2009,7 @@ pkgStruct = {
               inherit (mpi.packs.pkgs) compiler mpi;
             };
             projection = "{name}/{^openmpi.version}";
-          }) ([
-            { name = "openmpi-intel";
-              context = {
-                short_description = "Set openmpi to use Intel compiler (icc)";
-              };
-              environment = {
-                set = {
-                  OMPI_CC = "icc";
-                  OMPI_CXX = "icpc";
-                  OMPI_FC = "ifort";
-                  OMPI_F77 = "ifort";
-                };
-              };
-            }
-          ]
-          ++
-          lib.optionals (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4") [
+          }) (lib.optionals (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4") [
             { name = "openmpi-opa";
               context = {
                 short_description = "Set openmpi4 for Omnipath fabric";
