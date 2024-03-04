@@ -118,6 +118,7 @@ corePacks = import ../packs {
         filesystem = true;
         graph = true;
         iostreams = true;
+        locale = true;
         log = true;
         math = true;
         numpy = true;
