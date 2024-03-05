@@ -186,7 +186,7 @@ corePacks = import ../packs {
       build = opensslPkgconfig;
     };
     cuda = {
-      # make sure this is <= image driver
+      # make sure this is compatible with the image driver
       version = "12.2";
       depends = {
         libxml2 = rpmExtern "libxml2";

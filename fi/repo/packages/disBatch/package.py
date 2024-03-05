@@ -12,7 +12,7 @@ class Disbatch(PythonPackage):
     homepage = "https://github.com/flatironinstitute/disBatch"
     git      = "https://github.com/flatironinstitute/disBatch.git"
 
-    version('2.5', tag='2.5', submodules=True)
+    version('2.5', tag='2.5', commit='abee40342f1ecb5e9b801744d860b5b1414d4b2c', submodules=True)
     version('2.0', tag='2.0', submodules=True)
     version('1.4', tag='1.4', submodules=True)
 
