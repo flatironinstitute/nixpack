@@ -2044,7 +2044,7 @@ pkgStruct = {
         ++
         lib.optionals mpi.isCudaAware [
           gromacs
-          { pkg = gromacs.withPrefs { version = "2022.5"; variants = { plumed = true; }; };
+          { pkg = gromacs.withPrefs { version = "=2023"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
           { pkg = trilinos.withPrefs {
               version = "14.2.0";
@@ -2342,7 +2342,7 @@ pkgStruct = {
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
         projection = "{name}/skylake-mpi-{version}";
       }
-      { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "2022.5"; variants = { mpi = true; plumed = true; }; };
+      { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "=2023"; variants = { mpi = true; plumed = true; }; };
         projection = "{name}/skylake-mpi-plumed-{version}";
       }
     ];
