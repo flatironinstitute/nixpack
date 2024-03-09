@@ -1928,7 +1928,7 @@ pkgStruct = {
         key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
       };
     })
-    ["R2022b" "R2023a"]
+    ["R2023a" "R2023b"]
   ++
   map (v: idl.withPrefs
     { version = v;
