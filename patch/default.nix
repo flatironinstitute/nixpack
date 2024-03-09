@@ -135,6 +135,7 @@ in
 
   /* uses npm */
   py-jupyter-server = tmphome;
+  py-jupyter-server-proxy = tmphome;
   py-ipyparallel = tmphome;
 
   paraview = spec: old: {

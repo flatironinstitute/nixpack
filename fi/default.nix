@@ -743,15 +743,12 @@ corePacks = import ../packs {
         format-nongpl = true;
       };
     };
-    py-jupyter-remote-desktop-proxy = {
-      version = "main";
-    };
-    py-jupyter-server-proxy = {
-      version = "=4.0";
-    };
     py-jupyter-server = {
       # for py-jupyterlab 3
       version = "1";
+    };
+    py-jupyter-server-proxy = {
+      version = "=4.0";
     };
     py-jupyterhub = {
       version = "3";
@@ -2467,7 +2464,28 @@ pkgStruct = {
 
 };
 
-jupyterBase = pyView (with corePacks.pkgs; [
+jupyterPacks = corePacks.withPrefs {
+  label = "jupyterhub";
+  global = {
+    resolver = null;
+  };
+  package = {
+    py-jupyter-remote-desktop-proxy = {
+      version = "main";
+    };
+    py-jupyter-server-proxy = {
+      version = "=4.1";
+    };
+    py-jupyter-server = {
+      version = "2";
+    };
+    py-jupyterlab = {
+      version = "4";
+    };
+  };
+};
+
+jupyterBase = pyView (with jupyterPacks.pkgs; [
   python
   py-jupyterhub
   py-jupyterlab
@@ -2497,7 +2515,7 @@ jupyter = jupyterBase.extendView (
     ++
     [
       { pkg = rView;
-        kernelSrc = import ../jupyter/kernel/ir corePacks {
+        kernelSrc = import ../jupyter/kernel/ir jupyterPacks {
           pkg = rView;
           jupyter = jupyterBase;
         };
@@ -2507,8 +2525,8 @@ jupyter = jupyterBase.extendView (
           R_LIBS_SITE = "${rView}/rlib/R/library";
         };
       }
-      { pkg = corePacks.pkgs.py-bash-kernel;
-        kernelSrc = import ../jupyter/kernel/bash corePacks {
+      { pkg = jupyterPacks.pkgs.py-bash-kernel;
+        kernelSrc = import ../jupyter/kernel/bash jupyterPacks {
           pkg = jupyterBase;
           jupyter = jupyterBase;
         };
@@ -2518,7 +2536,7 @@ jupyter = jupyterBase.extendView (
       }
     ]
   ) ++
-  [ (corePacks.nixpkgs.x11vnc.overrideAttrs (old: {
+  [ (jupyterPacks.nixpkgs.x11vnc.overrideAttrs (old: {
       patches = old.patches ++ [
         (corePacks.nixpkgs.fetchpatch {
           name = "resize.patch";
