@@ -234,4 +234,15 @@ in
       });
     };
   };
+
+  jdupes = callPackage ./jdupes.nix { };
+
+  vamp-plugin-sdk = vamp-plugin-sdk.overrideAttrs (old: {
+    src = fetchFromGitHub {
+      owner = "vamp-plugins";
+      repo = "vamp-plugin-sdk";
+      rev = "vamp-plugin-sdk-v${old.version}";
+      hash = "sha256-5jNA6WmeIOVjkEMZXB5ijxyfJT88alVndBif6dnUFdI=";
+    };
+  });
 }

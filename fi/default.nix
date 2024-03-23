@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "27e13fdc063d4d3787ace9c22950ebeb365d53d9";
+    rev = "fbecb46610c55fb1370d2588c702a4892b0f4891";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.11";
-    rev = "dceb0c46f869f13ce987cdb726dfccc1a9bce2c1";
+    rev = "01f5bf70e699028e537c41cc960c20a705dd2a62";
   };
 
   repos = [
@@ -82,12 +82,9 @@ corePacks = import ../packs {
         python = true;
       };
     };
-    bazel = {
-      # py-tensorflow family
-      version = "6.1.0";
-    };
     binutils = {
       variants = {
+        gas = true;
         gold = true;
         headers = true;
         ld = true;
@@ -187,7 +184,7 @@ corePacks = import ../packs {
     };
     cuda = {
       # make sure this is compatible with the image driver
-      version = "12.2";
+      version = "12.3";
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
@@ -243,6 +240,7 @@ corePacks = import ../packs {
       target = if target == "skylake-avx512" then "skylake" else target;
       variants = {
         languages = ["c" "c++" "fortran" "jit"];
+        binutils = true;
       };
     };
     gdal = {
@@ -397,14 +395,13 @@ corePacks = import ../packs {
         fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "mlx"];
       };
     };
-    libffi = {
-      # for gobject-introspection
-      version = "3.3";
-      # failing
-      tests = false;
-    };
     libglx = {
       name = "opengl";
+    };
+    libjpeg-turbo = {
+      variants = {
+        libs = ["shared" "static"];
+      };
     };
     libmicrohttpd = {
       # for elfutils
@@ -420,10 +417,6 @@ corePacks = import ../packs {
         libwebpmux = true;
         libwebpdemux = true;
       };
-    };
-    likwid = {
-      # 5.3.0 patch errors
-      version = "5.2";
     };
     llvm = {
       version = "14";
@@ -471,6 +464,8 @@ corePacks = import ../packs {
       variants = {
         # just to force curl dep
         dap = true;
+        # for netcdfcxx4
+        build_system = "cmake";
       };
     };
     nix = {
@@ -622,12 +617,18 @@ corePacks = import ../packs {
     py-astroid = {
       depends = {
         py-setuptools = {
-          version = "62.6";
+          version = "62";
+        };
+        py-wheel = {
+          version = "0.37";
         };
       };
     };
     py-astropy = {
       depends = {
+        py-pip = {
+          version = ":23.0";
+        };
         py-cython = {
           version = "0.29.30";
         };
@@ -648,9 +649,12 @@ corePacks = import ../packs {
         };
       };
     };
-    py-charset-normalizer = {
-      # for py-requests
-      version = "2.0";
+    py-classylss = {
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
+      };
     };
     py-cryptography = {
       # py-pyopenssl
@@ -661,10 +665,11 @@ corePacks = import ../packs {
         cuda = true;
         inherit cuda_arch;
       };
-    };
-    py-cython = {
-      # for py-pyyaml, py-mpi4py
-      version = "0.29";
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
+      };
     };
     py-dedalus = {
       depends = {
@@ -676,8 +681,15 @@ corePacks = import ../packs {
         };
       };
     };
+    py-fastrlock = {
+      depends = {
+        py-pip = {
+          version = ":23.0";
+        };
+      };
+    };
     py-fsspec = {
-      # py-lightning-fabric
+      # py-pytorch-lightning
       variants = {
         http = true;
       };
@@ -686,19 +698,26 @@ corePacks = import ../packs {
       # py-pythran
       version = "0.5.3";
     };
-    py-gevent = {
-      depends = {
-        py-cython = {
-          version = "3";
-        };
-      };
-    };
     py-globus-sdk = {
       depends = {
         py-pyjwt = {
           variants = {
             crypto = true;
           };
+        };
+      };
+    };
+    py-grpcio = {
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
+      };
+    };
+    py-h5py = {
+      depends = {
+        py-cython = {
+          version = ":2";
         };
       };
     };
@@ -715,13 +734,6 @@ corePacks = import ../packs {
         frameworks = ["tensorflow" "keras" "pytorch"];
       };
     };
-    py-ipyparallel = {
-      depends = {
-        py-setuptools = {
-          version = "59";
-        };
-      };
-    };
     py-jax = {
       variants = {
         inherit cuda_arch;
@@ -733,8 +745,7 @@ corePacks = import ../packs {
       };
       depends = {
         bazel = {
-          # needs 5; can reuse the 5.3.0 build from other software
-          version = "5.3.0";
+          version = "6.1.2";
         };
       };
     };
@@ -757,9 +768,12 @@ corePacks = import ../packs {
       # for py-ipyparallel, various widgets
       version = "3";
     };
-    py-keras = {
-      # 3 has dependency problems: requires too-new tensorflow 2.16 or too-old torch 2.1.1
-      version = "2";
+    py-kdcount = {
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
+      };
     };
     py-m2r = {
       depends = {
@@ -769,11 +783,29 @@ corePacks = import ../packs {
       };
     };
     py-matplotlib = {
-      # for numpy constraint
+      # for py-numpy
       version = "3.7";
     };
-    py-ml-dtypes = {
-      version = "0.2.0";
+    py-mpi4py = {
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
+      };
+    };
+    py-mpsort = {
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
+      };
+    };
+    py-msgpack = {
+      depends = {
+        py-cython = {
+          version = "0.29";
+        };
+      };
     };
     py-nose = {
       depends = {
@@ -785,10 +817,28 @@ corePacks = import ../packs {
     py-numpy = {
       # for py-tensorflow
       version = "1.24.3";
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
+      };
     };
     py-pandas = {
-      # for py-cython
-      version = "2.1";
+      depends = {
+        py-cython = {
+          version = "3.0.5";
+        };
+        py-meson-python = {
+          version = "0.13.1";
+        };
+      };
+    };
+    py-pfft-python = {
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
+      };
     };
     py-pillow = {
       variants = {
@@ -800,21 +850,15 @@ corePacks = import ../packs {
         imagequant = true;
       };
     };
-    py-pip = {
-      # for py-astropy and others that require --install-options
-      version = "23.0";
-    };
-    py-pkgutil-resolve-name = {
-      depends = {
-        py-flit-core = {
-          version = "2";
-        };
-      };
-    };
     py-protobuf = {
       # for py-tensorflow
       variants = {
         cpp = true;
+      };
+      depends = {
+        py-pip = {
+          version = "23.0";
+        };
       };
     };
     py-py-cpuinfo = {
@@ -822,7 +866,7 @@ corePacks = import ../packs {
       version = "8.0.0";
     };
     py-pybind11 = {
-      # for py-torch
+      # for py-scipy, py-torch
       version = "2.11.0";
     };
     py-pyfftw = {
@@ -830,16 +874,27 @@ corePacks = import ../packs {
         py-setuptools = {
           version = "59";
         };
+        py-cython = {
+          version = "0.29";
+        };
       };
     };
     py-pylint = {
       depends = {
         py-setuptools = {
-          version = "62.6";
+          version = "62";
+        };
+        py-wheel = {
+          version = "0.37";
         };
       };
     };
     py-pymol = {
+      depends = {
+        py-pip = {
+          version = "23.0";
+        };
+      };
       build = {
         post = ''
         with open(os.path.join(spec.prefix.bin, 'pymol'), 'w') as fp:
@@ -847,17 +902,6 @@ corePacks = import ../packs {
                    'exec python -m pymol "$@"\n'
           )
         '';
-      };
-    };
-    py-pytorch-lightning = {
-      # py-horovod
-      version = "1.5.3";
-    };
-    py-pyqt5 = {
-      depends = {
-        py-sip = {
-          version = "6.6.2:6";
-        };
       };
     };
     py-pytest-cov = {
@@ -874,6 +918,16 @@ corePacks = import ../packs {
         py-setuptools = {
           version = "64";
         };
+        py-cython = {
+          version = ":2";
+        };
+      };
+    };
+    py-pyyaml = {
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
       };
     };
     py-runtests = {
@@ -881,20 +935,10 @@ corePacks = import ../packs {
         mpi = true;
       };
     };
-    py-scikit-image = {
-      depends = {
-        py-meson-python = {
-          version = "0.13";
-        };
-        py-setuptools = {
-          version = "67";
-        };
-      };
-    };
     py-scikit-learn = {
       depends = {
-        py-setuptools = {
-          version = "59";
+        py-cython = {
+          version = ":2";
         };
       };
     };
@@ -909,8 +953,8 @@ corePacks = import ../packs {
         xla = true;
       };
       depends = {
-        py-setuptools = {
-          version = ":61";  # for platform_system!="Darwin"
+        bazel = {
+          version = "6.5.0";
         };
       };
     };
@@ -967,8 +1011,8 @@ corePacks = import ../packs {
     };
     py-scipy = {
       depends = {
-        py-pip = {
-          version = "23.1";
+        py-cython = {
+          version = ":2";
         };
       };
     };
@@ -1005,14 +1049,6 @@ corePacks = import ../packs {
     py-websockify = {
       version = "master";
     };
-    py-wheel = {
-      # for py-astroid, py-pylint, and others
-      version = "0.37";
-    };
-    py-wrapt = {
-      # for py-tensorflow
-      version = "1.14";
-    };
     python = corePython;
     qt = {
       variants = {
@@ -1029,6 +1065,13 @@ corePacks = import ../packs {
     r-xml = {
       build = {
         XMLSEC_CONFIG = "/bin/false";
+      };
+    };
+    py-yt = {
+      depends = {
+        py-cython = {
+          version = ":2";
+        };
       };
     };
     raja = {
@@ -1299,15 +1342,6 @@ corePacks = import ../packs {
         patchelf = {
           deptype = ["build"];
         };
-        py-typing-extensions = {
-          version = "3.6.6:";
-          deptype = ["build" "run"];
-        };
-        py-gast = {
-          # https://github.com/tensorflow/tensorflow/pull/61134
-          version = "0.5.3";
-          deptype = ["build" "run"];
-        };
       };
     };
     py-sqlalchemy = spec: old: {
@@ -1558,6 +1592,11 @@ withPython = packs: py: let
         variants = {
           cpp = true;
         };
+        depends = {
+          py-pip = {
+            version = "23.0";
+          };
+        };
       };
     };
     global = {
@@ -1591,21 +1630,20 @@ mkPythons = base: gen:
     "3.11"
   ];
 
-pyBlacklist = [
-  { name = "py-setuptools"; version = ":62.5,62.7:"; } # fitsio dep (arbitrary version)
-  { name = "py-cython"; version = "0.29.30"; } # py-astropy dep
-  { name = "py-cython"; version = "0.29.32"; } # py-halotools dep
-  { name = "py-cython"; version = "3"; } # py-gevent dep
-  { name = "py-pip"; version = "23.1:"; } # py-scipy dep
+pyCensor = [
+  { name = "py-setuptools"; version = ":67"; } # various dep
+  { name = "py-pip"; version = ":23.0"; } # py-scipy dep
+  { name = "py-wheel"; version = ":0.37"; } # py-scipy dep
+  { name = "py-cython"; version = ":3.0.5"; } # various dep
   { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
   { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
-  { name = "py-meson-python"; version = "0.12"; }
+  { name = "py-meson-python"; version = "0.13.1"; } # py-pandas dep
   { name = "py-maturin"; version = "0.14"; }
 ];
 
 pyView = pl: corePacks.pythonView {
-  pkgs = builtins.filter (x: !(builtins.any (lib.specMatches x.spec) pyBlacklist))
+  pkgs = builtins.filter (x: !(builtins.any (lib.specMatches x.spec) pyCensor))
     (lib.findDeps (x: lib.hasPrefix "py-" x.name) pl);
   exclude = "npm-cache";
 };
@@ -1883,6 +1921,7 @@ pkgStruct = {
     pixz
     postgresql
     proj
+    protobuf
     qt
     { pkg = rView;
       environment = {
@@ -2209,7 +2248,7 @@ pkgStruct = {
         py-pybind11
         py-pycairo
         py-pycuda
-        py-cupy
+        #py-cupy # cuda 12.3
         py-pyfftw
         py-pygments
         py-pylint
@@ -2255,7 +2294,7 @@ pkgStruct = {
         #py-horovod #incompatible py-torch 2.1
         py-jax
         py-keras
-        py-lightning-fabric
+        #py-lightning-fabric #included in pytorch-lightning
         py-pytensor
         py-pytorch-lightning
 
