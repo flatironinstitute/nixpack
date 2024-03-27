@@ -661,6 +661,7 @@ corePacks = import ../packs {
       version = "38";
     };
     py-cupy = {
+      version = "12.3";
       variants = {
         cuda = true;
         inherit cuda_arch;
@@ -2253,7 +2254,7 @@ pkgStruct = {
         py-pybind11
         py-pycairo
         py-pycuda
-        #py-cupy # cuda 12.3
+        py-cupy
         py-pyfftw
         py-pygments
         py-pylint
