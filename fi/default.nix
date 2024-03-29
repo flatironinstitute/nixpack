@@ -1672,6 +1672,7 @@ hdf5Pkgs = packs: with packs.pkgs; [
 
 /* packages that we build both with and without mpi */
 optMpiPkgs = packs: with packs.pkgs; [
+  arpack-ng
   boost
   (fftw.withPrefs { version = "2"; variants = { precision = { long_double = false; quad = false; }; }; })
   fftw
@@ -1982,7 +1983,6 @@ pkgStruct = {
     pkgs = with comp.packs.pkgs; [
       /* ---------- compiler modules ---------- */
       (comp.defaulting compiler)
-      arpack-ng
       cfitsio
       cgal
       eigen
