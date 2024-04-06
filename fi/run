@@ -61,7 +61,7 @@ case "$cmd" in
 				(lmod)
 					attrs="pkgs.lmod"
 					;;
-				(jupyter)
+				(jupyter*)
 					attrs="jupyter"
 					;;
 				(shell)
