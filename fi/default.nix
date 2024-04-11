@@ -1117,6 +1117,7 @@ corePacks = import ../packs {
         openmp = true;
       };
     };
+    tbb = { name = "intel-oneapi-tbb"; };
     trilinos = {
       variants = {
         cxxstd = "17";
@@ -1863,10 +1864,10 @@ pkgStruct = {
     hdfview
     imagemagick
     #(blasPkg intel-mkl)
-    intel-tbb
+    #intel-tbb
     #intel-parallel-studio
-    intel-oneapi-compilers
     intel-oneapi-advisor
+    intel-oneapi-compilers
     (blasPkg intel-oneapi-mkl)
     intel-oneapi-mpi
     intel-oneapi-tbb
@@ -1917,7 +1918,7 @@ pkgStruct = {
     openmm
     ilmbase openexr # hidden, deps of openvdb
     { pkg = openvdb;
-      autoload = with openvdb.spec.depends; [ilmbase openexr intel-tbb];
+      autoload = with openvdb.spec.depends; [ilmbase openexr intel-oneapi-tbb];
     }
     p7zip
     papi
