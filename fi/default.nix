@@ -242,6 +242,11 @@ corePacks = import ../packs {
         languages = ["c" "c++" "fortran" "jit"];
         binutils = true;
       };
+      build = {
+        post = ''
+          os.symlink("gcc", os.path.join(pkg.prefix.bin, "cc"))
+        '';
+      };
     };
     gdal = {
       variants = {
