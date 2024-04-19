@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "fbecb46610c55fb1370d2588c702a4892b0f4891";
+    rev = "1abb416438f45b77909e862ac4cb89d650a5b09a";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.11";
-    rev = "01f5bf70e699028e537c41cc960c20a705dd2a62";
+    rev = "8d2ac85d11fa4b6d0ff43d69fc8c201931c49986";
   };
 
   repos = [
@@ -789,8 +789,11 @@ corePacks = import ../packs {
       };
     };
     py-matplotlib = {
-      # for py-numpy
-      version = "3.7";
+      depends = {
+        freetype = {
+          version = "2.6.1";
+        };
+      };
     };
     py-mpi4py = {
       depends = {
@@ -817,15 +820,6 @@ corePacks = import ../packs {
       depends = {
         py-setuptools = {
           version = "57";
-        };
-      };
-    };
-    py-numpy = {
-      # for py-tensorflow
-      version = "1.24.3";
-      depends = {
-        py-cython = {
-          version = ":2";
         };
       };
     };
@@ -870,10 +864,6 @@ corePacks = import ../packs {
     py-py-cpuinfo = {
       # for py-hdf5plugin
       version = "8.0.0";
-    };
-    py-pybind11 = {
-      # for py-scipy, py-torch
-      version = "2.11.0";
     };
     py-pyfftw = {
       depends = {
@@ -941,13 +931,6 @@ corePacks = import ../packs {
         mpi = true;
       };
     };
-    py-scikit-learn = {
-      depends = {
-        py-cython = {
-          version = ":2";
-        };
-      };
-    };
     py-setuptools-scm = {
       variants = {
         toml = true;
@@ -1013,13 +996,6 @@ corePacks = import ../packs {
           except OSError:
             pass
         '';
-      };
-    };
-    py-scipy = {
-      depends = {
-        py-cython = {
-          version = ":2";
-        };
       };
     };
     py-torch-cluster = {
@@ -1354,6 +1330,18 @@ corePacks = import ../packs {
         patchelf = {
           deptype = ["build"];
         };
+        py-numpy = {
+          # remove incorrect upper-bound
+          deptype = ["build" "run"];
+        };
+      };
+    };
+    py-torch = spec: old: {
+      depends = old.depends // {
+        py-pybind11 = {
+          # remove upper-bound
+          deptype = ["build" "link" "run"];
+        };
       };
     };
     py-sqlalchemy = spec: old: {
@@ -1376,7 +1364,9 @@ corePacks = import ../packs {
     boost = lib64Link;
     fftw = lib64Link;
     gsl = lib64Link;
-    hdf5 = lib64Link;
+    hdf5 = spec: old: lib64Link // {
+      depends = builtins.removeAttrs old.depends ["mpich"]; # broken conditional dep
+    };
 
     julia = spec: old: {
       depends = old.depends // {
@@ -1647,11 +1637,8 @@ pyCensor = [
   { name = "py-pip"; version = ":23.0"; } # py-scipy dep
   { name = "py-wheel"; version = ":0.37"; } # py-scipy dep
   { name = "py-cython"; version = ":3.0.5"; } # various dep
-  { name = "py-flit-core"; version = ":3.2"; } # py-testpath dep
   { name = "py-jupyter-packaging7"; } # py-jupyterlab-widget dep
-  { name = "py-importlib-metadata"; version = ":3"; } # py-backports-entry-points-selectable dep
   { name = "py-meson-python"; version = "0.13.1"; } # py-pandas dep
-  { name = "py-maturin"; version = "0.14"; }
 ];
 
 pyView = pl: corePacks.pythonView {
