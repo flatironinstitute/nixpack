@@ -2287,6 +2287,7 @@ pkgStruct = {
 
         py-protobuf
         py-torch
+        py-torch-scatter
         py-psycopg2
         py-tensorflow
 
