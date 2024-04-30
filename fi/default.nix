@@ -765,7 +765,7 @@ corePacks = import ../packs {
       version = "1";
     };
     py-jupyter-server-proxy = {
-      version = "=4.0";
+      version = "=4.1";
     };
     py-jupyterhub = {
       version = "3";
