@@ -20,6 +20,7 @@ packs.spackBuilder ({
   args = [./modules.py];
   inherit name modtype;
   withRepos = true;
+  enableParallelBuilding = false; # broken in some cases
 } // builtins.mapAttrs (name: builtins.toJSON) jsons // {
   passAsFile = builtins.attrNames jsons;
 }) // jsons
