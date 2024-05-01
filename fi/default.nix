@@ -788,13 +788,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-matplotlib = {
-      depends = {
-        freetype = {
-          version = "2.6.1";
-        };
-      };
-    };
     py-mpi4py = {
       depends = {
         py-cython = {
@@ -1296,6 +1289,13 @@ corePacks = import ../packs {
         py-jinja2 = {
           version = "3.0.3:";
           deptype = ["build" "run"];
+        };
+      };
+    };
+    py-matplotlib = spec: old: {
+      depends = old.depends // {
+        freetype = {
+          deptype = ["build" "link"];
         };
       };
     };
@@ -2759,6 +2759,13 @@ mods = corePacks.modules {
     };
     py-mpi4py = {
       autoload = "direct";
+    };
+    "python+tkinter" = {
+      environment = {
+        set = {
+          TCLLIBPATH = "{^tk.prefix}/lib";
+        };
+      };
     };
     pvfmm = {
       environment = {
