@@ -240,7 +240,7 @@ corePacks = import ../packs {
       target = if target == "skylake-avx512" then "skylake" else target;
       variants = {
         languages = ["c" "c++" "fortran" "jit"];
-        binutils = true;
+        binutils = false;
       };
       build = {
         post = ''
@@ -937,6 +937,12 @@ corePacks = import ../packs {
       depends = {
         bazel = {
           version = "6.5.0";
+        };
+        compiler = {
+          variants = {
+            # needs newer assembler
+            binutils = true;
+          };
         };
       };
     };
