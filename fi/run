@@ -13,7 +13,7 @@ lmodbase=/mnt/sw/lmod/$arch/$os
 if [[ `hostname -s` = pcn* ]] ; then
 	# popeye
 	site=popeye
-	nixargs="$nixargs --argstr target skylake-avx512 --argstr cudaarch 70"
+	nixargs="$nixargs --argstr target skylake-avx512 --argstr cudaarch 70,80"
 fi
 
 traceSpecs() {
