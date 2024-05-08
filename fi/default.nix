@@ -1834,6 +1834,7 @@ pkgStruct = {
     binutils
     blast-plus
     #blender
+    btop
     cmake
     { pkg = cuda;
       default = true;
