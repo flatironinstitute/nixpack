@@ -1781,18 +1781,6 @@ juliaPacks = corePacks.withPrefs {
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
     /* ------------ Core modules ------------ */
-    { pkg = slurm;
-      environment = {
-        set = {
-          CMD_WLM_CLUSTER_NAME = "slurm";
-          SLURM_CONF = "/cm/shared/apps/slurm/var/etc/slurm/slurm.conf";
-        };
-      };
-      projection = "{name}";
-      postscript = ''
-        add_property("lmod","sticky")
-      '';
-    }
     (gcc.withPrefs { version = "10"; })
     gcc12
     (gcc.withPrefs { version = "13"; })
