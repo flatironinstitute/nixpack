@@ -1027,9 +1027,6 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
-    py-websockify = {
-      version = "master";
-    };
     python = corePython;
     qt = {
       variants = {
@@ -2527,6 +2524,7 @@ jupyterBase = pyView (with jupyterPacks.pkgs; [
   node-js
   py-bash-kernel
   py-jupyter-remote-desktop-proxy
+  #py-jupyterlmod
 ]);
 
 jupyter = jupyterBase.extendView (

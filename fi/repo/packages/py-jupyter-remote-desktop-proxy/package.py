@@ -13,7 +13,6 @@ class PyJupyterRemoteDesktopProxy(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-jupyter-server", type="build")
     depends_on("py-jupyter-server-proxy", type="run")
-    depends_on("py-websockify", type="run")
     depends_on("npm", type="build")
 
     @run_after('install')
