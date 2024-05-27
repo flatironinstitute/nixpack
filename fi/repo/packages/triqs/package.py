@@ -6,6 +6,7 @@ class Triqs(CMakePackage):
     homepage = "https://triqs.github.io"
     url      = "https://github.com/TRIQS/triqs/archive/refs/tags/3.0.0.tar.gz"
 
+    version('3.3.0', sha256='794bb02ed7e98498a93219831b270123ea0c893cc272ec9bb98217354b8f1b8d')
     version('3.2.1', sha256='f16103c6f7b68cd412cfb309f22f9ee4d379d794518432c0d514956a39ea05cb')
     version('3.2.0', sha256='b001ed1339ff6024f62b4e61fb8a955b044feac2d53b5a58575a3175e9bf6776')
     version('3.1.1', sha256='cf4f6064ea962fc088e0c2833bf7c4e52f4c827ea331bf3c57d1c9303649042b')

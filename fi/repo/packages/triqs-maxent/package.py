@@ -6,6 +6,7 @@ class TriqsMaxent(CMakePackage):
     homepage = "https://triqs.github.io/maxent"
     url      = "https://github.com/TRIQS/maxent/releases/download/1.0.0/maxent-1.0.0.tar.gz"
 
+    version('3.3.0', sha256='e28507093a9a51466d64a83ccc2686b35b78091fe44616d4d1f66a54fbd841c1')
     version('1.2.0', sha256='41be8c4233df47c7c4454bce9b611d0dc8fb117778a5c4f7352ebf6bd7b9ac77')
     version('1.1.1', sha256='b0e00bcd5e8b143faf23d47225c53b8ceec36537ce4a97fe725874e7e9214289')
     version('1.1.0', sha256='87523adabdfe0c6d0a1fd84bdc1b4bceed64361adde922809d85e19c155e4c68')
