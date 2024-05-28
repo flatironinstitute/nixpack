@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-23.11";
-    rev = "8d2ac85d11fa4b6d0ff43d69fc8c201931c49986";
+    rev = "bea35f40af16d5d5697a1733b91958596f0fad94";
   };
 
   repos = [
