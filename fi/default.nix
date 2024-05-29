@@ -2601,9 +2601,6 @@ modPkgs = with pkgStruct;
           ''
             conflict("hdf5/${py.packs.pkgs.hdf5.spec.version}")
           '';
-        env = {
-          PYTHONNOUSERSITE = "1";
-        };
       }] ++ py.pkgs) pythons
     ) mpis
     ++
@@ -2747,6 +2744,13 @@ mods = corePacks.modules {
       environment = {
         set = {
           OPENMPI_VERSION = "{version}";
+        };
+      };
+    };
+    python = {
+      environment = {
+        set = {
+          PYTHONNOUSERSITE = "1";
         };
       };
     };

@@ -28,7 +28,6 @@ path.append('/usr/bin')
 baseenv = {
     'PATH': ':'.join(path),
     'PYTHONHOME': pkg,
-    'PYTHONNOUSERSITE': '',
     'PYTHONPATH': ':'.join(pyth)
 }
 
