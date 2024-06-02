@@ -601,12 +601,6 @@ corePacks = import ../packs {
         qt = true;  # for texstudio
       };
     };
-    postgresql = {
-      # for py-psycopg2
-      variants = {
-        client_only = true;
-      };
-    };
     proj = {
       # for vtk
       version = "7";
@@ -1898,6 +1892,7 @@ pkgStruct = {
     })
     nvtop
     octave
+    oneapi-level-zero
     openjdk
     openmm
     ilmbase openexr # hidden, deps of openvdb
