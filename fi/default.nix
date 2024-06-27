@@ -267,7 +267,7 @@ corePacks = import ../packs {
       tests = false;
     };
     gdrcopy = {
-      version = "2.3"; # match kernel module
+      version = "2.4.1"; # match kernel module
       variants = {
         cuda = true;
         inherit cuda_arch;
