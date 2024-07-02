@@ -2444,7 +2444,6 @@ pkgStruct = {
           "Blast" = "blast-plus";
           "amd/aocc" = "aocc";
           "healpix-cxx" = "healpix";
-          "intel/mkl" = "intel-mkl";
           "latex" = "texlive";
           "lib/arpack" = "arpack-ng";
           "lib/boost" = "boost";
