@@ -2025,26 +2025,7 @@ pkgStruct = {
             projection = if mpi.packs.pkgs.mpi.spec.variants.cuda then "{name}/cuda-{version}" else "{name}/{version}";
             default = mpi.isCore;
           }
-        ] ++
-          /* static mpi env modules */
-          map (p: p // {
-            depends = {
-              inherit (mpi.packs.pkgs) compiler mpi;
-            };
-            projection = "{name}/{^openmpi.version}";
-          }) (lib.optionals (lib.versionMatches mpi.packs.pkgs.mpi.spec.version "4") [
-            { name = "openmpi-opa";
-              context = {
-                short_description = "Set openmpi4 for Omnipath fabric";
-              };
-              environment = {
-                set = {
-                  "OMPI_MCA_pml" = "cm";
-                };
-              };
-            }
-          ])
-        )
+        ])
         /* ---------- MPI modules ---------- */
         ++ [
           osu-micro-benchmarks
