@@ -183,6 +183,20 @@ class Ne(Nix):
         out.write(' != ')
         self.paren(self.b, indent, out)
 
+class If(Nix):
+    prec = 15
+    def __init__(self, i, t, e):
+        self.i = i
+        self.t = t
+        self.e = e
+    def print(self, indent, out):
+        out.write('if ')
+        self.paren(self.i, indent, out)
+        out.write(' then ')
+        self.paren(self.t, indent, out)
+        out.write(' else ')
+        self.paren(self.e, indent, out)
+
 nixStrEsc = str.maketrans({'"': '\\"', '\\': '\\\\', '$': '\\$', '\n': '\\n', '\r': '\\r', '\t': '\\t'})
 def printNix(x, indent=0, out=sys.stdout):
     if isinstance(x, Nix):
@@ -317,6 +331,21 @@ def variant(p, v):
     else:
         return variant1(p, v)
 
+def variant_definitions(p, l):
+    if not l:
+        return None
+    w, v = l[0]
+    a = variant1(p, v)
+    c = []
+    conditions(c, p, w)
+    if not c:
+        return a
+    # fold right
+    return If(And(*c), a, variant_definitions(p, l[1:]))
+
+def variant_name(p, n):
+    return variant_definitions(p, p.variant_definitions(n))
+
 def depend(p, d):
     c = [whenCondition(p, w, depPrefs(s), s) for w, l in sorted(d.items()) for s in l]
     if len(c) == 1:
@@ -352,7 +381,10 @@ for p in spack.repo.PATH.all_package_classes():
     vers.sort(reverse = True)
     desc['version'] = [str(v) for _, _, v in vers]
     if p.variants:
-        desc['variants'] = {n: variant(p, entry) for n, entry in p.variants.items()}
+        if hasattr(p, "variant_names"):
+            desc['variants'] = {n: variant_name(p, n) for n in p.variant_names()}
+        else:
+            desc['variants'] = {n: variant(p, e) for n, e in p.variants.items()}
     if p.dependencies:
         desc['depends'] = {n: depend(p, d) for n, d in p.dependencies_by_name(when=True).items()}
     if p.conflicts:

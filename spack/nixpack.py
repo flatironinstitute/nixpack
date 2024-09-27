@@ -42,7 +42,10 @@ import llnl.util.tty
 try:
     import spack.target
 except ImportError:
-    spack.target = spack.architecture
+    try:
+        spack.target = spack.architecture
+    except AttributeError:
+        spack.target = None
 
 # monkeypatch store.layout for the few things we need
 class NixLayout():
@@ -73,6 +76,19 @@ if cores > 0:
 
 # add in dynamic overlay repos
 repos = getVar('repos', '').split()
+cache = getVar('spackCache', None)
+if cache:
+    if any(map(os.path.isfile, repos)):
+        # copy repo cache so we can add more to it
+        tmpcache = os.path.join(os.environ['TMPDIR'], 'spack-cache')
+        linktree(cache, tmpcache)
+        cache = tmpcache
+    spack.config.set('config:misc_cache', cache, 'command_line')
+
+repoArgs = {}
+if hasattr(spack.repo, "from_path"):
+    repoArgs['cache'] = spack.caches.MISC_CACHE
+
 dynRepos = {}
 for i, r in enumerate(repos):
     if os.path.isfile(r):
@@ -80,20 +96,12 @@ for i, r in enumerate(repos):
         pd = os.path.join(d, 'packages')
         os.makedirs(pd)
         os.symlink(r, os.path.join(d, 'repo.yaml'))
-        repo = spack.repo.Repo(d)
+        repo = spack.repo.Repo(d, **repoArgs)
         repos[i] = repo
         dynRepos[repo.namespace] = repo
-repoPath = spack.repo.RepoPath(*repos)
-spack.repo.PATH.put_first(repoPath)
 
-cache = getVar('spackCache', None)
-if cache:
-    if dynRepos:
-        # copy repo cache so we can add more to it
-        tmpcache = os.path.join(os.environ['TMPDIR'], 'spack-cache')
-        linktree(cache, tmpcache)
-        cache = tmpcache
-    spack.config.set('config:misc_cache', cache, 'command_line')
+repoPath = spack.repo.RepoPath(*repos, **repoArgs)
+spack.repo.PATH.put_first(repoPath)
 
 nixLogFd = int(getVar('NIX_LOG_FD', -1))
 nixLogFile = None
@@ -173,6 +181,8 @@ class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
 
     def find_path(self, compiler_cls, lang):
         "Find files in PATH that match the compiler_cls patterns for lang."
+        if not hasattr(compiler_cls, f"{lang}_names"):
+            return iter([])
         return (full_path
             for regexp in compiler_cls.search_regexps(lang)
             for (file, full_path) in self.path_files
@@ -347,7 +357,10 @@ class NixSpec(spack.spec.Spec):
         if self.supports_target(target):
             return
         for ancestor in target.microarchitecture.ancestors:
-            candidate = spack.target.Target(ancestor)
+            if spack.target:
+                candidate = spack.target.Target(ancestor)
+            else:
+                candidate = ancestor
             if self.supports_target(candidate):
                 print(f"Downgrading target {target} -> {candidate} for {self.compiler}")
                 self.architecture.target = candidate
