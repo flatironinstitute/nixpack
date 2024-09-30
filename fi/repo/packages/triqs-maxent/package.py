@@ -4,7 +4,7 @@ class TriqsMaxent(CMakePackage):
     """TRIQS: modular Maximum Entropy program to perform analytic continuation."""
 
     homepage = "https://triqs.github.io/maxent"
-    url      = "https://github.com/TRIQS/maxent/releases/download/1.0.0/maxent-1.0.0.tar.gz"
+    url      = "https://github.com/TRIQS/maxent/archive/refs/tags/3.3.0.tar.gz"
 
     version('3.3.0', sha256='e28507093a9a51466d64a83ccc2686b35b78091fe44616d4d1f66a54fbd841c1')
     version('1.2.0', sha256='41be8c4233df47c7c4454bce9b611d0dc8fb117778a5c4f7352ebf6bd7b9ac77')

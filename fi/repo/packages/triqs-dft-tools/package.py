@@ -4,8 +4,9 @@ class TriqsDftTools(CMakePackage):
     """TRIQS: continuous-time hybridization-expansion solver"""
 
     homepage = "https://triqs.github.io/dft_tools"
-    url      = "https://github.com/TRIQS/dft_tools/releases/download/3.0.0/dft_tools-3.0.0.tar.gz"
+    url      = "https://github.com/TRIQS/dft_tools/archive/refs/tags/3.3.1.tar.gz"
 
+    version('3.3.1', sha256='f4a9b9d44769fb7fe06892640217a915d133845169eae2fe450a41974c4b47c3')
     version('3.3.0', sha256='30dca657d491d8265aaffdccd1563b0d749460592ac5a86bc7d8fbfe84d4f02a')
     version('3.2.1', sha256='772d9326056faa3afc5a6d4ea04bdf8d18359bab518db29f68b1c2136c34b7d3')
     version('3.2.0', sha256='77d89bc5c9a36636a720b6cae78967cd6dd83d0018c854a68bef91219a456307')

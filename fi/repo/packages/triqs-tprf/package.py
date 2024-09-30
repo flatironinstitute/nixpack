@@ -4,8 +4,9 @@ class TriqsTprf(CMakePackage):
     """TRIQS: Two-Particle Response Function toolbox"""
 
     homepage = "https://triqs.github.io/tprf"
-    url      = "https://github.com/TRIQS/tprf/releases/download/3.0.0/tprf-3.0.0.tar.gz"
+    url      = "https://github.com/TRIQS/tprf/archive/refs/tags/3.3.1.tar.gz"
 
+    version('3.3.1', sha256='4a39648629888ec07c1a5c333ae5aa85ac04a46a7ec3b5d5d588cfe5246b7572')
     version('3.3.0', sha256='e703b490873293efa2835147c73b19b90860fe2e2d8b1ec9da79c8b602512b10')
     version('3.2.1', sha256='f1d4dd5986af4b37dc65f3af2a0be507455f0b4a74ea7d4de892739ccd86158c')
     version('3.1.1', sha256='63d4de9cfc3daf0d74db45cfa7445b817fd22a38a8485db3ce9a81febe263b50')
