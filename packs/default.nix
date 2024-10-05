@@ -23,6 +23,7 @@ defaultSpackConfig = {
 /* fill in package descriptor with defaults */
 fillDesc = name: /* simple name of package */
   { namespace ? "builtin"
+  , dir
   , version ? [] /* list of available concrete versions */
   , variants ? {} /* set of variant to (bool, string, or set of opt to bool) */
   , patches ? [] /* list of patches to apply (after those in spack) */
@@ -33,7 +34,7 @@ fillDesc = name: /* simple name of package */
   , build ? {} /* extra build variables to set */
   , compiler_spec ? name
   }: {
-    inherit name namespace version variants patches paths build compiler_spec;
+    inherit name namespace dir version variants patches paths build compiler_spec;
     depends = {
       compiler = {
         deptype = ["build" "link"];
@@ -297,8 +298,7 @@ lib.fix (packs: with packs; {
           verbose = pprefs.verbose or false;
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
-          repoPkgs = map (r: let p = "${r}/packages/${pname}"; in
-            lib.when (builtins.pathExists p) (builtins.path { name="repo-pkgs-${pname}"; path=p; })) repos;
+          gccPkg = pkgs.gcc.spec.package; /* for nullCompiler */
         } // desc.build // pprefs.build or {}) // {
           inherit spec;
           withPrefs = p: resolvePackage pname gen (lib.prefsUpdate pprefs p);
@@ -312,6 +312,7 @@ lib.fix (packs: with packs; {
             inherit (desc) name namespace provides;
             inherit (prefs) flags extern tests;
             target = spackTarget prefs.target;
+            package = builtins.path { name="repo-pkgs-${pname}"; path=desc.dir; };
             paths = desc.paths // prefs.paths;
             version = if prefs.extern != null && lib.versionIsConcrete prefs.version
                    then prefs.version

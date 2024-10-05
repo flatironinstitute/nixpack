@@ -375,7 +375,8 @@ virtuals = defaultdict(set)
 n = 0
 for p in spack.repo.PATH.all_package_classes():
     desc = dict()
-    desc['namespace'] = p.namespace;
+    desc['namespace'] = p.namespace
+    desc['dir'] = p.package_dir
     vers = [(i.get('preferred',False), not (v.isdevelop() or i.get('deprecated',False)), v)
             for v, i in p.versions.items()]
     vers.sort(reverse = True)

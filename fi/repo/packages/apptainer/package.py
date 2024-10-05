@@ -6,10 +6,6 @@ import spack.pkg.builtin.apptainer
 class Apptainer(spack.pkg.builtin.apptainer.Apptainer):
     depends_on('e2fsprogs', type='run')
 
-    @property
-    def package_dir(self):
-        return os.path.abspath(os.path.dirname(spack.pkg.builtin.apptainer.__file__))
-
     @run_after('install')
     def fi_conf(self):
         conf_path = os.path.join(self.prefix.etc, "apptainer", "apptainer.conf")

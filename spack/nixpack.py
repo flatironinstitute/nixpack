@@ -56,8 +56,12 @@ class NixLayout():
         return os.path.join(spec.prefix, self.metadata_dir)
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), 'repos')
+class NixDatabase():
+    root = '/var/empty'
+    upstream_dbs = []
 class NixStore():
     layout = NixLayout()
+    db = NixDatabase()
     # this is used to find bin/sbang:
     unpadded_root = spack.paths.prefix
 spack.store.STORE = NixStore()
@@ -88,6 +92,15 @@ if cache:
 repoArgs = {}
 if hasattr(spack.repo, "from_path"):
     repoArgs['cache'] = spack.caches.MISC_CACHE
+
+def linkPkg(repo, path, name):
+    try:
+        os.symlink(path, repo.dirname_for_package_name(name))
+        # clear cache:
+        repo._fast_package_checker = None
+    except FileExistsError:
+        # just trust that it should be identical
+        pass
 
 dynRepos = {}
 for i, r in enumerate(repos):
@@ -243,7 +256,11 @@ class NixSpec(spack.spec.Spec):
         self._set_architecture(target=nixspec.get('target', basetarget), platform=platform, os=archos)
         self.prefix = prefix
         self.external_path = nixspec['extern']
-        if self.external_path:
+        if self.namespace in dynRepos:
+            linkPkg(dynRepos[self.namespace], nixspec['package'], self.name)
+        if top:
+            self._top = True
+        elif self.external_path:
             assert self.external_path == prefix, f"{self.name} extern {nixspec['extern']} doesn't match prefix {prefix}"
         else:
             # add any dynamic packages
@@ -259,19 +276,15 @@ class NixSpec(spack.spec.Spec):
                     continue
                 pkgdir = os.path.join(repodir, r, 'packages')
                 for p in os.listdir(pkgdir):
-                    try:
-                        os.symlink(os.path.join(pkgdir, p), repo.dirname_for_package_name(p))
-                        # clear cache:
-                        repo._fast_package_checker = None
-                    except FileExistsError:
-                        # just trust that it should be identical
-                        pass
-        if top:
-            self._top = True
+                    linkPkg(repo, os.path.join(pkgdir, p), p)
 
         variants = nixspec['variants']
         if not self.external:
-            assert variants.keys() == self.package_class.variants.keys(), f"{self.name} has mismatching variants {variants.keys()} vs. {self.package_class.variants.keys()}"
+            if hasattr(self.package_class, "variant_names"):
+                pkgVariants = set(self.package_class.variant_names())
+            else:
+                pkgVariants = self.package_class.variant.keys()
+            assert variants.keys() == pkgVariants, f"{self.name} has mismatching variants {variants.keys()} vs. {pkgVariants}"
         for n, s in variants.items():
             if s is None:
                 continue
@@ -346,7 +359,7 @@ class NixSpec(spack.spec.Spec):
 
     def supports_target(self, target):
         try:
-            target.optimization_flags(self.compiler)
+            target.optimization_flags(self.compiler.name, self.compiler.version.dotted_numeric_string)
             return True
         except archspec.cpu.UnsupportedMicroarchitecture:
             return False
@@ -356,7 +369,7 @@ class NixSpec(spack.spec.Spec):
         target = self.architecture.target
         if self.supports_target(target):
             return
-        for ancestor in target.microarchitecture.ancestors:
+        for ancestor in target.ancestors:
             if spack.target:
                 candidate = spack.target.Target(ancestor)
             else:
@@ -402,7 +415,7 @@ class NixSpec(spack.spec.Spec):
                 }
             env = CompilerEnvironment()
             self.concretize()
-            self.package.setup_run_environment(env)
+            #self.package.setup_run_environment(env)
             config.update(env.config)
             config['paths'].update(self.paths)
             for lang in env.path_keys:
@@ -448,6 +461,7 @@ nullCompilerSpec = NixSpec({
             'fc': None,
         },
         'depends': {},
-        'patches': []
+        'patches': [],
+        'package': getVar('gccPkg', '/null-compiler'),
     }, '/null-compiler', top=False)
 nullCompiler = nullCompilerSpec.as_compiler
