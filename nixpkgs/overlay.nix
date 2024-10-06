@@ -100,15 +100,15 @@ in
   });
 
   openimagedenoise = openimagedenoise.override {
-    tbb = tbb_2021_8;
+    #tbb = tbb_2021_8;
   };
 
   openvdb = openvdb.override {
-    tbb = tbb_2021_8;
+    #tbb = tbb_2021_8;
   };
 
   embree = (embree.override {
-    tbb = tbb_2021_8;
+    #tbb = tbb_2021_8;
   }).overrideAttrs (old: {
     # based on spack flags
     cmakeFlags =
@@ -185,7 +185,7 @@ in
   };
 
   blender = (blender.override {
-    tbb = tbb_2021_8;
+    #tbb = tbb_2021_8;
   }).overrideAttrs (old: {
     cmakeFlags = old.cmakeFlags ++ ["-DWITH_OPENAL=OFF"];
   });

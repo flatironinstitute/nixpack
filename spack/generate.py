@@ -397,7 +397,7 @@ for p in spack.repo.PATH.all_package_classes():
                 provides[v.name].append((w, v.versions))
                 virtuals[v.name].add(p.name)
         desc['provides'] = {v: provide(p, c) for v, c in sorted(provides.items())}
-    if getattr(p, 'family', None) == 'compiler':
+    if getattr(p, 'family', None) == 'compiler' or 'compiler' in getattr(p, 'tags', []):
         desc.setdefault('provides', {}).setdefault('compiler', ':')
     output(p.name, Fun('spec', desc))
     n += 1

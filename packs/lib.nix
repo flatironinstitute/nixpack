@@ -191,7 +191,7 @@ rec {
     && all (name: variantMatches (spec.variants.${name} or null) variants.${name}) (attrNames variants)
     && subsetOrdered patches spec.patches
     && all (name: specMatches spec.depends.${name} depends.${name}) (attrNames depends)
-    && all (name: versionsOverlap spec.provides.${name} provides.${name}) (attrNames provides)
+    && all (name: hasAttr name spec.provides && versionsOverlap spec.provides.${name} provides.${name}) (attrNames provides)
     && spec.extern == extern;
 
   /* determine if something is a package (derivation) */
