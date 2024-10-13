@@ -413,16 +413,20 @@ class NixSpec(spack.spec.Spec):
                     'operating_system': self.architecture.os,
                     'target': basetarget,
                 }
-            env = CompilerEnvironment()
             self.concretize()
-            #self.package.setup_run_environment(env)
-            config.update(env.config)
-            config['paths'].update(self.paths)
-            for lang in env.path_keys:
-                if config['paths'][lang] is None:
-                    opts = env.find_path(compiler_cls, lang)
-                    config['paths'][lang] = next(opts, None)
-                    assert next(opts, None) is None, f"Multiple matching paths for {name} {lang} compiler"
+            if self.paths:
+                # extern packages should specify paths directly,
+                # bypassing the extra_attributes.compilers settings
+                config['paths'] = self.paths
+            else:
+                env = CompilerEnvironment()
+                self.package.setup_run_environment(env)
+                config.update(env.config)
+                for lang in env.path_keys:
+                    if config['paths'][lang] is None:
+                        opts = env.find_path(compiler_cls, lang)
+                        config['paths'][lang] = next(opts, None)
+                        assert next(opts, None) is None, f"Multiple matching paths for {name} {lang} compiler"
             self.compilers[name] = {'compiler': config}
             spack.config.set('compilers', list(self.compilers.values()), 'command_line')
             # clear compilers cache since we changed config:

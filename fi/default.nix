@@ -242,7 +242,7 @@ corePacks = import ../packs {
       #version = "9";
     };
     gcc = {
-      version = "12";
+      version = "13";
       target = if target == "skylake-avx512" then "skylake" else target;
       variants = {
         languages = ["c" "c++" "fortran" "jit"];
@@ -600,7 +600,7 @@ corePacks = import ../packs {
     };
     patchelf = {
       # for intel-oneapi-compilers
-      version = "0.17";
+      #version = "0.17";
     };
     pegtl = {
       # for paraview
@@ -1832,7 +1832,7 @@ pkgStruct = {
       };
       autoload = [hwloc];
     }
-    amdlibm
+    #amdlibm #gcc <=13.1
     { pkg = aocc;
       context = {
         provides = []; # not a real compiler

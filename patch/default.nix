@@ -63,6 +63,10 @@ in
     };
     depends = old.depends // {
       compiler = null;
+      llvm = {
+        # uses llvm package
+        deptype = ["build"];
+      };
     };
   };
 
