@@ -507,9 +507,9 @@ corePacks = import ../packs {
     ocaml = {
       # for unison
       #version = "4.10";
-      variants = {
-        force-safe-string = false;
-      };
+      #variants = {
+        #force-safe-string = false;
+      #};
     };
     openblas = {
       variants = {
@@ -589,7 +589,7 @@ corePacks = import ../packs {
     papi = {
       # last official release doesn't support zen (as of 22-06-07)
       # also we have a custom icelake patch (as of 22-06-29)
-      version = "6.0.0.1-fi";
+      #version = "6.0.0.1-fi";
     };
     paraview = {
       variants = {
@@ -1675,10 +1675,6 @@ rView = corePacks.view {
 };
 
 hdf5Pkgs = packs: with packs.pkgs; [
-  (hdf5.withPrefs { version = "1.8";
-    # spack has decided that 1.8+fortran+shared is broken for some reason #29132
-    variants = { fortran = false; };
-  })
   (hdf5.withPrefs { version = "1.10"; })
   { pkg = hdf5; # default 1.12
     default = true;
@@ -1970,7 +1966,7 @@ pkgStruct = {
     texstudio
     tmux
     udunits
-    unison
+    #unison #needs ~force-safe-string, incompatible with modern ocaml
     valgrind
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
     #visit #needs qt <= 5.14.2, vtk dep patches?
@@ -2013,7 +2009,7 @@ pkgStruct = {
       gmp
       hdf5-blosc
       healpix
-      highway
+      #highway #avx instruction build errors
       hwloc
       jemalloc
       libiconv
