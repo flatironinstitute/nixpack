@@ -217,6 +217,7 @@ corePacks = import ../packs {
       variants = {
         debuginfod = true;
       };
+      build = opensslPkgconfig;
     };
     embree = {
       # for blender
