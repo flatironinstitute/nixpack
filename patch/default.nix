@@ -178,6 +178,14 @@ in
     };
   };
 
+  go = spec: old: {
+    build = {
+      setup = ''
+        os.environ['GOCACHE'] = os.path.join(os.environ['TMPDIR'], 'go-cache')
+      '';
+    };
+  };
+
   /* some things don't use a compiler */
   intel-mkl = nocompiler;
   intel-mpi = nocompiler;

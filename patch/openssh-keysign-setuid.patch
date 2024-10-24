@@ -1,9 +1,9 @@
---- src/Makefile.in.orig	2021-08-02 14:39:57.349166560 -0400
-+++ src/Makefile.in	2021-08-02 14:40:01.069190252 -0400
-@@ -388,7 +388,7 @@
- 	$(INSTALL) -m 0755 $(STRIP_OPT) ssh-keygen$(EXEEXT) $(DESTDIR)$(bindir)/ssh-keygen$(EXEEXT)
+--- src/Makefile.in.orig    2024-10-19 16:42:58.275604182 -0400
++++ src/Makefile.in 2024-10-19 16:43:14.199771778 -0400
+@@ -411,7 +411,7 @@
  	$(INSTALL) -m 0755 $(STRIP_OPT) ssh-keyscan$(EXEEXT) $(DESTDIR)$(bindir)/ssh-keyscan$(EXEEXT)
  	$(INSTALL) -m 0755 $(STRIP_OPT) sshd$(EXEEXT) $(DESTDIR)$(sbindir)/sshd$(EXEEXT)
+ 	$(INSTALL) -m 0755 $(STRIP_OPT) sshd-session$(EXEEXT) $(DESTDIR)$(SSHD_SESSION)$(EXEEXT)
 -	$(INSTALL) -m 4711 $(STRIP_OPT) ssh-keysign$(EXEEXT) $(DESTDIR)$(SSH_KEYSIGN)$(EXEEXT)
 +	$(INSTALL) -m 0711 $(STRIP_OPT) ssh-keysign$(EXEEXT) $(DESTDIR)$(SSH_KEYSIGN)$(EXEEXT)
  	$(INSTALL) -m 0755 $(STRIP_OPT) ssh-pkcs11-helper$(EXEEXT) $(DESTDIR)$(SSH_PKCS11_HELPER)$(EXEEXT)

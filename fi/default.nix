@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "0cf482116f228f8cce9ce7c8b0c3b29fa7fedf3b";
+    rev = "50da7120e29e585deb9d4ff188e27d0895546ec1";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-24.05";
-    rev = "37df9bcf93431c7f9f9358aec2d7ed0a52d7ba1d";
+    rev = "15dd38eb90582760f3a496c699fa370cf32fa923";
   };
 
   repos = [
@@ -81,6 +81,10 @@ corePacks = import ../packs {
         inherit cuda_arch;
         python = true;
       };
+    };
+    at-spi2-core = {
+      # for gtkplus
+      version = "2.48";
     };
     binutils = {
       variants = {
@@ -269,6 +273,8 @@ corePacks = import ../packs {
       };
     };
     gdbm = {
+      # for perl
+      version = "1.23";
       # failing
       tests = false;
     };
@@ -331,6 +337,10 @@ corePacks = import ../packs {
           version = "4.3";
         };
       };
+    };
+    gocryptfs = {
+      # needs openssl pkgconfig
+      build = opensslPkgconfig;
     };
     harfbuzz = {
       variants = {
@@ -785,7 +795,6 @@ corePacks = import ../packs {
       };
     };
     py-jsonschema = {
-      version = "4.17"; # for py-asdf
       variants = {
         format-nongpl = true;
       };
@@ -868,7 +877,7 @@ corePacks = import ../packs {
         freetype = true;
         tiff = true;
         webp = true;
-        webpmux = true;
+        #webpmux = true;
         jpeg2000 = true;
         imagequant = true;
       };
@@ -1212,6 +1221,12 @@ corePacks = import ../packs {
       };
     };
     zlib-api = { name = "zlib"; };
+    zlib-ng = {
+      # for hdf5
+      variants = {
+        new_strategies = false;
+      };
+    };
     zstd = {
       variants = {
         multithread = false;
