@@ -203,6 +203,11 @@ corePacks = import ../packs {
         nghttp2 = true;  # for rust
       };
     };
+    dbus = {
+      variants = {
+        build_system = "autotools";
+      };
+    };
     dejagnu = {
       # failing
       tests = false;
@@ -454,6 +459,12 @@ corePacks = import ../packs {
       variants = {
         lua = false;
         libcxx = "project";
+      };
+      depends = {
+        compiler = {
+          # https://github.com/llvm/llvm-project/issues/62396
+          version = "11";
+        };
       };
     };
     magma = {
@@ -1156,36 +1167,6 @@ corePacks = import ../packs {
         };
       };
     };
-    triqs = {
-      depends = {
-        compiler = gcc12;
-      };
-    };
-    triqs-cthyb = {
-      depends = {
-        compiler = gcc12;
-      };
-    };
-    triqs-dft-tools = {
-      depends = {
-        compiler = gcc12;
-      };
-    };
-    triqs-maxent = {
-      depends = {
-        compiler = gcc12;
-      };
-    };
-    triqs-omegamaxent-interface = {
-      depends = {
-        compiler = gcc12;
-      };
-    };
-    triqs-tprf = {
-      depends = {
-        compiler = gcc12;
-      };
-    };
     ucx = {
       variants = {
         thread_multiple = true;
@@ -1514,8 +1495,6 @@ mkCompilers = base: gen:
     { name = "gcc"; }
   ];
 
-gcc12 = corePacks.pkgs.gcc;#.withPrefs { version = "12.2"; }; # 12.3 fails to bootstrap
-
 mkMpi = comp: mpi: {
   inherit mpi;
   packs = comp.packs.withPrefs {
@@ -1779,7 +1758,6 @@ juliaPacks = corePacks.withPrefs {
       version = "0.8";
     };
     curl = {
-      version = "8.6";
       variants = {
         libssh2 = true;
         nghttp2 = true;
@@ -1810,8 +1788,8 @@ juliaPacks = corePacks.withPrefs {
 pkgStruct = {
   pkgs = with corePacks.pkgs; [
     /* ------------ Core modules ------------ */
-    (gcc.withPrefs { version = "10"; })
-    gcc12
+    (gcc.withPrefs { version = "11"; })
+    gcc
     (gcc.withPrefs { version = "14"; })
     { pkg = llvm;
       default = true;

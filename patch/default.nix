@@ -70,6 +70,13 @@ in
     };
   };
 
+  apptainer = spec: old: {
+    depends = old.depends // {
+      # imports package
+      singularityce = { deptype = ["build"]; };
+    };
+  };
+
   intel-oneapi-compilers = spec: old: {
     compiler_spec = "oneapi"; # can be overridden as "intel" with prefs
     provides = old.provides or {} // {

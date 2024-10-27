@@ -278,37 +278,6 @@ class NixSpec(spack.spec.Spec):
                 for p in os.listdir(pkgdir):
                     linkPkg(repo, os.path.join(pkgdir, p), p)
 
-        variants = nixspec['variants']
-        if not self.external:
-            if hasattr(self.package_class, "variant_names"):
-                pkgVariants = set(self.package_class.variant_names())
-            else:
-                pkgVariants = self.package_class.variant.keys()
-            assert variants.keys() == pkgVariants, f"{self.name} has mismatching variants {variants.keys()} vs. {pkgVariants}"
-        for n, s in variants.items():
-            if s is None:
-                continue
-            if isinstance(s, bool):
-                v = spack.variant.BoolValuedVariant(n, s)
-            elif isinstance(s, list):
-                v = spack.variant.MultiValuedVariant(n, s)
-            elif isinstance(s, dict):
-                v = spack.variant.MultiValuedVariant(n, [k for k,v in s.items() if v])
-            else:
-                v = spack.variant.SingleValuedVariant(n, s)
-            self.variants[n] = v
-        valid_flags = self.compiler_flags.valid_compiler_flags()
-        for n, s in nixspec['flags'].items():
-            assert n in valid_flags and type(s) is list, f"{self.name} has invalid compiler flag {n}"
-            self.compiler_flags[n] = s
-        self.tests = nixspec['tests']
-        self.paths = {n: p and os.path.join(prefix, p) for n, p in nixspec['paths'].items()}
-        if self.external:
-            # not really unique but shouldn't matter
-            self._hash = spack.util.hash.b32_hash(self.external_path)
-        else:
-            self._nix_hash, nixname = key.split('-', 1)
-
         depends = nixspec['depends'].copy()
         compiler = depends.pop('compiler', None)
         self.compiler = self.get(compiler, top=False).as_compiler if compiler else nullCompiler
@@ -347,6 +316,37 @@ class NixSpec(spack.spec.Spec):
             if not lrdep:
                 # trim build dep references
                 del nixspec['depends'][n]
+
+        variants = nixspec['variants']
+        if not self.external:
+            if hasattr(self.package_class, "variant_names"):
+                pkgVariants = set(self.package_class.variant_names())
+            else:
+                pkgVariants = self.package_class.variant.keys()
+            assert variants.keys() == pkgVariants, f"{self.name} has mismatching variants {variants.keys()} vs. {pkgVariants}"
+        for n, s in variants.items():
+            if s is None:
+                continue
+            if isinstance(s, bool):
+                v = spack.variant.BoolValuedVariant(n, s)
+            elif isinstance(s, list):
+                v = spack.variant.MultiValuedVariant(n, s)
+            elif isinstance(s, dict):
+                v = spack.variant.MultiValuedVariant(n, [k for k,v in s.items() if v])
+            else:
+                v = spack.variant.SingleValuedVariant(n, s)
+            self.variants[n] = v
+        valid_flags = self.compiler_flags.valid_compiler_flags()
+        for n, s in nixspec['flags'].items():
+            assert n in valid_flags and type(s) is list, f"{self.name} has invalid compiler flag {n}"
+            self.compiler_flags[n] = s
+        self.tests = nixspec['tests']
+        self.paths = {n: p and os.path.join(prefix, p) for n, p in nixspec['paths'].items()}
+        if self.external:
+            # not really unique but shouldn't matter
+            self._hash = spack.util.hash.b32_hash(self.external_path)
+        else:
+            self._nix_hash, nixname = key.split('-', 1)
 
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []

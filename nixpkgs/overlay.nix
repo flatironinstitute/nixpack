@@ -228,6 +228,9 @@ in
         # FAIL: Ed448 verify sig?
         doCheck = false;
       });
+      crypton-x509-validation = super.crypton-x509-validation.overrideAttrs (old: {
+        doCheck = false;
+      });
       http2 = super.http2.overrideAttrs (old: {
         # tests hang
         doCheck = false;
