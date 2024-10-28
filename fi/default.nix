@@ -428,7 +428,7 @@ corePacks = import ../packs {
     };
     libfabric = {
       variants = {
-        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "psm2" "mlx"];
+        fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "mlx"];
       };
     };
     libglx = {
@@ -573,7 +573,7 @@ corePacks = import ../packs {
           ofi = true;
           ucx = true;
           psm = false;
-          psm2 = true;
+          psm2 = false;
           verbs = true;
         };
         schedulers = {
