@@ -131,6 +131,7 @@ in
   llvmPackages_14 = llvm_patch llvmPackages_14;
   llvmPackages_15 = llvm_patch llvmPackages_15;
   llvmPackages_16 = llvm_patch llvmPackages_16;
+  llvmPackages_17 = llvm_patch llvmPackages_17;
 
   libxcrypt = libxcrypt.overrideAttrs (old: {
     /* sign-conversion warnings: */

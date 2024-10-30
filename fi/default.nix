@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-24.05";
-    rev = "15dd38eb90582760f3a496c699fa370cf32fa923";
+    rev = "50c10135ef6898242dd8ed28440a38b2a27bf2d4";
   };
 
   repos = [
@@ -136,10 +136,6 @@ corePacks = import ../packs {
         timer = true;
         cxxstd = "14";
       };
-    };
-    botan = {
-      # for keepassxc
-      #version = "2";
     };
     c-blosc = {
       # for openvdb
@@ -404,6 +400,12 @@ corePacks = import ../packs {
         '';
       };
     };
+    keepassxc = {
+      variants = {
+        # missing minizip dep otherwise
+        autotype = true;
+      };
+    };
     libaio = {
       # needs mke2fs?
       tests = false;
@@ -412,12 +414,6 @@ corePacks = import ../packs {
       # for elfutils
       variants = {
         iconv = false;
-        crypto = "mbedtls"; # messy avoid propagating openssl dep
-      };
-      depends = {
-        mbedtls = {
-          version = "2";
-        };
       };
     };
     libcap = rpmExtern "libcap";
@@ -1705,7 +1701,7 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.10.4";
+      version = "1.10";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
@@ -1732,7 +1728,7 @@ juliaPacks = corePacks.withPrefs {
         version_suffix = "jl";
         shlib_symbol_version = "JL_LLVM_15.0";
       };
-      patches = [(builtins.fetchurl "https://raw.githubusercontent.com/spack/patches/master/julia/f3def26930832532bbcd861d41b31ae03db993bc2b3510f89ef831a30bd3e099.patch")];
+      patches = [(builtins.fetchurl "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c.patch")];
     };
     libuv-julia = {
       version = "1.44.3";
@@ -1742,6 +1738,7 @@ juliaPacks = corePacks.withPrefs {
       variants = {
         libs = ["shared"];
         pic = true;
+        build_system = "cmake"; # for pkgconfig for curl for elfutils
       };
     };
     nghttp2 = {
@@ -1761,7 +1758,7 @@ juliaPacks = corePacks.withPrefs {
       variants = {
         libssh2 = true;
         nghttp2 = true;
-        tls = { mbedtls = true; };
+        tls = { mbedtls = true; openssl = false; };
       };
     };
     libblastrampoline = {
@@ -2796,7 +2793,8 @@ corePacks // {
     pkgStruct
     mods
     modsMod
-    jupyter;
+    jupyter
+    juliaPacks;
 
   traceModSpecs =
     let filterSpecs = builtins.concatMap (p:
