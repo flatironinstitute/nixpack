@@ -2096,7 +2096,6 @@ pkgStruct = {
         ++
         lib.optionals comp.isCore [
           ior
-          petsc
           valgrind
         ];
 
