@@ -1701,7 +1701,7 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.10";
+      version = "1.11";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
@@ -1711,9 +1711,10 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     llvm = {
-      version = "15.0.7";
+      version = "16.0.6";
       variants = {
         internal_unwind = false;
+        libunwind = "none";
         llvm_dylib = true;
         lld = true;
         link_llvm_dylib = true;
@@ -1726,12 +1727,14 @@ juliaPacks = corePacks.withPrefs {
           webassembly = true;
         };
         version_suffix = "jl";
-        shlib_symbol_version = "JL_LLVM_15.0";
+        shlib_symbol_version = "JL_LLVM_16.0";
       };
-      patches = [(builtins.fetchurl "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/25cdc0271e7722d4a7cc6f72abcb17bfe205fc741bbe3716a21759c3eee7d32c.patch")];
+      patches = [(builtins.fetchurl 
+        "https://raw.githubusercontent.com/spack/patches/d042ae8f41493547d4263d249a13546f2c971972/julia/4997cd3006a3171d9b33f9a72ff9fdadc84e91a7c86aa044dcf495eef3a02893.patch"
+      )];
     };
     libuv-julia = {
-      version = "1.44.3";
+      version = "1.48.0";
     };
     mbedtls = {
       version = "2.28";
@@ -1742,7 +1745,7 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     nghttp2 = {
-      version = "1.52";
+      version = "1.59";
     };
     openblas = {
       variants = {
@@ -1762,10 +1765,10 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     libblastrampoline = {
-      version = "5.8:";
+      version = "5.11:";
     };
     libgit2 = {
-      version = "1.6";
+      version = "1.7";
     };
     libssh2 = {
       version = "1.11";
@@ -1774,7 +1777,7 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     suite-sparse = {
-      version = "7.2.1";
+      version = "7.7.0";
     };
   } // blasVirtuals {
     /* don't use flexiblas */
