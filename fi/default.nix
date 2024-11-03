@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-24.05";
-    rev = "50c10135ef6898242dd8ed28440a38b2a27bf2d4";
+    rev = "4df2561800d1fb1be56d9d71cddb9a1079b688c2";
   };
 
   repos = [
@@ -406,6 +406,10 @@ corePacks = import ../packs {
         autotype = true;
       };
     };
+    kokkos = {
+      # for trilinos
+      version = "4.3.01";
+    };
     libaio = {
       # needs mke2fs?
       tests = false;
@@ -611,6 +615,7 @@ corePacks = import ../packs {
     };
     paraview = {
       variants = {
+        hdf5 = true;
         python = true;
         qt = true;
         osmesa = false;
@@ -1931,7 +1936,7 @@ pkgStruct = {
     }
     p7zip
     papi
-    paraview
+    #paraview
     #pdftk #needs gcc java (gcj)
     perl
     petsc
@@ -2065,8 +2070,9 @@ pkgStruct = {
         lib.optionals mpi.isCore [
           pvfmm
           stkfmm
-          (trilinos.withPrefs { version = "13.4.1"; variants = { cxxstd = "14"; }; })
-          (trilinos.withPrefs { version = "14.2.0"; variants = { cxxstd = "17"; }; })
+          #(trilinos.withPrefs { version = "13.4.1"; variants = { cxxstd = "14"; }; })
+          #(trilinos.withPrefs { version = "14.2.0"; variants = { cxxstd = "17"; }; })
+          trilinos
         ]
         ++
         lib.optionals (comp.isCore && mpi.isCore) [

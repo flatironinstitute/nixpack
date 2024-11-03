@@ -118,6 +118,9 @@ in
     build = {
       /* tries to install into gdk-pixbuf -- TODO: patch and use GDK_PIXBUF_MODULE_FILE (like nixpkgs) */
       enable_pixbuf_loader = "no";
+      setup = ''
+        os.environ['CARGO_HOME'] = os.path.join(os.environ['TMPDIR'], 'cargo')
+      '';
     };
   };
 
@@ -190,6 +193,16 @@ in
       setup = ''
         os.environ['GOCACHE'] = os.path.join(os.environ['TMPDIR'], 'go-cache')
       '';
+    };
+  };
+
+  rust = spec: old: {
+    build = {
+      setup = ''
+        os.environ['CARGO_HOME'] = os.path.join(os.environ['TMPDIR'], 'cargo')
+      '';
+      # workaround for https://github.com/rust-lang/cargo/issues/10303
+      CARGO_NET_GIT_FETCH_WITH_CLI = "true";
     };
   };
 
