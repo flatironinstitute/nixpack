@@ -1,0 +1,20 @@
+diff --git a/extension_helpers/_setup_helpers.py b/extension_helpers/_setup_helpers.py
+index 7e766da..8636873 100644
+--- a/extension_helpers/_setup_helpers.py
++++ b/extension_helpers/_setup_helpers.py
+@@ -94,8 +94,13 @@ def get_extensions(srcdir='.'):
+     if len(ext_modules) > 0:
+         main_package_dir = min(packages, key=len)
+         src_path = os.path.join(os.path.dirname(__file__), 'src')
+-        shutil.copy(os.path.join(src_path, 'compiler.c'),
+-                    os.path.join(srcdir, main_package_dir, '_compiler.c'))
++        dst_file = os.path.join(srcdir, main_package_dir, '_compiler.c')
++        try:
++            # remove dst_file in case it exists but is read-only
++            os.remove(dst_file)
++        except FileNotFoundError:
++            pass
++        shutil.copy(os.path.join(src_path, 'compiler.c'), dst_file)
+         ext = Extension(main_package_dir + '.compiler_version',
+                         [os.path.join(main_package_dir, '_compiler.c')])
+         ext_modules.append(ext)

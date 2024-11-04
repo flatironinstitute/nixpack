@@ -124,6 +124,11 @@ in
       ];
   });
 
+  ffado = ffado.overrideAttrs (old: {
+    # avoid a 404 patch
+    patches = lib.take 1 old.patches;
+  });
+
   libical = libical.overrideAttrs (old: {
     cmakeFlags = old.cmakeFlags ++ ["-DBerkeleyDB_ROOT_DIR=${db}"];
   });

@@ -340,6 +340,11 @@ corePacks = import ../packs {
         };
       };
     };
+    gtkplus = {
+      variants = {
+        build_system = "meson";
+      };
+    };
     gocryptfs = {
       # needs openssl pkgconfig
       build = opensslPkgconfig;
@@ -466,6 +471,9 @@ corePacks = import ../packs {
           version = "11";
         };
       };
+    };
+    lmod = {
+      patches = [./lmod-no-sys-tcl.patch];
     };
     magma = {
       variants = {
@@ -733,6 +741,9 @@ corePacks = import ../packs {
         };
       };
     };
+    py-extension-helpers = {
+      patches = [./py-extension-helpers-setup.py.patch];
+    };
     py-fastrlock = {
       depends = {
         py-pip = {
@@ -815,9 +826,6 @@ corePacks = import ../packs {
     py-jupyter-server = {
       # for py-jupyterlab 3
       version = "1";
-    };
-    py-jupyter-server-proxy = {
-      version = "=4.1";
     };
     py-jupyterhub = {
       version = "3";
@@ -2509,9 +2517,6 @@ jupyterPacks = corePacks.withPrefs {
   package = {
     py-jupyter-remote-desktop-proxy = {
       version = "main";
-    };
-    py-jupyter-server-proxy = {
-      version = "=4.1";
     };
     py-jupyter-server = {
       version = "2";
