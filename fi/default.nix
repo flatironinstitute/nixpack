@@ -731,16 +731,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-dedalus = {
-      depends = {
-        fftw = {
-          variants = {
-            mpi = true;
-            precision = ["float" "double" "long_double"];
-          };
-        };
-      };
-    };
     py-extension-helpers = {
       patches = [./py-extension-helpers-setup.py.patch];
     };
@@ -2151,22 +2141,6 @@ pkgStruct = {
             triqs-maxent
             #triqs-omegamaxent-interface
             triqs-tprf
-          ] ++
-          [
-            {
-              pkg = py-dedalus.withPrefs { version = "3"; };
-              projection = "dedalus/{version}-py{^python.version}";
-              postscript = ''
-                depends_on("python-mpi/${python.spec.version}")
-              '';
-            }
-            {
-              pkg = py-dedalus.withPrefs { version = "2"; };
-              projection = "dedalus/{version}-py{^python.version}";
-              postscript = ''
-                depends_on("python-mpi/${python.spec.version}")
-              '';
-            }
           ]
         );
       }) pythons;
