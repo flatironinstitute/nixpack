@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "50da7120e29e585deb9d4ff188e27d0895546ec1";
+    rev = "013586b0f74e2228ffb38971ed87ec9d71f32260";
   };
 
   spackConfig = {
@@ -75,13 +75,6 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
-    ascent = {
-      variants = {
-        cuda = true;
-        inherit cuda_arch;
-        python = true;
-      };
-    };
     at-spi2-core = {
       # for gtkplus
       version = "2.48";
@@ -118,8 +111,9 @@ corePacks = import ../packs {
         fiber = true;
         filesystem = true;
         graph = true;
+        #icu = true;
         iostreams = true;
-        locale = true;
+        #locale = true;
         log = true;
         math = true;
         numpy = true;
@@ -152,13 +146,6 @@ corePacks = import ../packs {
         svg = false;
       };
     };
-    camp = {
-      variants = {
-        openmp = true;
-        cuda = true;
-        inherit cuda_arch;
-      };
-    };
     cfitsio = {
       # for py-astropy and py-fitsio
       version = "3.49";
@@ -184,7 +171,7 @@ corePacks = import ../packs {
     };
     cuda = {
       # make sure this is compatible with the image driver
-      version = "12.4.1";
+      version = "12.5";
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
@@ -259,6 +246,7 @@ corePacks = import ../packs {
           os.symlink("gcc", os.path.join(pkg.prefix.bin, "cc"))
         '';
       };
+      patches = [./gcc-13.3-nvcc.patch];
     };
     gdal = {
       variants = {
@@ -329,6 +317,8 @@ corePacks = import ../packs {
       };
     };
     gsl = {
+      # for fgsl
+      version = "2.7";
       variants = {
         external-cblas = true;
       };
@@ -976,7 +966,12 @@ corePacks = import ../packs {
         toml = true;
       };
     };
+    py-tensorboard = {
+      version = "2.17";
+    };
     py-tensorflow = {
+      # for py-keras
+      version = "2.17";
       variants = {
         inherit cuda_arch;
         xla = true;
@@ -1100,12 +1095,6 @@ corePacks = import ../packs {
         };
       };
     };
-    raja = {
-      variants = {
-        cuda = true;
-        inherit cuda_arch;
-      };
-    };
     relion = {
       variants = {
         inherit cuda_arch;
@@ -1180,25 +1169,9 @@ corePacks = import ../packs {
         dm = true;
       };
     };
-    umpire = {
-      variants = {
-        cuda = true;
-        inherit cuda_arch;
-        shared = false;
-      };
-    };
     visit = {
       variants = {
         python = false; # needs python2
-      };
-    };
-    vtk-m = {
-      # for ascent
-      version = "2.0";
-      variants = {
-        cuda = true;
-        inherit cuda_arch;
-        fpic = true;
       };
     };
     zlib-api = { name = "zlib"; };
@@ -2095,7 +2068,6 @@ pkgStruct = {
             projection = "{name}/mpi-h100-{version}";
           }
           plumed
-          #ascent # FIXME raja+cuda build broken "contains a vector, which is not supported in device code"
         ]
         ++
         lib.optionals comp.isCore [

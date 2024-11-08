@@ -13,6 +13,13 @@ let
   noluajit = spec: old: {
     depends = removeAttrs old.depends ["lua-luajit" "lua-luajit-openresty"];
   };
+  cargohome = {
+    build = {
+      setup = ''
+        os.environ['CARGO_HOME'] = os.path.join(os.environ['TMPDIR'], 'cargo')
+      '';
+    };
+  };
 in
 {
   /* compiler pseudo-virtual */
@@ -115,22 +122,14 @@ in
   };
 
   librsvg = {
-    build = {
+    build = cargohome.build // {
       /* tries to install into gdk-pixbuf -- TODO: patch and use GDK_PIXBUF_MODULE_FILE (like nixpkgs) */
       enable_pixbuf_loader = "no";
-      setup = ''
-        os.environ['CARGO_HOME'] = os.path.join(os.environ['TMPDIR'], 'cargo')
-      '';
     };
   };
 
-  py-cryptography = {
-    build = {
-      setup = ''
-        os.environ['CARGO_HOME'] = os.path.join(os.environ['TMPDIR'], 'cargo')
-      '';
-    };
-  };
+  py-cryptography = cargohome;
+  py-maturin = cargohome;
 
   /* for pdflatex */
   r = {
@@ -197,10 +196,7 @@ in
   };
 
   rust = spec: old: {
-    build = {
-      setup = ''
-        os.environ['CARGO_HOME'] = os.path.join(os.environ['TMPDIR'], 'cargo')
-      '';
+    build = cargohome.build // {
       # workaround for https://github.com/rust-lang/cargo/issues/10303
       CARGO_NET_GIT_FETCH_WITH_CLI = "true";
     };
