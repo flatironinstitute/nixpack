@@ -291,20 +291,26 @@ class Conflict(Exception):
 
 class Inode:
     "An abstract class representing a node of a file tree"
-    def __init__(self, node: Inode, src: int, path: Path):
+    def __init__(self, src: int, path: Path):
+        self.path = path
         self.src: Optional[int] = src # index into srcPaths
-        if node is not None:
-            if not self.unify(node):
-                raise Conflict(path, self, node)
 
     @property
     def needed(self):
         "does this node need special processing/copying/translaton?"
         return self.src == None
 
-    def unify(self, other) -> bool:
+    def compatible(self, other: Inode) -> bool:
         "is this node compatible with the other"
         return type(self) == type(other)
+
+    def resolve(self, node: Optional[Inode]) -> Inode:
+        "return a unified object or raise Conflict"
+        if node is None:
+            return self
+        if not self.compatible(node):
+            raise Conflict(self.path, self, node)
+        return node
 
     def srcpath(self, path: Path) -> Path:
         "translate the given path to the specific src path for this node"
@@ -316,18 +322,26 @@ class Inode:
         dst.symlink(self.srcpath(dst))
 
 class Symlink(Inode):
-    def __init__(self, node: Inode, src: int, path: Path):
+    def __init__(self, src: int, path: Path):
         targ = path.readlink()
         self.targ = newpath(targ)
-        super().__init__(node, src, path)
+        super().__init__(src, path)
 
     @property
     def needed(self):
         # for recursion -- don't bother creating directories just for symlinks
         return False
 
-    def unify(self, other) -> bool:
-        return super().unify(other) and self.targ == other.targ
+    def compatible(self, other) -> bool:
+        if super().compatible(other) and self.targ == other.targ:
+            return True
+        # partial special case to handle unifying a symlink with its target
+        if self.targ == newpath(other.path.path):
+            return True
+        # last resort
+        if os.path.realpath(self.path.path) == os.path.realpath(other.path.path):
+            return True
+        return False
 
     def __repr__(self):
         return f'Symlink({self.src}, {self.targ!r})'
@@ -341,9 +355,8 @@ class File(Inode):
     wrap = False
     copy = False
 
-    def __init__(self, node: Inode, src: int, path: Path):
-        self.path = path
-        super().__init__(node, src, path)
+    def __init__(self, src: int, path: Path):
+        super().__init__(src, path)
         if path.isexe():
             if path.opt(b'shbang'):
                 with path.open():
@@ -362,8 +375,8 @@ class File(Inode):
     def needed(self):
         return self.shbang or self.jupyter or self.wrap or self.copy
 
-    def unify(self, other) -> bool:
-        if not super().unify(other):
+    def compatile(self, other) -> bool:
+        if not super().compatible(other):
             return False
         # allow identical files
         return self.path.compare(other.path)
@@ -403,18 +416,22 @@ class File(Inode):
 class Dir(Inode):
     needany = False
 
-    def __init__(self, node: Inode, src: int, path: Path):
-        super().__init__(node, src, path)
-        if node and self.src != node.src:
-            self.src = None
-        self.dir = node.dir if node else dict()
-        with path.opendir():
-            for ent in path.scandir():
-                n = scan(self.dir.get(ent.name), src, ent)
+    def __init__(self, src: int, path: Path):
+        super().__init__(src, path)
+        self.dir = dict()
+
+    def resolve(self, node: Optional[Inode]) -> Inode:
+        node = super().resolve(node)
+        if self.src != node.src:
+            node.src = None
+        with self.path.opendir():
+            for ent in self.path.scandir():
+                n = scan(node.dir.get(ent.name), self.src, ent)
                 if n:
-                    self.dir[ent.name] = n
-                    if not self.needany and n.needed:
-                        self.needany = True
+                    node.dir[ent.name] = n
+                    if not node.needany and n.needed:
+                        node.needany = True
+        return node
 
     @property
     def needed(self):
@@ -444,7 +461,7 @@ def scan(node, src: int, path: Path):
     else:
         cls = File
     try:
-        return cls(node, src, path)
+        return cls(src, path).resolve(node)
     except Conflict:
         if path.opt(b'ignoreConflicts'):
             return node

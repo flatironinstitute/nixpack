@@ -2103,6 +2103,7 @@ pkgStruct = {
     pythons = mkPythons comp.packs (py: py // {
       view = with py.packs.pkgs; (pyView ([
         /* ---------- python packages ---------- */
+        python
         python-venv
         gettext
         meson
@@ -2456,6 +2457,7 @@ jupyterPacks = corePacks.withPrefs {
 };
 
 jupyterBase = pyView (with jupyterPacks.pkgs; [
+  python
   python-venv
   py-jupyterhub
   py-jupyterlab
