@@ -130,6 +130,8 @@ in
 
   py-cryptography = cargohome;
   py-maturin = cargohome;
+  py-rpds-py = cargohome;
+  py-ruff = cargohome;
 
   /* for pdflatex */
   r = {
@@ -199,6 +201,13 @@ in
     build = cargohome.build // {
       # workaround for https://github.com/rust-lang/cargo/issues/10303
       CARGO_NET_GIT_FETCH_WITH_CLI = "true";
+    };
+  };
+
+  vtk = spec: old: {
+    depends = old.depends // {
+      # imports package
+      boost = { deptype = ["build"]; };
     };
   };
 

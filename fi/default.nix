@@ -232,7 +232,7 @@ corePacks = import ../packs {
     };
     fmt = {
       # for seacas, for vtk
-      #version = "9";
+      version = "9";
     };
     gcc = {
       version = "13";
@@ -1765,7 +1765,6 @@ pkgStruct = {
   pkgs = with corePacks.pkgs; [
     /* ------------ Core modules ------------ */
     (gcc.withPrefs { version = "11"; })
-    gcc
     (gcc.withPrefs { version = "14"; })
     { pkg = llvm;
       default = true;
@@ -1798,7 +1797,7 @@ pkgStruct = {
       };
       autoload = [hwloc];
     }
-    #amdlibm #gcc <=13.1
+    amdlibm
     { pkg = aocc;
       context = {
         provides = []; # not a real compiler
@@ -1847,9 +1846,6 @@ pkgStruct = {
     graphviz
     hdfview
     imagemagick
-    #(blasPkg intel-mkl)
-    #intel-tbb
-    #intel-parallel-studio
     intel-oneapi-advisor
     intel-oneapi-compilers
     (blasPkg intel-oneapi-mkl)
@@ -1941,8 +1937,7 @@ pkgStruct = {
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
     #visit #needs qt <= 5.14.2, vtk dep patches?
     vmd
-    #vtk #FIXME currently broken #42505
-    wecall
+    vtk
     zsh
   ]
   ++
@@ -1984,7 +1979,7 @@ pkgStruct = {
       jemalloc
       libiconv
       #libdrm
-      #magma #cuda 12.6
+      magma
       #mesa
       libxc
       mpc
@@ -2041,8 +2036,6 @@ pkgStruct = {
         lib.optionals mpi.isCore [
           pvfmm
           stkfmm
-          #(trilinos.withPrefs { version = "13.4.1"; variants = { cxxstd = "14"; }; })
-          #(trilinos.withPrefs { version = "14.2.0"; variants = { cxxstd = "17"; }; })
           trilinos
         ]
         ++
@@ -2056,17 +2049,6 @@ pkgStruct = {
           gromacs
           { pkg = gromacs.withPrefs { version = "=2023"; variants = { plumed = true; }; };
             projection = "{name}/mpi-plumed-{version}"; }
-          { pkg = trilinos.withPrefs {
-              version = "14.2.0";
-              variants = {
-                cxxstd = "17";
-                cuda_arch = { "90" = true; none = false; };
-                cuda = true;
-                wrapper = true;
-              };
-            };
-            projection = "{name}/mpi-h100-{version}";
-          }
           plumed
         ]
         ++
@@ -2121,7 +2103,7 @@ pkgStruct = {
     pythons = mkPythons comp.packs (py: py // {
       view = with py.packs.pkgs; (pyView ([
         /* ---------- python packages ---------- */
-        python
+        python-venv
         gettext
         meson
         py-asdf
@@ -2204,7 +2186,7 @@ pkgStruct = {
         py-pybind11
         py-pycairo
         py-pycuda
-        #py-cupy #cudnn version
+        py-cupy
         py-pyfftw
         py-pygments
         py-pylint
@@ -2290,7 +2272,7 @@ pkgStruct = {
     mpi = let mpi = mkMpi comp comp.packs.pkgs.intel-oneapi-mpi; in mpi // {
       pkgs = with mpi.packs.pkgs; [
         osu-micro-benchmarks
-      ] ++ optMpiPkgs mpi.packs;
+      ] /* ++ optMpiPkgs mpi.packs */; # boost broken
     };
   };
 
@@ -2349,7 +2331,7 @@ pkgStruct = {
     }; in [
     /* -------- nixpkgs modules --------- */
     nix
-    (withGL blender)
+    #(withGL blender) #embree patch url
     elinks
     #evince
     feh
@@ -2474,7 +2456,7 @@ jupyterPacks = corePacks.withPrefs {
 };
 
 jupyterBase = pyView (with jupyterPacks.pkgs; [
-  python
+  python-venv
   py-jupyterhub
   py-jupyterlab
   py-batchspawner

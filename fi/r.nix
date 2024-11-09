@@ -9,7 +9,7 @@ with packs.pkgs; [
   r-biocinstaller
   r-biocmanager
   r-cairo
-  r-deseq2
+  #r-deseq2 #build error
   r-dt
   #r-diffbind
   r-formula
@@ -39,8 +39,8 @@ with packs.pkgs; [
   r-askpass
   r-assertthat
   r-backports
-  r-biomart
-  r-biomformat
+  #r-biomart
+  #r-biomformat
   r-bit64
   r-bitops
   r-blob
@@ -97,7 +97,7 @@ with packs.pkgs; [
   r-nloptr
   #r-pdsh
   r-pheatmap
-  r-phyloseq
+  #r-phyloseq
   r-pkgbuild
   r-pkgconfig
   r-pkgload

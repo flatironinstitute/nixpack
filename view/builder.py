@@ -460,3 +460,5 @@ for i, src in enumerate(srcPaths):
 # populate the destination with the result
 assert top, "No paths found"
 top.create(Path(dstPath))
+with open(os.path.join(dstPath, b".view-src"), "xb") as f:
+    f.write(b"\n".join(srcPaths))

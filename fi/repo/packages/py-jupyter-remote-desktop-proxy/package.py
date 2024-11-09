@@ -7,7 +7,7 @@ class PyJupyterRemoteDesktopProxy(PythonPackage):
     pypi = "jupyter-remote-desktop-proxy/jupyter-remote-desktop-proxy-1.2.1.tar.gz"
     git = "https://github.com/flatironinstitute/jupyter-remote-desktop-proxy"
 
-    version("main", branch="main", commit="f2a80f279c8e275caa8441ab0df5ad3d28d37f9a")
+    version("main", branch="main", commit="7a272429d863dab829269584fdab57db47c9aac6")
     version("1.2.1", sha256="8adf71303e653360653c7dc5b9c1a836a239ab3fb2884d3259846046f6b82bda")
 
     depends_on("py-setuptools", type="build")
