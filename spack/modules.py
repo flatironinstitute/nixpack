@@ -181,7 +181,7 @@ config = {
         modtype: modconf
     }
 }
-spack.config.set('modules', config, 'command_line')
+spack.config.set('modules', config, 'nixpack')
 spack.repo.PATH.provider_index # precompute
 
 print(f"Generating {len(specs)} {modtype} modules in {root}...")

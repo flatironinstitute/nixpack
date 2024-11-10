@@ -66,17 +66,18 @@ class NixStore():
     unpadded_root = spack.paths.prefix
 spack.store.STORE = NixStore()
 
-spack.config.COMMAND_LINE_SCOPES = getVar('spackConfig').split()
+spack.config._add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split())
 spack.config.CONFIG.remove_scope('system')
 spack.config.CONFIG.remove_scope('user')
+spack.config.CONFIG.push_scope(spack.config.InternalConfigScope("nixpack"))
 
-spack.config.set('config:build_stage', [getVar('NIX_BUILD_TOP')], 'command_line')
+spack.config.set('config:build_stage', [getVar('NIX_BUILD_TOP')], 'nixpack')
 enableParallelBuilding = bool(getVar('enableParallelBuilding', True))
 cores = 1
 if enableParallelBuilding:
     cores = int(getVar('NIX_BUILD_CORES', 0))
 if cores > 0:
-    spack.config.set('config:build_jobs', cores, 'command_line')
+    spack.config.set('config:build_jobs', cores, 'nixpack')
 
 # add in dynamic overlay repos
 repos = getVar('repos', '').split()
@@ -87,7 +88,7 @@ if cache:
         tmpcache = os.path.join(os.environ['TMPDIR'], 'spack-cache')
         linktree(cache, tmpcache)
         cache = tmpcache
-    spack.config.set('config:misc_cache', cache, 'command_line')
+    spack.config.set('config:misc_cache', cache, 'nixpack')
 
 repoArgs = {}
 if hasattr(spack.repo, "from_path"):
@@ -428,7 +429,7 @@ class NixSpec(spack.spec.Spec):
                         config['paths'][lang] = next(opts, None)
                         assert next(opts, None) is None, f"Multiple matching paths for {name} {lang} compiler"
             self.compilers[name] = {'compiler': config}
-            spack.config.set('compilers', list(self.compilers.values()), 'command_line')
+            spack.config.set('compilers', list(self.compilers.values()), 'nixpack')
             # clear compilers cache since we changed config:
             spack.compilers._cache_config_file = None
         return self._as_compiler
@@ -459,7 +460,7 @@ nullCompilerSpec = NixSpec({
         'flags': {},
         'tests': False,
         'paths': {
-            'cc': None,
+            'cc': '/bin/false',
             'cxx': None,
             'f77': None,
             'fc': None,
