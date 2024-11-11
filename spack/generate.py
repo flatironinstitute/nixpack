@@ -289,9 +289,12 @@ def whenCondition(p, s, a, dep=None):
     return App('when', And(*c), a)
 
 try:
-    VariantValue = spack.variant.Value
+    VariantValue = spack.variant.ConditionalValue
 except AttributeError:
-    VariantValue = None
+    try:
+        VariantValue = spack.variant.Value
+    except AttributeError:
+        VariantValue = None
 
 def variant1(p, v):
     def value(x):
