@@ -1,0 +1,25 @@
+Reverts https://github.com/gcc-mirror/gcc/commit/2b3ecdf4fb13471b69d80583e10c5baedfe84d7c
+for compatibility with nvcc
+https://forums.developer.nvidia.com/t/compilation-errors-with-gcc-versions-11-14-and-cuda-toolkit-12-5-12-6-due-to-undefined-builtin-ia32-ldtilecfg-and-builtin-ia32-sttilecfg-etc/308401
+
+diff --git a/gcc/config/i386/amxtileintrin.h b/gcc/config/i386/amxtileintrin.h
+index cc6022657a87f..2ee7b6bad2bf3 100644
+--- a/gcc/config/i386/amxtileintrin.h
++++ b/gcc/config/i386/amxtileintrin.h
+@@ -39,14 +39,14 @@ extern __inline void
+ __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+ _tile_loadconfig (const void *__config)
+ {
+-  __builtin_ia32_ldtilecfg (__config);
++  __asm__ volatile ("ldtilecfg\t%X0" :: "m" (*((const void **)__config)));
+ }
+ 
+ extern __inline void
+ __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+ _tile_storeconfig (void *__config)
+ {
+-  __builtin_ia32_sttilecfg (__config);
++  __asm__ volatile ("sttilecfg\t%X0" : "=m" (*((void **)__config)));
+ }
+ 
+ extern __inline void
