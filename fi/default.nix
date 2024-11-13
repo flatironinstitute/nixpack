@@ -598,10 +598,6 @@ corePacks = import ../packs {
         python = true;
       };
     };
-    osu-micro-benchmarks = {
-      # 7.3 doesn't work with intel (MPI_Allgather_init)
-      version = "7.2";
-    };
     pango = {
       variants = {
         X = true;
