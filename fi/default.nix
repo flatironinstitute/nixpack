@@ -1236,11 +1236,10 @@ corePacks = import ../packs {
           mpi_yield_when_idle = 1
           #btl_openib_receive_queues=P,128,2048,1024,32:S,2048,2048,1024,64:S,12288,2048,1024,64:S,65536,2048,1024,64
           btl=^openib
-          mtl=^psm,ofi
           pml=ucx
           pml_ucx_tls=any
           """)
-
+        '' + (if lib.versionMatches spec.version "4" then ''
           help_oob_path = os.path.join(pkg.prefix.share, "openmpi/help-oob-tcp.txt")
           with open(help_oob_path, 'r') as f:
               help_oob = f.read()
@@ -1248,7 +1247,7 @@ corePacks = import ../packs {
               f.write(help_oob.replace(
                 "[invalid if_inexclude]\nWARNING: An invalid value was given for oob_tcp_if_%s.  This\nvalue will be ignored.\n\n  Local host: %s\n  Value:      %s\n  Message:    %s\n#\n",
                 "[invalid if_inexclude]\nIgnoring value for oob_tcp_if_%s on %s (%s: %s).\n(You can safely ignore this message.)\n#\n"))
-        '';
+        '' else "");
       };
     };
     intel-oneapi-mpi = spec: old: {
