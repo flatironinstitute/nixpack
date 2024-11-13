@@ -568,7 +568,7 @@ corePacks = import ../packs {
       variants = {
         fabrics = {
           none = false;
-          ofi = true;
+          ofi = false;
           ucx = true;
           psm = false;
           psm2 = false;
@@ -579,9 +579,10 @@ corePacks = import ../packs {
           slurm = true;
         };
         pmi = true;
-        pmix = false;
+        internal-pmix = true;
         static = false;
         legacylaunchers = true;
+        romio = false;
       };
     };
     openssl = if os == "rocky8" then opensslExtern else {};
@@ -1497,6 +1498,7 @@ mkMpis = comp: gen:
   ] ++ lib.optionals comp.isCore [
     { name = "intel-oneapi-mpi"; }
     { name = "openmpi"; version = "4.1"; }
+    { name = "openmpi"; version = "5.0"; variants = { legacylaunchers = null; pmi = null; };}
     { name = "openmpi";
       variants = {
         cuda = true;
