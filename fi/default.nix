@@ -707,7 +707,6 @@ corePacks = import ../packs {
       version = "38";
     };
     py-cupy = {
-      #version = "12.3";
       variants = {
         cuda = true;
         inherit cuda_arch;
@@ -718,8 +717,13 @@ corePacks = import ../packs {
         };
       };
     };
-    py-extension-helpers = {
-      patches = [./py-extension-helpers-setup.py.patch];
+    py-ewah-bool-utils = {
+      depends = {
+        py-numpy = {
+          # build only
+          #version = "2";
+        };
+      };
     };
     py-fastrlock = {
       depends = {
@@ -890,6 +894,14 @@ corePacks = import ../packs {
     py-py-cpuinfo = {
       # for py-hdf5plugin
       version = "8.0.0";
+    };
+    py-pyerfa = {
+      depends = {
+        py-numpy = {
+          # build only
+          #version = "2";
+        };
+      };
     };
     py-pyfftw = {
       version = "0.13"; # for py-numpy@1
@@ -1067,6 +1079,14 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    py-yt = {
+      depends = {
+        py-numpy = {
+          # build only
+          #version = "2";
+        };
+      };
+    };
     python = corePython;
     qt = {
       variants = {
@@ -1083,13 +1103,6 @@ corePacks = import ../packs {
     r-xml = {
       build = {
         XMLSEC_CONFIG = "/bin/false";
-      };
-    };
-    py-yt = {
-      depends = {
-        py-cython = {
-          version = ":2";
-        };
       };
     };
     relion = {
@@ -2090,8 +2103,11 @@ pkgStruct = {
             }
             triqs-dft-tools
             triqs-maxent
-            #triqs-omegamaxent-interface
+            triqs-omegamaxent-interface
             triqs-tprf
+            triqs-ctseg
+            triqs-hartree-fock
+            triqs-hubbardi
           ]
         );
       }) pythons;
@@ -2220,7 +2236,7 @@ pkgStruct = {
         #py-ws4py
         #py-xattr #broken: missing pip dep
         #py-yep
-        #py-yt #py-astropy@6
+        py-yt
 
         py-protobuf
         py-torch
