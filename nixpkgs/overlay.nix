@@ -89,11 +89,6 @@ in
     doCheck = false; # failure
   });
 
-  tbb_2020_3 = tbb_2020_3.overrideAttrs (old: {
-    # avoid some broken (bun unnecessary) patches
-    patches = lib.take 2 old.patches;
-  });
-
   openimageio = openimageio.overrideAttrs (old: {
     # avoid finding system libjpeg.so
     cmakeFlags = old.cmakeFlags ++ ["-DJPEGTURBO_PATH=${libjpeg.out}"];
