@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "3e82a729d3198a1b7b8ac974854db6f80653a15d";
+    rev = "c5f09b6ab6aaa589ac4ee15d366523c12d514e24";
   };
 
   spackConfig = {
@@ -441,6 +441,13 @@ corePacks = import ../packs {
     libunwind = {
       # failing
       tests = false;
+      variants = {
+        # for py-py-spy
+        components = {
+          none = false;
+          ptrace = true;
+        };
+      };
     };
     libwebp = {
       # for py-pillow
@@ -1921,6 +1928,11 @@ pkgStruct = {
     postgresql
     proj
     protobuf
+    {
+      pkg = py-py-spy;
+      # remove leading py-
+      projection = "py-spy/{version}";
+    }
     qt
     { pkg = rView;
       environment = {
