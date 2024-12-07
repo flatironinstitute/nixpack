@@ -1889,6 +1889,7 @@ pkgStruct = {
     }
     nccl
     #nix #too old/broken
+    ninja
     node-js
     { pkg = npm;
       autoload = [node-js];
