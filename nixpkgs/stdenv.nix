@@ -24,5 +24,8 @@ pkgs.stdenv.override {
     inherit glibc binutils gcc;
   };
   allowedRequisites = pkgs.stdenv.allowedRequisites ++
-    [ glibc.out glibc.dev glibc.bin binutils pkgs.nss_sss ];
+    [ glibc.out glibc.dev glibc.bin binutils pkgs.nss_sss
+      pkgs.talloc pkgs.libunistring pkgs.mpdecimal pkgs.mailcap pkgs.libxcrypt pkgs.gdbm.lib pkgs.tzdata pkgs.expat pkgs.ncurses pkgs.libffi pkgs.python3 pkgs.readline
+      pkgs.sqlite.out pkgs.openssl_3_3.out
+    ];
 }

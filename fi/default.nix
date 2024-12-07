@@ -42,8 +42,8 @@ corePacks = import ../packs {
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
-    ref = "release-24.05";
-    rev = "0b88841b5eb61720be435a9e40f69bd853fa232c";
+    ref = "release-24.11";
+    rev = "ff5fd5aff0b38eca6461d9a4d64e3ea672077939";
   };
 
   repos = [
@@ -2345,7 +2345,7 @@ pkgStruct = {
     }; in [
     /* -------- nixpkgs modules --------- */
     nix
-    #(withGL blender) #embree patch url
+    #(withGL blender)
     elinks
     #evince
     feh
@@ -2377,7 +2377,7 @@ pkgStruct = {
     #rxvt-unicode
     #sage
     #(withGL slack)
-    (withGL (vscode.overrideAttrs (old: {
+    /* (withGL (vscode.overrideAttrs (old: {
       preFixup = old.preFixup + ''
         gappsWrapperArgs+=(
           --add-flags --no-sandbox
@@ -2390,7 +2390,7 @@ pkgStruct = {
           '';
         };
       };
-    })))
+    }))) */
     #wecall
     xmedcon
     xscreensaver

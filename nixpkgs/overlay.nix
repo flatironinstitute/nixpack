@@ -119,11 +119,6 @@ in
       ];
   });
 
-  ffado = ffado.overrideAttrs (old: {
-    # avoid a 404 patch
-    patches = lib.take 1 old.patches;
-  });
-
   libical = libical.overrideAttrs (old: {
     cmakeFlags = old.cmakeFlags ++ ["-DBerkeleyDB_ROOT_DIR=${db}"];
   });
@@ -132,6 +127,7 @@ in
   llvmPackages_15 = llvm_patch llvmPackages_15;
   llvmPackages_16 = llvm_patch llvmPackages_16;
   llvmPackages_17 = llvm_patch llvmPackages_17;
+  llvmPackages_18 = llvm_patch llvmPackages_18;
 
   libxcrypt = libxcrypt.overrideAttrs (old: {
     /* sign-conversion warnings: */
@@ -174,8 +170,16 @@ in
     };
   };
 
+  python312 = python312.override {
+    packageOverrides = self: super: {
+      numpy = super.numpy.overridePythonAttrs (old: {
+        # FAIL: TestAccuracy.test_validate_transcendentals
+        doCheck = false;
+      });
+    };
+  };
+
   pipewire = (pipewire.override {
-    bluezSupport = false;
     rocSupport = false; # temporarily workaround sox broken download (though probably don't need it anyway)
   }).overrideAttrs (old: {
     buildInputs = old.buildInputs ++ [libopus];
@@ -200,10 +204,6 @@ in
 
   umockdev = umockdev.overrideAttrs (old: {
     doCheck = false; # static-code unknown failure
-  });
-
-  libproxy = libproxy.overrideAttrs (old: {
-    cmakeFlags = old.cmakeFlags ++ ["-DWITH_PERL=no"];
   });
 
   libpsl = libpsl.overrideAttrs (old: {
@@ -234,6 +234,9 @@ in
       });
       http2 = super.http2.overrideAttrs (old: {
         # tests hang
+        doCheck = false;
+      });
+      tls = super.tls.overrideAttrs (old: {
         doCheck = false;
       });
     };
