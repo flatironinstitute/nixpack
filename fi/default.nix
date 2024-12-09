@@ -1842,7 +1842,6 @@ pkgStruct = {
     }
     cudnn
     curl
-    disBatch
     distcc
     doxygen
     (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
@@ -2152,6 +2151,7 @@ pkgStruct = {
         py-coverage
         py-cython
         py-dask
+        py-disbatch
         #py-deeptools #pysam broken
         #py-einsum2
         py-emcee
