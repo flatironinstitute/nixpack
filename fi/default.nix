@@ -2147,6 +2147,7 @@ pkgStruct = {
         py-cachey
         py-cherrypy
         py-classylss
+        py-click
         py-corrfunc
         py-coverage
         py-cython
@@ -2244,6 +2245,7 @@ pkgStruct = {
         #py-tess
         py-toml
         py-twisted
+        py-typer
         py-virtualenv
         py-wcwidth
         #py-ws4py
