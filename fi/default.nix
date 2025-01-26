@@ -1140,6 +1140,11 @@ corePacks = import ../packs {
         hwloc = true;
       };
     };
+    sox = {
+      variants = {
+        mp3 = true;
+      };
+    };
     suite-sparse = {
       variants = {
         openmp = true;
@@ -1947,6 +1952,7 @@ pkgStruct = {
     ruby
     rust
     smartmontools
+    sox
     sra-tools
     stress-ng
     subversion
