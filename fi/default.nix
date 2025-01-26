@@ -1873,6 +1873,7 @@ pkgStruct = {
     latex2html
     lftp
     libffi
+    libtiff
     libtirpc
     libzmq
     likwid
