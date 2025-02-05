@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class TriqsHubbardi(CMakePackage):
     """TRIQS: Hubbard I solver"""

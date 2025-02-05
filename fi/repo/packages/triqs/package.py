@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class Triqs(CMakePackage):
     """TRIQS: a Toolbox for Research on Interacting Quantum Systems"""

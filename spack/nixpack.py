@@ -66,7 +66,10 @@ class NixStore():
     unpadded_root = spack.paths.prefix
 spack.store.STORE = NixStore()
 
-spack.config._add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split())
+try:
+    spack.main.add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split())
+except AttributeError:
+    spack.config._add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split())
 spack.config.CONFIG.remove_scope('system')
 spack.config.CONFIG.remove_scope('user')
 spack.config.CONFIG.push_scope(spack.config.InternalConfigScope("nixpack"))

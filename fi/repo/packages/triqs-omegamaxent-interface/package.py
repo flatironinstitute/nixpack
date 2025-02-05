@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class TriqsOmegamaxentInterface(CMakePackage):
     """TRIQS: python interface to the maximum entropy analytic continuation program OmegaMaxEnt"""

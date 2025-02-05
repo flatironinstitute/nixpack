@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class TriqsHartreeFock(CMakePackage):
     """TRIQS: Hartree-Fock lattice and impurity solvers based on the TRIQS library"""

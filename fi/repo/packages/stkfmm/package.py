@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class Stkfmm(CMakePackage):
     """A C++ library implements the Kernel Aggregated Fast Multipole Method based on the library PVFMM."""

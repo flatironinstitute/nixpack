@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class TriqsCtseg(CMakePackage):
     """A segment picture impurity solver with spin-spin interactions. """

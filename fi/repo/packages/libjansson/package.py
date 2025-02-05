@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class Libjansson(CMakePackage):
     """libjansson"""

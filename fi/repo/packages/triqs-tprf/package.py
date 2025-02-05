@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class TriqsTprf(CMakePackage):
     """TRIQS: Two-Particle Response Function toolbox"""

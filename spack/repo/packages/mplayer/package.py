@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class Mplayer(AutotoolsPackage):
     """MPlayer is a movie player which runs on many systems (see the documentation). 

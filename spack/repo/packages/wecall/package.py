@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class Wecall(MakefilePackage):
     """Fast, accurate and simple to use command line tool for variant detection in NGS data. """

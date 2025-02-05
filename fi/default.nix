@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "c5f09b6ab6aaa589ac4ee15d366523c12d514e24";
+    rev = "54c60d89473365de08a7d333cb90a134534fbe8b";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-24.11";
-    rev = "ff5fd5aff0b38eca6461d9a4d64e3ea672077939";
+    rev = "5539463c173fe4555f02d4e946e708b51508ae92";
   };
 
   repos = [

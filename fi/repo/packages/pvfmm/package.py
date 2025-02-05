@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class Pvfmm(CMakePackage):
     """PVFMM is a library for solving certain types of elliptic partial differential equations."""

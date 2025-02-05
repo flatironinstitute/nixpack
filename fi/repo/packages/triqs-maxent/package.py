@@ -1,4 +1,4 @@
-from spack import *
+from spack.package import *
 
 class TriqsMaxent(CMakePackage):
     """TRIQS: modular Maximum Entropy program to perform analytic continuation."""
