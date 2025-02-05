@@ -2422,6 +2422,20 @@ pkgStruct = {
 
   static = [
     /* -------- misc modules --------- */
+    (let py = (findCore (findCore pkgStruct.compilers).pythons); in
+    { name = "disBatch";
+      inherit (py.packs.pkgs.py-disbatch.spec) version;
+      projection = "{name}";
+      prefix = linkfiles "disBatch" [
+        "${py.view}/bin/disBatch"
+        "${py.view}/bin/disbatch"
+      ];
+      environment = {
+        prepend_path = {
+          PATH = "{prefix}";
+        };
+      };
+    })
     { path = ".modulerc";
       static =
         let alias = {
