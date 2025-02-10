@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "54c60d89473365de08a7d333cb90a134534fbe8b";
+    rev = "91271f0488e70da56736e7a046b70021121e0dc1";
   };
 
   spackConfig = {
@@ -75,6 +75,14 @@ corePacks = import ../packs {
         license-agreed = true;
       };
     };
+    arrow = {
+      # for py-pyarrow
+      version = "16.1.0";
+      variants = {
+        python = true;
+        parquet = true;
+      };
+    };
     at-spi2-core = {
       # for gtkplus
       version = "2.48";
@@ -111,9 +119,9 @@ corePacks = import ../packs {
         fiber = true;
         filesystem = true;
         graph = true;
-        #icu = true;
+        icu = true;
         iostreams = true;
-        #locale = true;
+        locale = true;
         log = true;
         math = true;
         numpy = true;
@@ -128,6 +136,7 @@ corePacks = import ../packs {
         test = true;
         thread = true;
         timer = true;
+        wave = true;
         cxxstd = "14";
       };
     };
@@ -149,6 +158,13 @@ corePacks = import ../packs {
     cfitsio = {
       # for py-astropy and py-fitsio
       version = "3.49";
+    };
+    cgal = {
+      depends = {
+        cmake = {
+          version = "3.29";
+        };
+      };
     };
     cli11 = {
       # for paraview
@@ -379,6 +395,12 @@ corePacks = import ../packs {
         };
       };
     };
+    icu4c = {
+      # for boost
+      variants = {
+        cxxstd = "14";
+      };
+    };
     idl = {
       build = {
         post = ''
@@ -395,6 +417,10 @@ corePacks = import ../packs {
         '';
       };
     };
+    intel-tbb = {
+      # for openvdb
+      version = "2021";
+    };
     keepassxc = {
       variants = {
         # missing minizip dep otherwise
@@ -402,6 +428,14 @@ corePacks = import ../packs {
       };
     };
     kokkos = {
+      # for trilinos
+      version = "4.3.01";
+      variants = {
+        complex_align = false;
+        openmp = true;
+      };
+    };
+    kokkos-kernels = {
       # for trilinos
       version = "4.3.01";
     };
@@ -457,17 +491,19 @@ corePacks = import ../packs {
       };
     };
     llvm = {
-      version = "14";
+      version = "15";
       variants = {
         lua = false;
         libcxx = "project";
       };
+      /*
       depends = {
         compiler = {
           # https://github.com/llvm/llvm-project/issues/62396
           version = "11";
         };
       };
+      */
     };
     lmod = {
       patches = [./lmod-no-sys-tcl.patch];
@@ -724,6 +760,20 @@ corePacks = import ../packs {
         };
       };
     };
+    py-dask-expr = {
+      depends = {
+        py-versioneer = {
+          version = "0.28";
+        };
+      };
+    };
+    py-distributed = {
+      depends = {
+        py-versioneer = {
+          version = "0.28";
+        };
+      };
+    };
     py-ewah-bool-utils = {
       depends = {
         py-numpy = {
@@ -829,6 +879,10 @@ corePacks = import ../packs {
         };
       };
     };
+    py-llvmlite = {
+      # py-numba 0.59
+      #version = "0.42";
+    };
     py-m2r = {
       depends = {
         py-mistune = {
@@ -857,8 +911,12 @@ corePacks = import ../packs {
         };
       };
     };
+    py-numba = {
+      # py-numpy 1
+      #version = "0.59";
+    };
     py-numpy = {
-      version = "1";
+      #version = "1";
     };
     py-pandas = {
       depends = {
@@ -902,6 +960,21 @@ corePacks = import ../packs {
       # for py-hdf5plugin
       version = "8.0.0";
     };
+    py-pyarrow = {
+      variants = {
+        # for py-dask-expr
+        dataset = true;
+        parquet = true;
+      };
+      depends = {
+        py-pip = {
+          version = ":23.0";
+        };
+        py-setuptools-scm = {
+          version = ":7";
+        };
+      };
+    };
     py-pyerfa = {
       depends = {
         py-numpy = {
@@ -911,13 +984,10 @@ corePacks = import ../packs {
       };
     };
     py-pyfftw = {
-      version = "0.13"; # for py-numpy@1
+      #version = "0.13"; # for py-numpy@1
       depends = {
         py-setuptools = {
           version = "59";
-        };
-        py-cython = {
-          version = "0.29";
         };
       };
     };
@@ -944,6 +1014,13 @@ corePacks = import ../packs {
                    'exec python -m pymol "$@"\n'
           )
         '';
+      };
+    };
+    py-pytensor = {
+      depends = {
+        py-versioneer = {
+          version = "0.28";
+        };
       };
     };
     py-pytest-cov = {
@@ -977,20 +1054,27 @@ corePacks = import ../packs {
         mpi = true;
       };
     };
+    py-scikit-build-core = {
+      # for py-pyzmq
+      variants = {
+        pyproject = true;
+      };
+    };
     py-setuptools-scm = {
       variants = {
         toml = true;
       };
     };
     py-tensorboard = {
-      version = "2.17";
+      #version = "2.17";
     };
     py-tensorflow = {
       # for py-keras
-      version = "2.17";
+      version = "=2.18.0";
       variants = {
         inherit cuda_arch;
         xla = true;
+        rocm = false;
       };
       depends = {
         bazel = {
@@ -1008,10 +1092,6 @@ corePacks = import ../packs {
       # for py-google-auth
       version = "1";
     };
-    py-versioneer = {
-      # for py-distributed, py-dask
-      version = "0.28";
-    };
     re2 = {
       # for py-tensorflow
       variants = {
@@ -1019,8 +1099,7 @@ corePacks = import ../packs {
       };
     };
     py-libclang = {
-      # for py-tensorflow
-      version = "14";
+      version = "15";
     };
     py-torch = {
       variants = {
@@ -1140,6 +1219,12 @@ corePacks = import ../packs {
         hwloc = true;
       };
     };
+    snappy = {
+      # for arrow
+      variants = {
+        shared = false;
+      };
+    };
     sox = {
       variants = {
         mp3 = true;
@@ -1191,10 +1276,20 @@ corePacks = import ../packs {
         dm = true;
       };
     };
+    utf8proc = {
+      # for arrow
+      variants = {
+        shared = true;
+      };
+    };
     visit = {
       variants = {
         python = false; # needs python2
       };
+    };
+    vtk = {
+      # 9.4 spack package deps broken
+      version = "9.3";
     };
     zlib-api = { name = "zlib"; };
     zlib-ng = {
@@ -2147,7 +2242,7 @@ pkgStruct = {
         py-autopep8
         #py-backports-ssl-match-hostname #conflicts...
         #py-backports-weakref # broken?
-        py-biopython
+        #py-biopython #py-numpy 1
         py-black
         py-bokeh
         py-bottleneck
@@ -2221,7 +2316,7 @@ pkgStruct = {
         py-pybind11
         py-pycairo
         py-pycuda
-        py-cupy
+        #py-cupy #py-numpy 1
         py-pyfftw
         py-pygments
         py-pylint
