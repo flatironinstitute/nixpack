@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "91271f0488e70da56736e7a046b70021121e0dc1";
+    rev = "b95927c043dfc4f26042efc905c916fa570c6e1e";
   };
 
   spackConfig = {
@@ -102,10 +102,6 @@ corePacks = import ../packs {
         ffmpeg = true;
         opensubdiv = true;
       };
-    };
-    blt = {
-      # for raja
-      #version = "0.5";
     };
     boost = {
       variants = {
@@ -290,6 +286,9 @@ corePacks = import ../packs {
         cuda = true;
         inherit cuda_arch;
       };
+    };
+    glib = {
+      version = "2.79:";
     };
     gloo = {
       # for py-torch
@@ -526,10 +525,6 @@ corePacks = import ../packs {
       };
       tests = false;
     };
-    meson = {
-      # for py-pandas
-      #version = "1.2.1";
-    };
     mpi = {
       name = "openmpi";
     };
@@ -558,21 +553,11 @@ corePacks = import ../packs {
         sandboxing = false;
       };
     };
-    node-js = {
-      #version = "19";
-    };
     nvhpc = {
       variants = {
         mpi = true;
         stdpar = builtins.head (lib.splitRegex "," cudaarch);
       };
-    };
-    ocaml = {
-      # for unison
-      #version = "4.10";
-      #variants = {
-        #force-safe-string = false;
-      #};
     };
     openblas = {
       variants = {
@@ -646,11 +631,6 @@ corePacks = import ../packs {
         X = true;
       };
     };
-    papi = {
-      # last official release doesn't support zen (as of 22-06-07)
-      # also we have a custom icelake patch (as of 22-06-29)
-      #version = "6.0.0.1-fi";
-    };
     paraview = {
       variants = {
         hdf5 = true;
@@ -658,10 +638,6 @@ corePacks = import ../packs {
         qt = true;
         osmesa = false;
       };
-    };
-    patchelf = {
-      # for intel-oneapi-compilers
-      #version = "0.17";
     };
     pegtl = {
       # for paraview
@@ -695,31 +671,10 @@ corePacks = import ../packs {
       # for vtk, paraview
       version = "8.1.0";
     };
-    protobuf = {
-      # for py-protobuf, paraview
-      version = "3.21";
-    };
-    py-anyio = {
-      # for py-jupyter-server
-      version = "3";
-    };
-    py-astroid = {
-      depends = {
-        py-setuptools = {
-          version = "62";
-        };
-        py-wheel = {
-          version = "0.37";
-        };
-      };
-    };
     py-astropy = {
       depends = {
         py-pip = {
           version = ":23.0";
-        };
-        py-cython = {
-          version = "3.0.0";
         };
       };
     };
@@ -730,24 +685,6 @@ corePacks = import ../packs {
       variants = {
         mpi = true;
       };
-    };
-    py-blessings = {
-      depends = {
-        py-setuptools = {
-          version = "57";
-        };
-      };
-    };
-    py-classylss = {
-      depends = {
-        py-cython = {
-          version = ":2";
-        };
-      };
-    };
-    py-cryptography = {
-      # py-pyopenssl
-      version = "38";
     };
     py-cupy = {
       variants = {
@@ -771,14 +708,6 @@ corePacks = import ../packs {
       depends = {
         py-versioneer = {
           version = "0.28";
-        };
-      };
-    };
-    py-ewah-bool-utils = {
-      depends = {
-        py-numpy = {
-          # build only
-          #version = "2";
         };
       };
     };
@@ -810,29 +739,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-grpcio = {
-      # for py-protobuf
-      version = "1.62";
-      depends = { 
-        py-cython = {
-          version = ":2";
-        };
-      };
-    };
-    py-h5py = {
-      depends = {
-        py-cython = {
-          version = ":2";
-        };
-      };
-    };
-    py-halotools = {
-      depends = {
-        py-cython = {
-          version = "0.29.32";
-        };
-      };
-    };
     py-horovod = {
       variants = {
         inherit cuda_arch;
@@ -861,27 +767,8 @@ corePacks = import ../packs {
         format-nongpl = true;
       };
     };
-    py-jupyter-server = {
-      # for py-jupyterlab 3
-      version = "1";
-    };
     py-jupyterhub = {
       version = "3";
-    };
-    py-jupyterlab = {
-      # for py-ipyparallel, various widgets
-      version = "3";
-    };
-    py-kdcount = {
-      depends = {
-        py-cython = {
-          version = ":2";
-        };
-      };
-    };
-    py-llvmlite = {
-      # py-numba 0.59
-      #version = "0.42";
     };
     py-m2r = {
       depends = {
@@ -890,52 +777,10 @@ corePacks = import ../packs {
         };
       };
     };
-    py-mpsort = {
-      depends = {
-        py-cython = {
-          version = ":2";
-        };
-      };
-    };
-    py-msgpack = {
-      depends = {
-        py-cython = {
-          version = "0.29";
-        };
-      };
-    };
     py-nose = {
       depends = {
         py-setuptools = {
           version = "57";
-        };
-      };
-    };
-    py-numba = {
-      # py-numpy 1
-      #version = "0.59";
-    };
-    py-numpy = {
-      #version = "1";
-    };
-    py-pandas = {
-      depends = {
-        py-cython = {
-          version = "3.0.5";
-        };
-        py-meson-python = {
-          version = "0.13.1";
-        };
-      };
-    };
-    py-partd = {
-      # for py-versioneer dep vs py-distributed
-      version = "1.4.1";
-    };
-    py-pfft-python = {
-      depends = {
-        py-cython = {
-          version = ":2";
         };
       };
     };
@@ -950,8 +795,6 @@ corePacks = import ../packs {
       };
     };
     py-protobuf = {
-      # for py-tensorflow
-      version = "4.21";
       variants = {
         cpp = true;
       };
@@ -972,32 +815,6 @@ corePacks = import ../packs {
         };
         py-setuptools-scm = {
           version = ":7";
-        };
-      };
-    };
-    py-pyerfa = {
-      depends = {
-        py-numpy = {
-          # build only
-          #version = "2";
-        };
-      };
-    };
-    py-pyfftw = {
-      #version = "0.13"; # for py-numpy@1
-      depends = {
-        py-setuptools = {
-          version = "59";
-        };
-      };
-    };
-    py-pylint = {
-      depends = {
-        py-setuptools = {
-          version = "62";
-        };
-        py-wheel = {
-          version = "0.37";
         };
       };
     };
@@ -1032,23 +849,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-pywavelets = {
-      depends = {
-        py-setuptools = {
-          version = "64";
-        };
-        py-cython = {
-          version = ":2";
-        };
-      };
-    };
-    py-pyyaml = {
-      depends = {
-        py-cython = {
-          version = ":2";
-        };
-      };
-    };
     py-runtests = {
       variants = {
         mpi = true;
@@ -1064,9 +864,6 @@ corePacks = import ../packs {
       variants = {
         toml = true;
       };
-    };
-    py-tensorboard = {
-      #version = "2.17";
     };
     py-tensorflow = {
       # for py-keras
@@ -1236,6 +1033,12 @@ corePacks = import ../packs {
       };
     };
     tbb = { name = "intel-oneapi-tbb"; };
+    thrift = {
+      variants = {
+        # python<3.11
+        python = false;
+      };
+    };
     trilinos = {
       variants = {
         cxxstd = "17";
@@ -1378,6 +1181,14 @@ corePacks = import ../packs {
         cmakeargs.append('-DSTOP_ON_WARNING=0')
         pkg.cmake_args = lambda: cmakeargs
       '';
+      };
+    };
+    py-astropy = spec: old: {
+      depends = old.depends // {
+        py-cython = {
+          deptype = ["build"];
+          version = "3.0"; # lifted
+        };
       };
     };
     py-cython = spec: old: {
@@ -1736,7 +1547,7 @@ mkPythons = base: gen:
   builtins.map (version: gen (mkPython base version))
   [ /* -------- pythons -------- */
     "3.10"
-    "3.11"
+    "3.12"
   ];
 
 pyCensor = [
@@ -2034,6 +1845,7 @@ pkgStruct = {
       # remove leading py-
       projection = "py-spy/{version}";
     }
+    (python.withPrefs { version = "3.13"; })
     qt
     { pkg = rView;
       environment = {
@@ -2298,7 +2110,6 @@ pkgStruct = {
         py-mcfit
         py-netcdf4
         py-nbconvert
-        py-nose
         py-notebook
         py-numba
         py-numpy
@@ -2358,7 +2169,6 @@ pkgStruct = {
         py-protobuf
         py-torch
         py-torch-scatter
-        py-psycopg2
         py-tensorflow
 
         #py-horovod #incompatible py-torch 2.1
@@ -2370,7 +2180,6 @@ pkgStruct = {
 
         # py-torchaudio  # breaks on import
         py-torchvision
-        py-halotools
         py-pymc
         py-xarray
       ] ++
@@ -2379,6 +2188,9 @@ pkgStruct = {
         )[
         # Uses old py-sip; won't build against 3.11
         py-envisage
+        py-halotools
+        py-nose
+        py-psycopg2
         py-pymol
         py-pyqt5
         py-qtconsole

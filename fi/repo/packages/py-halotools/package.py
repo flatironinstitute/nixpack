@@ -13,6 +13,7 @@ class PyHalotools(PythonPackage):
     homepage = "https://halotools.readthedocs.io/"
     pypi = "halotools/halotools-0.8.1.tar.gz"
 
+    version("0.9.3", sha256="6d7448f00b489cc8a7552bbac57b894f1339280c0a103465fdfe991d3dc59600")
     version("0.8.1", sha256="defc8913f06e2bf69ca33b4167eb61fa5277810a5daedd1b84846186061a78e3")
 
     variant("extras", default=True, description="Install the 'all' set of extras")
@@ -22,7 +23,7 @@ class PyHalotools(PythonPackage):
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm", type="build")
     # depends_on("py-oldest-supported-numpy", type="build")
-    depends_on("py-cython@0.29.32", type="build")
+    depends_on("py-cython", type="build")
     depends_on("py-extension-helpers", type="build")
 
     depends_on("py-astropy", type=("build", "run"))
