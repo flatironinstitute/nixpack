@@ -309,10 +309,14 @@ class NixSpec(spack.spec.Spec):
                     assert cdep.spec == dep, f"{self.name}.{n}: conflicting dependencies on {dep.name}"
                     cdep.update_deptypes(dtype)
                 else:
+                    if n != dep.name:
+                        virtuals = (n,)
+                    else:
+                        virtuals = ()
                     try:
-                        self._add_dependency(dep, depflag=dtype, virtuals=())
+                        self._add_dependency(dep, depflag=dtype, virtuals=virtuals)
                     except TypeError:
-                        self._add_dependency(dep, deptypes=dtype, virtuals=())
+                        self._add_dependency(dep, deptypes=dtype, virtuals=virtuals)
             try:
                 lrdep = dtype & (spack.deptypes.LINK | spack.deptypes.RUN)
             except AttributeError:
