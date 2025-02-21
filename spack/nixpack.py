@@ -325,12 +325,13 @@ class NixSpec(spack.spec.Spec):
                 # trim build dep references
                 del nixspec['depends'][n]
 
+        package_class = spack.repo.PATH.get_pkg_class(self.fullname)
         variants = nixspec['variants']
         if not self.external:
-            if hasattr(self.package_class, "variant_names"):
-                pkgVariants = set(self.package_class.variant_names())
+            if hasattr(package_class, "variant_names"):
+                pkgVariants = set(package_class.variant_names())
             else:
-                pkgVariants = self.package_class.variant.keys()
+                pkgVariants = package_class.variant.keys()
             assert variants.keys() == pkgVariants, f"{self.name} has mismatching variants {variants.keys()} vs. {pkgVariants}"
         for n, s in variants.items():
             if s is None:
@@ -360,9 +361,9 @@ class NixSpec(spack.spec.Spec):
             self.compiler_flags[f] = []
 
         if nixspec['patches']:
-            patches = self.package_class.patches.setdefault(spack.spec.Spec(), [])
+            patches = package_class.patches.setdefault(spack.spec.Spec(), [])
             for i, p in enumerate(nixspec['patches']):
-                patches.append(spack.patch.FilePatch(self.package_class, p, 1, '.', ordering_key = ('~nixpack', i)))
+                patches.append(spack.patch.FilePatch(package_class, p, 1, '.', ordering_key = ('~nixpack', i)))
             spack.repo.PATH.patch_index.update_package(self.fullname)
 
     def supports_target(self, target):
