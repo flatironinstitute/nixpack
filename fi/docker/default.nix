@@ -3,20 +3,15 @@ packs:
 let docker = derivation rec {
   inherit (packs) system;
   pname = "docker";
-  version = "24.0.7";
+  version = "28.0.1";
   name = "${pname}-${version}";
   docker = builtins.fetchurl {
     url = "https://download.docker.com/linux/static/stable/${packs.target}/${name}.tgz";
-    sha256 = "0gdxg5iirzlpafbywbwww3h2adykmiprcnkjxabspb56gykmjkcq";
+    sha256 = "0ij7ha9b596lq7pvcxd5r345nm76dlgdim5w1nn9w6bqbmmximjy";
   };
   rootless = builtins.fetchurl {
     url = "https://download.docker.com/linux/static/stable/${packs.target}/docker-rootless-extras-${version}.tgz";
-    sha256 = "1wz6waxkh84jsi5acxw1c0gvi4dnsqixnahnbcz68ixcdllrw3jr";
-  };
-  # needed for https://github.com/rootless-containers/rootlesskit/pull/369
-  rootlesskit = builtins.fetchurl {
-    url = "https://github.com/rootless-containers/rootlesskit/releases/download/v1.1.1/rootlesskit-${packs.target}.tar.gz";
-    sha256 = "13wyshzlw3dd2800629qkshwykcvmxi49qp268nzxjh5nkxsz0rw";
+    sha256 = "1fsx7w5b91r23pad3hpwyvcljc62hw60b42nqqpp463ggvfzykil";
   };
   PATH = "/bin:/usr/bin";
   setupsh = ./setup.sh;
