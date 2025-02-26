@@ -47,6 +47,11 @@ except ImportError:
     except AttributeError:
         spack.target = None
 
+try:
+    from spack.solver.asp import _inject_patches_variant as inject_patches_variant
+except ImportError:
+    from spack.spec.Spec import inject_patches_variant
+
 # monkeypatch store.layout for the few things we need
 class NixLayout():
     metadata_dir = '.spack'
@@ -258,7 +263,10 @@ class NixSpec(spack.spec.Spec):
         version = nixspec['version']
         self.versions = spack.version.VersionList([spack.version.Version(version)])
         self._set_architecture(target=nixspec.get('target', basetarget), platform=platform, os=archos)
-        self.prefix = prefix
+        try:
+            self.set_prefix(prefix)
+        except AttributeError:
+            self.prefix = prefix
         self.external_path = nixspec['extern']
         if self.namespace in dynRepos:
             linkPkg(dynRepos[self.namespace], nixspec['package'], self.name)
@@ -305,14 +313,15 @@ class NixSpec(spack.spec.Spec):
                         cdep = cdeps[0]
                 else:
                     cdep = self._dependencies.get(dep.name)
+                if n != dep.name:
+                    virtuals = (n,)
+                else:
+                    virtuals = ()
                 if cdep:
                     assert cdep.spec == dep, f"{self.name}.{n}: conflicting dependencies on {dep.name}"
                     cdep.update_deptypes(dtype)
+                    cdep.update_virtuals(virtuals)
                 else:
-                    if n != dep.name:
-                        virtuals = (n,)
-                    else:
-                        virtuals = ()
                     try:
                         self._add_dependency(dep, depflag=dtype, virtuals=virtuals)
                     except TypeError:
@@ -394,7 +403,7 @@ class NixSpec(spack.spec.Spec):
             return
         if self.compiler:
             self.adjust_target()
-        spack.spec.Spec.inject_patches_variant(self)
+        inject_patches_variant(self)
         self._mark_concrete()
 
     def copy(self, deps=True, **kwargs):

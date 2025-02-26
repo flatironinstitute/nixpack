@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "0f20e88be8ca70122cede481c8c88571f681fc2b";
+    rev = "ba0df239a5bcadd5685a7e376ed06352922b88ce";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-24.11";
-    rev = "d5e26a04cc8d8894fdb0dd2947396a6d88c72fca";
+    rev = "5129ed8a3e503411f16502fa61a76eb712a77c7c";
   };
 
   repos = [
@@ -218,6 +218,13 @@ corePacks = import ../packs {
         debuginfod = true;
       };
       build = opensslPkgconfig;
+    };
+    emacs = {
+      variants = {
+        X = true;
+        gui = "x11";
+        toolkit = "athena";
+      };
     };
     embree = {
       # for blender
@@ -864,6 +871,10 @@ corePacks = import ../packs {
       variants = {
         toml = true;
       };
+    };
+    py-sphinx = {
+      # for python 3.10
+      version = "8.1";
     };
     py-tensorflow = {
       # for py-keras
@@ -1752,10 +1763,11 @@ pkgStruct = {
       default = true;
     }
     cudnn
+    (cudnn.withPrefs { version = "9"; })
     curl
     distcc
     doxygen
-    (emacs.withPrefs { variants = { X = true; toolkit = "athena"; }; })
+    emacs
     fio
     freetype
     gdal
