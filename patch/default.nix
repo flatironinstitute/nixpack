@@ -148,6 +148,14 @@ in
   /* creates various cache stuff */
   npm = tmphome;
 
+  py-jaxlib = spec: old: {
+    build = {
+      setup = ''
+        os.environ['XDG_CACHE_HOME'] = os.environ['TMPDIR']
+      '';
+    };
+  };
+
   /* uses npm */
   py-jupyter-server = tmphome;
   py-jupyter-server-proxy = tmphome;
