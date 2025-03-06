@@ -680,6 +680,9 @@ corePacks = import ../packs {
         mpi = true;
       };
     };
+    py-cryptography = {
+      build = opensslPkgconfig;
+    };
     py-cupy = {
       variants = {
         cuda = true;
