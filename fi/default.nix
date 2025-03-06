@@ -133,12 +133,8 @@ corePacks = import ../packs {
         thread = true;
         timer = true;
         wave = true;
-        cxxstd = "14";
+        cxxstd = "17";
       };
-    };
-    c-blosc = {
-      # for openvdb
-      version = "1.17.0";
     };
     cairo = {
       variants = {
@@ -196,11 +192,6 @@ corePacks = import ../packs {
       variants = {
         libidn2 = true;
         nghttp2 = true;  # for rust
-      };
-    };
-    dbus = {
-      variants = {
-        build_system = "autotools";
       };
     };
     dejagnu = {
@@ -404,7 +395,7 @@ corePacks = import ../packs {
     icu4c = {
       # for boost
       variants = {
-        cxxstd = "14";
+        cxxstd = "17";
       };
     };
     idl = {
@@ -497,19 +488,10 @@ corePacks = import ../packs {
       };
     };
     llvm = {
-      version = "15";
+      version = "18";
       variants = {
         lua = false;
-        libcxx = "project";
       };
-      /*
-      depends = {
-        compiler = {
-          # https://github.com/llvm/llvm-project/issues/62396
-          version = "11";
-        };
-      };
-      */
     };
     lmod = {
       patches = [./lmod-no-sys-tcl.patch];
@@ -599,7 +581,7 @@ corePacks = import ../packs {
       };
     };
     openmpi = {
-      version = "4.0";
+      version = "4.1";
       variants = {
         fabrics = {
           none = false;
@@ -631,6 +613,11 @@ corePacks = import ../packs {
     openvdb = {
       variants = {
         python = true;
+      };
+      depends = {
+        c-blosc = {
+          version = "1.17.0";
+        };
       };
     };
     pango = {
@@ -777,6 +764,17 @@ corePacks = import ../packs {
     py-jupyterhub = {
       version = "3";
     };
+    py-libclang = {
+      version = "15";
+      depends = {
+        llvm = llvm15;
+      };
+    };
+    py-llvmlite = {
+      depends = {
+        llvm = llvm15;
+      };
+    };
     py-m2r = {
       depends = {
         py-mistune = {
@@ -906,9 +904,6 @@ corePacks = import ../packs {
         shared = true;
       };
     };
-    py-libclang = {
-      version = "15";
-    };
     py-torch = {
       variants = {
         inherit cuda_arch;
@@ -999,6 +994,7 @@ corePacks = import ../packs {
         XMLSEC_CONFIG = "/bin/false";
       };
     };
+    rdma-core = rpmExtern "rdma-core";
     relion = {
       variants = {
         inherit cuda_arch;
@@ -1133,7 +1129,10 @@ corePacks = import ../packs {
       };
     };
     python = spec: old: {
-      patches = if lib.versionMatches spec.version "3.11.4:" then [./python-ncursesw-py-3.11.4.patch] else [./python-ncursesw.patch];
+      patches = 
+        if      lib.versionMatches spec.version "3.13:"   then []
+        else if lib.versionMatches spec.version "3.11.4:" then [./python-ncursesw-py-3.11.4.patch]
+        else                                                   [./python-ncursesw.patch];
       build = {
         post = ''
           stdlib = f"python{pkg.version.up_to(2)}"
@@ -1434,7 +1433,7 @@ mkMpis = comp: gen:
     { name = "openmpi"; }
   ] ++ lib.optionals comp.isCore [
     { name = "intel-oneapi-mpi"; }
-    { name = "openmpi"; version = "4.1"; }
+    { name = "openmpi"; version = "4.0"; }
     { name = "openmpi"; version = "5.0"; variants = { legacylaunchers = null; pmi = null; };}
     { name = "openmpi";
       variants = {
@@ -1611,6 +1610,14 @@ preExtensions = pre: view: pkgExtensions
 pyExtensions = preExtensions "py-";
 rExtensions = preExtensions "r-";
 
+llvm15 = {
+  version = "15";
+  # https://github.com/llvm/llvm-project/issues/62396
+  patches = [(builtins.fetchurl 
+    "https://github.com/llvm/llvm-project/commit/484e64f7e7b2c0494d7b2dbfdd528bcd707ee652.patch"
+  )];
+};
+
 /* julia needs very specific package versions for which dependency resolution isn't enough */
 juliaPacks = corePacks.withPrefs {
   label = "julia";
@@ -1707,32 +1714,10 @@ pkgStruct = {
     (gcc.withPrefs { version = "14"; })
     { pkg = llvm;
       default = true;
-    }
-    { pkg = llvm.withPrefs {
-        version = "16";
-        variants = {
-          libcxx = "runtime";
-        };
-      };
-      environment = {
-        append_path = {
-          LD_LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
-          LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
-        };
-      };
       autoload = [hwloc];
     }
     { pkg = llvm.withPrefs {
-        version = "18";
-        variants = {
-          libcxx = "runtime";
-        };
-      };
-      environment = {
-        append_path = {
-          LD_LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
-          LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
-        };
+        version = "19";
       };
       autoload = [hwloc];
     }
@@ -2638,6 +2623,10 @@ mods = corePacks.modules {
         prepend_path = {
           # see pythonbind
           PYTHONPATH = "{prefix}/lib/python3/site-packages";
+        };
+        append_path = {
+          LD_LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
+          LIBRARY_PATH = "{prefix}/lib/x86_64-unknown-{platform}-gnu";
         };
       };
     };

@@ -177,6 +177,15 @@ in
     };
   };
 
+  git-lfs = spec: old: {
+    build = {
+      setup = ''
+        os.environ['GOPATH'] = os.path.join(os.environ['TMPDIR'], 'gopath')
+        os.environ['GOCACHE'] = os.path.join(os.environ['TMPDIR'], 'gocache')
+      '';
+    };
+  };
+
   go = spec: old: {
     build = {
       setup = ''
