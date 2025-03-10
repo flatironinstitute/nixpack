@@ -2084,6 +2084,7 @@ pkgStruct = {
         py-gpustat
         py-graphviz
         py-h5py
+        py-halotools
         py-hdf5plugin
         py-healpy
         #py-husl
@@ -2188,7 +2189,6 @@ pkgStruct = {
         )[
         # Uses old py-sip; won't build against 3.11
         py-envisage
-        py-halotools
         py-nose
         py-psycopg2
         py-pymol

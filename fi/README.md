@@ -124,6 +124,12 @@ For example, to build a single package into `result`, run:
 ./fi/run build -j 1 --cores 8 -A pkgs.packagename
 ```
 
+To build a specific Python package:
+
+```
+./fi/run build -j 1 -A pkgStruct.compilers.0.pythons.0.packs.pkgs.py-classylss
+```
+
 ### Releases
 
 To do a release:
