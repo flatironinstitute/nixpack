@@ -1549,6 +1549,7 @@ mkPython = base: version:
       inherit version;
       variants = {
         tkinter = true; # break dependency cycle
+        optimizations = true;
       };
     }; in {
     python = python;
