@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "be0f56f122d563073bde0a09b1239777b7e5fb7a";
+    rev = "bf411b041ee3ae1199bc00b272ac93765a7ecadf";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-24.11";
-    rev = "5129ed8a3e503411f16502fa61a76eb712a77c7c";
+    rev = "417faafb4c37a7bd7ae4268a4834f21cceef5143";
   };
 
   repos = [
@@ -77,10 +77,11 @@ corePacks = import ../packs {
     };
     arrow = {
       # for py-pyarrow
-      version = "16.1.0";
+      #version = "16.1.0";
       variants = {
         python = true;
         parquet = true;
+        dataset = true;
       };
     };
     at-spi2-core = {
@@ -665,6 +666,10 @@ corePacks = import ../packs {
       # for vtk, paraview
       version = "8.1.0";
     };
+    protobuf = {
+      # for py-protobuf
+      version = "3.28";
+    };
     py-astropy = {
       depends = {
         py-pip = {
@@ -816,14 +821,6 @@ corePacks = import ../packs {
         # for py-dask-expr
         dataset = true;
         parquet = true;
-      };
-      depends = {
-        py-pip = {
-          version = ":23.0";
-        };
-        py-setuptools-scm = {
-          version = ":7";
-        };
       };
     };
     py-pymol = {
@@ -1133,7 +1130,7 @@ corePacks = import ../packs {
     };
     python = spec: old: {
       patches = 
-        if      lib.versionMatches spec.version "3.13:"   then []
+        if      lib.versionMatches spec.version "3.12:"   then []
         else if lib.versionMatches spec.version "3.11.4:" then [./python-ncursesw-py-3.11.4.patch]
         else                                                   [./python-ncursesw.patch];
       build = {
@@ -1542,7 +1539,7 @@ withPython = packs: py: let
   };
   in pyPacks;
 
-corePython = { version = "3.10"; };
+corePython = { version = "3.11"; };
 
 mkPython = base: version:
   let python = {
@@ -1559,7 +1556,7 @@ mkPython = base: version:
 mkPythons = base: gen:
   builtins.map (version: gen (mkPython base version))
   [ /* -------- pythons -------- */
-    "3.10"
+    "3.11"
     "3.12"
   ];
 
@@ -1888,7 +1885,7 @@ pkgStruct = {
         key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
       };
     })
-    ["R2023a" "R2023b"]
+    ["R2023b" /*"R2024b"*/]
   ++
   map (v: idl.withPrefs
     { version = v;
@@ -2005,6 +2002,10 @@ pkgStruct = {
           py-pfft-python
           py-pmesh
           py-runtests
+        ] ++
+        lib.optionals (
+          lib.versionMatches py.python.version ":3.11"
+        )[
           py-nbodykit
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && comp.isCore) (with py.packs.pkgs;
@@ -2050,7 +2051,6 @@ pkgStruct = {
         py-asdf-standard
         py-asdf-transform-schemas
         py-asdf-unit-schemas
-        py-astropy
         py-autopep8
         #py-backports-ssl-match-hostname #conflicts...
         #py-backports-weakref # broken?
@@ -2084,7 +2084,6 @@ pkgStruct = {
         py-gpustat
         py-graphviz
         py-h5py
-        py-halotools
         py-hdf5plugin
         py-healpy
         #py-husl
@@ -2165,7 +2164,7 @@ pkgStruct = {
         #py-ws4py
         #py-xattr #broken: missing pip dep
         #py-yep
-        py-yt
+        #py-yt
 
         py-protobuf
         py-torch
@@ -2185,15 +2184,10 @@ pkgStruct = {
         py-xarray
       ] ++
       lib.optionals (
-        lib.versionMatches py.python.version ":3.10"
+        lib.versionMatches py.python.version ":3.11"
         )[
-        # Uses old py-sip; won't build against 3.11
-        py-envisage
-        py-nose
-        py-psycopg2
-        py-pymol
-        py-pyqt5
-        py-qtconsole
+        py-astropy
+        py-halotools
       ])
       ).overrideView {
         ignoreConflicts = [
