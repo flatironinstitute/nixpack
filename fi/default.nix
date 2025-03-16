@@ -1251,14 +1251,6 @@ corePacks = import ../packs {
       # kill py-cython conflict
       conflicts = [];
     };
-    py-numexpr = spec: old: {
-      depends = old.depends // {
-        py-numpy = {
-          # allow 1.26?
-          deptype = ["build" "run"];
-        };
-      };
-    };
     py-protobuf = spec: old: {
       # kill 3.11 conflict (using whl instead)
       conflicts = [];
