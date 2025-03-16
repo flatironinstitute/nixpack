@@ -1747,6 +1747,7 @@ pkgStruct = {
     gdrcopy
     geos
     ghostscript
+    gh
     git
     git-lfs
     go
