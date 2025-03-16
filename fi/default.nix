@@ -77,7 +77,7 @@ corePacks = import ../packs {
     };
     arrow = {
       # for py-pyarrow
-      #version = "16.1.0";
+      version = "16.1.0";
       variants = {
         python = true;
         parquet = true;
@@ -671,10 +671,8 @@ corePacks = import ../packs {
       version = "3.28";
     };
     py-astropy = {
-      depends = {
-        py-pip = {
-          version = ":23.0";
-        };
+      variants = {
+        all = true;
       };
     };
     py-batchspawner = {
@@ -684,6 +682,9 @@ corePacks = import ../packs {
       variants = {
         mpi = true;
       };
+    };
+    py-botocore = {
+      version = "1.34.44";
     };
     py-cryptography = {
       build = opensslPkgconfig;
@@ -721,6 +722,8 @@ corePacks = import ../packs {
       };
     };
     py-fsspec = {
+      # py-astropy
+      version = "2024.2.0";
       # py-pytorch-lightning
       variants = {
         http = true;
@@ -1191,14 +1194,6 @@ corePacks = import ../packs {
         cmakeargs.append('-DSTOP_ON_WARNING=0')
         pkg.cmake_args = lambda: cmakeargs
       '';
-      };
-    };
-    py-astropy = spec: old: {
-      depends = old.depends // {
-        py-cython = {
-          deptype = ["build"];
-          version = "3.0"; # lifted
-        };
       };
     };
     py-cython = spec: old: {
@@ -2051,6 +2046,7 @@ pkgStruct = {
         py-asdf-standard
         py-asdf-transform-schemas
         py-asdf-unit-schemas
+        py-astropy
         py-autopep8
         #py-backports-ssl-match-hostname #conflicts...
         #py-backports-weakref # broken?
@@ -2186,7 +2182,6 @@ pkgStruct = {
       lib.optionals (
         lib.versionMatches py.python.version ":3.11"
         )[
-        py-astropy
         py-halotools
       ])
       ).overrideView {
