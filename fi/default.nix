@@ -1986,15 +1986,15 @@ pkgStruct = {
           py-mpi4py
           py-bigfile
           py-h5py
-          py-mpsort
-          py-pfft-python
-          py-pmesh
+          #py-mpsort
+          #py-nbodykit
+          #py-pfft-python
+          #py-pmesh
           py-runtests
         ] ++
         lib.optionals (
           lib.versionMatches py.python.version ":3.11"
         )[
-          py-nbodykit
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && comp.isCore) (with py.packs.pkgs;
           [(pkgMod triqs // {
@@ -2074,7 +2074,7 @@ pkgStruct = {
         py-graphviz
         py-h5py
         py-hdf5plugin
-        py-healpy
+        #py-healpy
         #py-husl
         py-hypothesis
         py-intervaltree
@@ -2088,7 +2088,7 @@ pkgStruct = {
         py-jupyter-server
         py-jupyterlab
         py-jupyterlab-server
-        py-kdcount
+        #py-kdcount
         #py-leveldb
         #py-llfuse
         py-mako
@@ -2126,7 +2126,7 @@ pkgStruct = {
         py-pytest
         #py-python-gflags
         #py-python-hglib
-        py-python-ldap
+        #py-python-ldap
         py-pyyaml
         #py-ray #needs bazel 3
         py-ruff
@@ -2156,8 +2156,10 @@ pkgStruct = {
         #py-yt
 
         py-protobuf
-        py-torch
-        py-torch-scatter
+        #py-torch
+        #py-torch-scatter
+        # py-torchaudio  # breaks on import
+        #py-torchvision
         py-tensorflow
 
         #py-horovod #incompatible py-torch 2.1
@@ -2165,10 +2167,8 @@ pkgStruct = {
         py-keras
         #py-lightning-fabric #included in pytorch-lightning
         py-pytensor
-        py-pytorch-lightning
+        #py-pytorch-lightning
 
-        # py-torchaudio  # breaks on import
-        py-torchvision
         py-pymc
         py-xarray
       ] ++
@@ -2497,10 +2497,11 @@ modPkgs = with pkgStruct;
   map (pkg: pkgMod pkg // { projection = "{name}/intel-mpi-{version}"; })
     intel.mpi.pkgs
   ++
+  /*
   map (pkg: pkgMod pkg // { projection = "{name}/libcpp-{version}";
     autoload = [clangcpp.packs.pkgs.compiler]; })
     clangcpp.pkgs
-  ++
+  ++ */
   map (pkg: pkgMod pkg // { projection = "{name}/nvhpc-{version}"; })
     nvhpc.pkgs
   ++

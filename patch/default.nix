@@ -152,6 +152,7 @@ in
     build = {
       setup = ''
         os.environ['XDG_CACHE_HOME'] = os.environ['TMPDIR']
+        os.environ['TEST_TMPDIR'] = os.environ['TMPDIR']
       '';
     };
   };
