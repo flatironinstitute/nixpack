@@ -334,9 +334,9 @@ class NixSpec(spack.spec.Spec):
                 # trim build dep references
                 del nixspec['depends'][n]
 
-        package_class = spack.repo.PATH.get_pkg_class(self.fullname)
         variants = nixspec['variants']
         if not self.external:
+            package_class = spack.repo.PATH.get_pkg_class(self.fullname)
             if hasattr(package_class, "variant_names"):
                 pkgVariants = set(package_class.variant_names())
             else:
@@ -369,7 +369,7 @@ class NixSpec(spack.spec.Spec):
         for f in self.compiler_flags.valid_compiler_flags():
             self.compiler_flags[f] = []
 
-        if nixspec['patches']:
+        if not self.external and nixspec['patches']:
             patches = package_class.patches.setdefault(spack.spec.Spec(), [])
             for i, p in enumerate(nixspec['patches']):
                 patches.append(spack.patch.FilePatch(package_class, p, 1, '.', ordering_key = ('~nixpack', i)))
