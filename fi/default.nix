@@ -148,10 +148,6 @@ corePacks = import ../packs {
         svg = false;
       };
     };
-    cfitsio = {
-      # for py-astropy and py-fitsio
-      version = "3.49";
-    };
     cgal = {
       depends = {
         cmake = {
@@ -1894,7 +1890,7 @@ pkgStruct = {
       gsl
       gmp
       hdf5-blosc
-      healpix
+      healpix-cxx
       #highway #avx instruction build errors
       hwloc
       jemalloc
