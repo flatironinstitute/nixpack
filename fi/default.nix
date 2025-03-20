@@ -1990,13 +1990,15 @@ pkgStruct = {
         /* ---------- python+mpi modules ---------- */
         view = py.packs.pythonView { pkgs = with py.packs.pkgs; [
           py-mpi4py
-          py-bigfile
           py-h5py
-          #py-mpsort
-          #py-nbodykit
-          #py-pfft-python
-          #py-pmesh
           py-runtests
+
+          # need fixes for numpy 2 & cython 3
+          # py-nbodykit
+          # py-bigfile
+          # py-mpsort
+          # py-pfft-python
+          # py-pmesh
         ] ++
         lib.optionals (
           lib.versionMatches py.python.version ":3.11"
@@ -2094,7 +2096,7 @@ pkgStruct = {
         py-jupyter-server
         py-jupyterlab
         py-jupyterlab-server
-        py-kdcount
+        # py-kdcount  # for py-nbodykit
         #py-leveldb
         #py-llfuse
         py-mako
