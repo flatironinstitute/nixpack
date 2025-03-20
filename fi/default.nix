@@ -25,7 +25,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "fi-nixpack";
-    rev = "bf411b041ee3ae1199bc00b272ac93765a7ecadf";
+    rev = "5def520af4c327059ae749460f370fca08e902bc";
   };
 
   spackConfig = {
@@ -43,7 +43,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/NixOS/nixpkgs";
     ref = "release-24.11";
-    rev = "417faafb4c37a7bd7ae4268a4834f21cceef5143";
+    rev = "6c8e4e4546146ddf05e9433ca560fa6260d00a14";
   };
 
   repos = [
@@ -77,7 +77,7 @@ corePacks = import ../packs {
     };
     arrow = {
       # for py-pyarrow
-      version = "16.1.0";
+      version = "19.0.1";
       variants = {
         python = true;
         parquet = true;
@@ -146,6 +146,7 @@ corePacks = import ../packs {
         pdf = true;
         png = true;
         svg = false;
+        zlib = true;
       };
     };
     cgal = {
@@ -867,6 +868,13 @@ corePacks = import ../packs {
     py-setuptools-scm = {
       variants = {
         toml = true;
+      };
+    };
+    py-setuptools-scm-git-archive = {
+      depends = {
+        py-setuptools-scm = {
+          version = "7";
+        };
       };
     };
     py-sphinx = {
@@ -1756,6 +1764,7 @@ pkgStruct = {
     imagemagick
     intel-oneapi-advisor
     intel-oneapi-compilers
+    intel-oneapi-itac
     (blasPkg intel-oneapi-mkl)
     intel-oneapi-mpi
     intel-oneapi-tbb
@@ -2069,8 +2078,8 @@ pkgStruct = {
         py-gpustat
         py-graphviz
         py-h5py
-        py-hdf5plugin
-        #py-healpy
+        #py-hdf5plugin
+        py-healpy
         #py-husl
         py-hypothesis
         py-intervaltree
@@ -2084,7 +2093,7 @@ pkgStruct = {
         py-jupyter-server
         py-jupyterlab
         py-jupyterlab-server
-        #py-kdcount
+        py-kdcount
         #py-leveldb
         #py-llfuse
         py-mako
