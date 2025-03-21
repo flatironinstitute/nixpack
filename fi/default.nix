@@ -1141,8 +1141,8 @@ corePacks = import ../packs {
         else if lib.versionMatches spec.version "3.11.4:" then [./python-ncursesw-py-3.11.4.patch]
         else                                                   [./python-ncursesw.patch];
       build = {
-        post = ''
-          stdlib = f"python{pkg.version.up_to(2)}"
+        post = let suffix = if spec.variants.freethreading == true then "t" else ""; in ''
+          stdlib = f"python{pkg.version.up_to(2)}${suffix}"
           os.symlink("/mnt/sw/fi/python/EXTERNALLY-MANAGED",
             os.path.join(pkg.prefix.lib, stdlib, "EXTERNALLY-MANAGED"),
             )
@@ -1837,6 +1837,7 @@ pkgStruct = {
       projection = "py-spy/{version}";
     }
     (python.withPrefs { version = "3.13"; })
+    (python.withPrefs { version = "3.13"; variants = { freethreading = true; }; })
     qt
     { pkg = rView;
       environment = {
@@ -1879,7 +1880,7 @@ pkgStruct = {
         key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
       };
     })
-    ["R2023b" /*"R2024b"*/]
+    ["R2023b" "R2024b"]
   ++
   map (v: idl.withPrefs
     { version = v;
@@ -2265,6 +2266,7 @@ pkgStruct = {
     /* -------- nixpkgs modules --------- */
     nix
     #(withGL blender)
+    biber
     elinks
     #evince
     feh
@@ -2310,6 +2312,7 @@ pkgStruct = {
         };
       };
     }))) */
+    tectonic
     #wecall
     xmedcon
     xscreensaver
