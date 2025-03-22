@@ -918,8 +918,15 @@ corePacks = import ../packs {
         custom-protobuf = true;
       };
       depends = blasVirtuals {
-        name = "openblas";
-      }; # doesn't find flexiblas
+        name = "openblas"; # doesn't find flexiblas
+      } // {
+        compiler = {
+          variants = {
+            # needs newer assembler
+            binutils = true;
+          };
+        };
+      };
     };
     # py-torchaudio = {
     #   build = {
@@ -2097,7 +2104,7 @@ pkgStruct = {
         py-jupyter-server
         py-jupyterlab
         py-jupyterlab-server
-        # py-kdcount  # for py-nbodykit
+        #py-kdcount  # for py-nbodykit
         #py-leveldb
         #py-llfuse
         py-mako
@@ -2165,10 +2172,10 @@ pkgStruct = {
         #py-yt
 
         py-protobuf
-        #py-torch
-        #py-torch-scatter
+        py-torch
+        py-torch-scatter
         # py-torchaudio  # breaks on import
-        #py-torchvision
+        py-torchvision
         py-tensorflow
 
         #py-horovod #incompatible py-torch 2.1
@@ -2176,7 +2183,7 @@ pkgStruct = {
         py-keras
         #py-lightning-fabric #included in pytorch-lightning
         py-pytensor
-        #py-pytorch-lightning
+        py-pytorch-lightning
 
         py-pymc
         py-xarray
