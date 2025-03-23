@@ -25,6 +25,31 @@ core_specs = modconf.setdefault('core_specs', [])
 
 cls = spack.modules.module_types[modtype]
 
+class NullContext:
+    "contextlib.nullcontext"
+    def __enter__(self):
+        pass
+    def __exit__(self, *exc):
+        pass
+
+class TempConfig:
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+    def __enter__(self):
+        self.oldconf = spack.config.get(self.key)
+        spack.config.set(self.key, self.value, scope='nixpack')
+
+    def __exit__(self, *exc):
+        spack.config.set(self.key, self.oldconf, scope='nixpack')
+
+def tempProjection(projection):
+    if projection:
+        return TempConfig(f'modules:{name}:{modtype}:projections', {'all': projection})
+    else:
+        return NullContext()
+
 class FakePackage(PackageBase):
     extendees = ()
     provided = {}
@@ -64,22 +89,6 @@ class FakeSpec(nixpack.NixSpec):
     def package_class(self):
         return self._package
 
-class ConfigModule:
-    "Override per-package configuration normally exposed by BaseConfiguration.module.configuration"
-    def __init__(self, module, projection=None):
-        self.module = module
-        self.projection = projection
-
-    def configuration(self, name):
-        conf = self.module.configuration(name)
-        if self.projection:
-            conf = conf.copy()
-            conf['projections'] = {'all': self.projection}
-        return conf
-
-    def __getattr__(self, attr):
-        return getattr(self.module, attr)
-
 class ModSpec:
     def __init__(self, p):
         if isinstance(p, str) or 'spec' in p:
@@ -115,7 +124,6 @@ class ModSpec:
         except AttributeError:
             self.spec.concretize()
             self._writer = cls(self.spec, name)
-            self._writer.conf.module = ConfigModule(self._writer.conf.module, self.projection)
             for t in ('autoload', 'prerequisites'):
                 self._writer.conf.conf[t].extend(map(nixpack.NixSpec.get, getattr(self, t)))
             if 'unlocked_paths' in self.context:
@@ -138,7 +146,8 @@ class ModSpec:
             base, name = os.path.split(self.path)
             return os.path.join(layout.arch_dirname, base or 'Core', name) + "." + layout.extension
         else:
-            return layout.filename
+            with tempProjection(self.projection):
+                return layout.filename
 
     def __str__(self):
         try:
@@ -163,7 +172,8 @@ class ModSpec:
             with open(fn, 'x') as f:
                 f.write(content)
         else:
-            self.writer.write()
+            with tempProjection(self.projection):
+                self.writer.write()
             if self.postscript:
                 with open(fn, 'a') as f:
                     f.write(self.postscript)

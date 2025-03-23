@@ -1844,7 +1844,10 @@ pkgStruct = {
       projection = "py-spy/{version}";
     }
     (python.withPrefs { version = "3.13"; })
-    (python.withPrefs { version = "3.13"; variants = { freethreading = true; }; })
+    {
+      pkg = python.withPrefs { version = "3.13"; variants = { freethreading = true; }; };
+      projection = "{name}/freethreading-{version}";
+    }
     qt
     { pkg = rView;
       environment = {
