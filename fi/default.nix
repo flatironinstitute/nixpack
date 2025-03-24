@@ -1980,6 +1980,7 @@ pkgStruct = {
         ]
         ++
         lib.optionals (comp.isCore && mpi.isCore) [
+          mpi-rockstar
           { pkg = netlib-scalapack;  # MKL provies Intel ScaLAPACK
             projection = "scalapack/{version}"; }
           (relion.withPrefs { version = "4"; })
