@@ -2495,10 +2495,10 @@ modPkgs = with pkgStruct;
         pkg = py.view;
         default = py.isCore;
         projection = "python-mpi/{^python.version}";
-        #autoload = [comp.pythons[py].view]
         postscript = pyExtensions py.view +
           # conflicts with non-mpi version
           ''
+            depends_on("python/${py.packs.pkgs.python.spec.version}")
             conflict("hdf5/${py.packs.pkgs.hdf5.spec.version}")
           '';
       }] ++ py.pkgs) pythons
@@ -2658,9 +2658,6 @@ mods = corePacks.modules {
           PYTHONNOUSERSITE = "1";
         };
       };
-    };
-    py-mpi4py = {
-      autoload = "direct";
     };
     "python+tkinter" = {
       environment = {
