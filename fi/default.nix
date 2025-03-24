@@ -1746,7 +1746,9 @@ pkgStruct = {
     { pkg = cuda;
       default = true;
     }
-    cudnn
+    { pkg = cudnn;
+      default = true;
+    }
     (cudnn.withPrefs { version = "9"; })
     curl
     distcc
