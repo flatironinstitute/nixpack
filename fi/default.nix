@@ -1106,6 +1106,11 @@ corePacks = import ../packs {
         shared = true;
       };
     };
+    uv = {
+      variants = {
+        module_append_path = true;
+      };
+    };
     visit = {
       variants = {
         python = false; # needs python2
@@ -1873,6 +1878,15 @@ pkgStruct = {
     tmux
     udunits
     #unison #needs ~force-safe-string, incompatible with modern ocaml
+    {
+      pkg = uv;
+      postscript = ''
+        local home = os.getenv("HOME")
+        if home then
+          setenv("UV_CACHE_DIR", pathJoin(home, ".cache/uv"))
+        end
+      '';
+    }
     valgrind
     (vim.withPrefs { variants = { features = "huge"; x = true; python = true; gui = true; cscope = true; lua = true; ruby = true; }; })
     #visit #needs qt <= 5.14.2, vtk dep patches?
