@@ -2054,7 +2054,7 @@ pkgStruct = {
       view = with py.packs.pkgs; (pyView ([
         /* ---------- python packages ---------- */
         python
-        python-venv
+        #python-venv
         gettext
         meson
         py-asdf
