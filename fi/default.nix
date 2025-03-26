@@ -2698,6 +2698,11 @@ mods = corePacks.modules {
         };
       };
     };
+    uv = {
+      filter = {
+        exclude_env_vars = ["UV_ROOT" "UV_BASE"];
+      };
+    };
   };
 
   pkgs = modPkgs;
