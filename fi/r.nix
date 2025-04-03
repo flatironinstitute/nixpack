@@ -125,6 +125,7 @@ with packs.pkgs; [
   r-segmented
   r-seqinr
   r-sessioninfo
+  r-seurat
   r-sf
   r-shape
   r-shiny

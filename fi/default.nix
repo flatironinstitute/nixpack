@@ -1865,6 +1865,7 @@ pkgStruct = {
       postscript = rExtensions rView;
     }
     rclone
+    rocm-smi-lib
     ruby
     rust
     smartmontools
