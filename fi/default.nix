@@ -1854,6 +1854,11 @@ pkgStruct = {
     {
       pkg = python.withPrefs { version = "3.13"; variants = { freethreading = true; }; };
       projection = "{name}/freethreading-{version}";
+      environment = {
+        set = {
+          UV_PYTHON = "3.13t";
+        };
+      };
     }
     qt
     { pkg = rView;
@@ -2674,6 +2679,7 @@ mods = corePacks.modules {
       environment = {
         set = {
           PYTHONNOUSERSITE = "1";
+          UV_PYTHON = "{version}";
         };
       };
     };
