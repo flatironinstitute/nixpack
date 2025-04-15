@@ -1573,11 +1573,11 @@ pyCensor = [
   { name = "py-meson-python"; version = "0.13.1"; } # py-pandas dep
 ];
 
-pyView = pl: corePacks.pythonView {
+pyView = args: pl: corePacks.pythonView {
   pkgs = builtins.filter (x: !(builtins.any (lib.specMatches x.spec) pyCensor))
     (lib.findDeps (x: lib.hasPrefix "py-" x.name) pl);
-  exclude = "npm-cache";
-};
+  exclude = ["npm-cache" "pyvenv.cfg"];
+} // args;
 
 rView = corePacks.view {
   pkgs = lib.findDeps (x: lib.hasPrefix "r-" x.name) (import ./r.nix corePacks);
@@ -2071,10 +2071,22 @@ pkgStruct = {
     });
 
     pythons = mkPythons comp.packs (py: py // {
-      view = with py.packs.pkgs; (pyView ([
+      view = with py.packs.pkgs; (pyView {
+        ignoreConflicts = [
+          # for py-pyqt/py-sip:
+          "lib/python3.*/site-packages/PyQt5/__init__.py"
+        ];
+        exclude = [
+          "npm-cache" "pyvenv.cfg"
+          # cmyt, jupyter-packaging11
+          "lib/python3.*/site-packages/tests"
+          # torch-scatter, torch-cluster
+          "lib/python3.*/site-packages/test"
+        ];
+      } ([
         /* ---------- python packages ---------- */
         python
-        #python-venv
+        python-venv
         gettext
         meson
         py-asdf
@@ -2219,18 +2231,7 @@ pkgStruct = {
         )[
         py-halotools
       ])
-      ).overrideView {
-        ignoreConflicts = [
-          # for py-pyqt/py-sip:
-          "lib/python3.*/site-packages/PyQt5/__init__.py"
-        ];
-        exclude = [
-          # cmyt, jupyter-packaging11
-          "lib/python3.*/site-packages/tests"
-          # torch-scatter, torch-cluster
-          "lib/python3.*/site-packages/test"
-        ];
-      };
+      );
     });
   });
 
@@ -2438,7 +2439,7 @@ jupyterPacks = corePacks.withPrefs {
   };
 };
 
-jupyterBase = pyView (with jupyterPacks.pkgs; [
+jupyterBase = pyView {} (with jupyterPacks.pkgs; [
   python
   python-venv
   py-jupyterhub
