@@ -41,9 +41,9 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
-    url = "https://github.com/NixOS/nixpkgs";
+    url = "https://github.com/dylex/nixpkgs";
     ref = "release-24.11";
-    rev = "6c8e4e4546146ddf05e9433ca560fa6260d00a14";
+    rev = "9fcaf0a44283ca6730ba306d74f804e96a55c4bd";
   };
 
   repos = [
