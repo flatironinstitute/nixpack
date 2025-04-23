@@ -244,6 +244,10 @@ in
 
   jdupes = callPackage ./jdupes.nix { };
 
+  rapidjson = rapidjson.overrideAttrs (old: {
+    doCheck = false; # valgrind unknown instruction
+  });
+
   vamp-plugin-sdk = vamp-plugin-sdk.overrideAttrs (old: {
     src = fetchFromGitHub {
       owner = "vamp-plugins";
