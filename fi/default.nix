@@ -515,6 +515,7 @@ corePacks = import ../packs {
     mpi = {
       name = "openmpi";
     };
+    munge = rpmExtern "munge";
     music = {
       variants = {
         hdf5 = true;
@@ -594,7 +595,7 @@ corePacks = import ../packs {
           slurm = true;
         };
         pmi = true;
-        internal-pmix = true;
+        internal-pmix = false;
         static = false;
         legacylaunchers = true;
         romio = false;
@@ -647,7 +648,10 @@ corePacks = import ../packs {
       version = "2.9.1";
     };
     pmix = {
-      version = "4.2.2";
+      #version = "4.2.2";
+      variants = {
+        munge = true;
+      };
     };
     poppler = {
       variants = {
@@ -1032,9 +1036,12 @@ corePacks = import ../packs {
       version = "3.6.0_2024-03-20";
     };
     slurm = rpmExtern "slurm" // {
+      version = "24.11";
       variants = {
-        #pmix = true;
+        pmix = true;
         hwloc = true;
+        nvml = true;
+        rsmi = true;
       };
     };
     snappy = {
@@ -1436,7 +1443,7 @@ mkMpis = comp: gen:
     { name = "openmpi"; }
   ] ++ lib.optionals comp.isCore [
     { name = "intel-oneapi-mpi"; }
-    { name = "openmpi"; version = "4.0"; }
+    #{ name = "openmpi"; version = "4.0"; }
     { name = "openmpi"; version = "5.0"; variants = { legacylaunchers = null; pmi = null; };}
     { name = "openmpi";
       variants = {
@@ -1842,6 +1849,7 @@ pkgStruct = {
     perl
     petsc
     pixz
+    pmix
     postgresql
     proj
     protobuf
