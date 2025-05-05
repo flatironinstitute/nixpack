@@ -1754,6 +1754,7 @@ pkgStruct = {
     blast-plus
     #blender
     btop
+    ccache
     cmake
     { pkg = cuda;
       default = true;
@@ -2320,7 +2321,7 @@ pkgStruct = {
       withXavs = false;
       xavs = null;
     } // { name = builtins.replaceStrings ["-full"] [""] ffmpeg-full.name; module = { default = true; }; })
-    #gimp
+    gimp
     #git
     #i3-env
     #inkscape
