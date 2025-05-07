@@ -64,6 +64,9 @@ case "$cmd" in
 				(jupyter*)
 					attrs="jupyter"
 					;;
+				(slurm)
+					attrs="pkgs.cuda pkgs.pmix pkgs.oneapi-level-zero"
+					;;
 				(shell)
 					attrs="pkgs.zsh pkgs.tmux pkgs.git"
 					;;
