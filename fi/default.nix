@@ -3,6 +3,7 @@
 , target ? "broadwell"
 , cudaarch ? "70,80,90"
 , gitrev ? null
+, slurmVersion ? "24.11"
 }:
 
 let
@@ -277,7 +278,7 @@ corePacks = import ../packs {
       tests = false;
     };
     gdrcopy = {
-      version = "2.4.1"; # match kernel module
+      version = "2.5"; # match kernel module
       variants = {
         cuda = true;
         inherit cuda_arch;
@@ -842,6 +843,9 @@ corePacks = import ../packs {
         '';
       };
     };
+    py-pyslurm = {
+      version = slurmVersion;
+    };
     py-pytensor = {
       depends = {
         py-versioneer = {
@@ -1036,7 +1040,7 @@ corePacks = import ../packs {
       version = "3.6.0_2024-03-20";
     };
     slurm = rpmExtern "slurm" // {
-      version = "24.11";
+      version = slurmVersion;
       variants = {
         pmix = true;
         hwloc = true;
@@ -2184,6 +2188,7 @@ pkgStruct = {
         py-pygments
         py-pylint
         #py-pyreadline
+        py-pyslurm
         #py-pysnmp
         #py-pystan
         py-pytest
