@@ -2687,6 +2687,7 @@ mods = corePacks.modules {
       environment = {
         set = {
           OPENMPI_VERSION = "{version}";
+          SLURM_MPI_TYPE = "pmix";
         };
       };
     };
