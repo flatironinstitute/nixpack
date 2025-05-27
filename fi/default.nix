@@ -2745,6 +2745,12 @@ corePacks // {
     jupyter
     juliaPacks;
 
+  pyslurm = pyView {} (with corePacks.pkgs; [
+    python
+    python-venv
+    py-pyslurm
+  ]);
+
   traceModSpecs =
     let filterSpecs = builtins.concatMap (p:
       let q = p.pkg or p; in

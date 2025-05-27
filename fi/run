@@ -67,6 +67,9 @@ case "$cmd" in
 				(slurm)
 					attrs="pkgs.cuda pkgs.pmix pkgs.oneapi-level-zero"
 					;;
+				(pyslurm)
+					attrs="pyslurm"
+					;;
 				(shell)
 					attrs="pkgs.zsh pkgs.tmux pkgs.git"
 					;;
