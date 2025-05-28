@@ -2447,9 +2447,6 @@ jupyterPacks = corePacks.withPrefs {
     py-jupyter-server = {
       version = "2";
     };
-    py-jupyterlab = {
-      version = "4";
-    };
   };
 };
 
