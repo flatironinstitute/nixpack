@@ -2693,6 +2693,7 @@ mods = corePacks.modules {
         set = {
           PYTHONNOUSERSITE = "1";
           UV_PYTHON = "{version}";
+          UV_PYTHON_PREFERENCE = "only-system";
         };
       };
     };
