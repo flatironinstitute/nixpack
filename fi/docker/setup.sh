@@ -5,7 +5,8 @@ if [[ ! -x $DOCKER_ROOT/bin/dockerd-rootless.sh || ! -d /home/$USER ]] || ! /bin
 	exit 1
 fi
 
-cfg=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user
+xdg=${XDG_CONFIG_HOME:-$HOME/.config}
+cfg=$xdg/systemd/user
 mkdir -p $cfg
 rm -f $cfg/docker.service
 cat <<- EOT > $cfg/docker.service
@@ -33,4 +34,17 @@ cat <<- EOT > $cfg/docker.service
 	NotifyAccess=all
 	KillMode=mixed
 EOT
+if [[ ! -f $xdg/docker/daemon.json ]] ; then
+	mkdir -p $xdg/docker
+	cat << EOT > $xdg/docker/daemon.json
+{
+    "runtimes": {
+        "nvidia": {
+            "args": [],
+            "path": "nvidia-container-runtime"
+        }
+    }
+}
+EOT
+fi
 systemctl --user daemon-reload
