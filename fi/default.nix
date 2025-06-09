@@ -2626,6 +2626,10 @@ mods = corePacks.modules {
           HOROVOD_BUILD_CUDA_CC_LIST = format_cudaarch "" ",";  # 70,80
 
           HOROVOD_CUDA_HOME = "{prefix}";
+
+        };
+        prepend_path = {
+          LD_LIBRARY_PATH = "{prefix}/extras/CUPTI/lib64";
         };
       };
     };
