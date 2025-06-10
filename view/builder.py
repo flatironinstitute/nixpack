@@ -260,11 +260,11 @@ class Path:
                     return True
 
     def _scandir(self):
-        if self.fd is not None:
-            try:
-                return os.scandir(self.fd)
-            except TypeError:
-                pass
+        #if self.fd is not None:
+        #    try:
+        #        return os.scandir(self.fd) # XXX returns str not bytes
+        #    except TypeError:
+        #        pass
         return os.scandir(self.path)
 
     def scandir(self):
