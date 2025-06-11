@@ -44,7 +44,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/dylex/nixpkgs";
     ref = "release-24.11";
-    rev = "08642cf33b5718f7bb3faee8c4af2c9cae7be84c";
+    rev = "94a0358690f59e81421117b0c72c2ec1bd8eb366";
   };
 
   repos = [
@@ -492,9 +492,6 @@ corePacks = import ../packs {
         lua = false;
       };
     };
-    lmod = {
-      patches = [./lmod-no-sys-tcl.patch];
-    };
     magma = {
       variants = {
         inherit cuda_arch;
@@ -602,7 +599,7 @@ corePacks = import ../packs {
         romio = false;
       };
     };
-    openssl = if os == "rocky8" then opensslExtern else {};
+    openssl = opensslExtern;
     opensubdiv = {
       variants = {
         inherit cuda_arch;
@@ -1022,6 +1019,13 @@ corePacks = import ../packs {
         inherit cuda_arch;
         mklfft = false;
       };
+    };
+    ruby = {
+      depends = if os == "rocky9" then {
+        openssl = {
+          version = "1";
+        };
+      } else {};
     };
     rust = {
       # needs openssl pkgconfig
@@ -1520,13 +1524,13 @@ linkfiles = name: files: derivation {
   args = files;
 };
 
-opensslPkgconfig = if os == "rocky8" then {
+opensslPkgconfig = {
   PKG_CONFIG_PATH = linkfiles "openssl-pkgconfig" [
     "/usr/lib64/pkgconfig/openssl.pc"
     "/usr/lib64/pkgconfig/libssl.pc"
     "/usr/lib64/pkgconfig/libcrypto.pc"
   ];
-} else {};
+};
 
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
