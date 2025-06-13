@@ -1893,7 +1893,7 @@ pkgStruct = {
     smartmontools
     sox
     sra-tools
-    stress-ng
+    #stress-ng #broken on r9
     subversion
     swig
     texlive
