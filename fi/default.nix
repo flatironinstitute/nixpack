@@ -2174,6 +2174,7 @@ pkgStruct = {
         py-numba
         py-numpy
         py-olefile
+        py-optax
         #py-paho-mqtt
         py-pandas
         #py-parmap
