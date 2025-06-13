@@ -16,7 +16,7 @@ packs = import ./packs {
     /* default:
     url = "https://github.com/spack/spack"; */
     ref = "develop";
-    #rev = "f17e76e9d8d8252245eeefc7b85b6fa0433837b8";
+    rev = "9c255381b1a4a5ba065ba80f875fc20815f14e0a";
   };
   /* extra config settings for spack itself.  Can contain any standard spack
      configuration, but don't put compilers (automatically generated), packages
