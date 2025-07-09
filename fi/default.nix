@@ -1767,6 +1767,7 @@ pkgStruct = {
     { pkg = cuda;
       default = true;
     }
+    (cuda.withPrefs { version = "12.8"; })
     { pkg = cudnn;
       default = true;
     }
@@ -1921,7 +1922,7 @@ pkgStruct = {
   map (v: mathematica.withPrefs
     { version = v;
     })
-    ["12.3.0" "13.2.1"]
+    ["13.2.1" "14.0.0"]
   ++
   map (v: matlab.withPrefs
     { version = v;
@@ -1929,7 +1930,7 @@ pkgStruct = {
         key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
       };
     })
-    ["R2023b" "R2024b"]
+    ["R2024b" "R2025a"]
   ++
   map (v: idl.withPrefs
     { version = v;
