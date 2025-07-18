@@ -2374,9 +2374,8 @@ pkgStruct = {
 
   docker = (import ./docker corePacks);
 
-  static = [
+  static = let py = (findCore (findCore pkgStruct.compilers).pythons); in [
     /* -------- misc modules --------- */
-    (let py = (findCore (findCore pkgStruct.compilers).pythons); in
     { name = "disBatch";
       inherit (py.packs.pkgs.py-disbatch.spec) version;
       projection = "{name}";
@@ -2389,7 +2388,27 @@ pkgStruct = {
           PATH = "{prefix}";
         };
       };
-    })
+      postscript = ''
+        whatis("Short description: Dynamically distribute a list of tasks over a pool of compute resources.")
+        help([[Dynamically distribute a list of tasks over a pool of compute resources.]])
+      '';
+    }
+    { name = "meson";
+      inherit (py.packs.pkgs.meson.spec) version;
+      projection = "{name}";
+      prefix = linkfiles "meson" [
+        "${py.view}/bin/meson"
+      ];
+      environment = {
+        prepend_path = {
+          PATH = "{prefix}";
+        };
+      };
+      postscript = ''
+        whatis("Short description: Meson is a portable open source build system meant to be both extremely fast, and as user friendly as possible.")
+        help([[Meson is a portable open source build system meant to be both extremely fast, and as user friendly as possible.]])
+      '';
+    }
     { path = ".modulerc";
       static =
         let alias = {
