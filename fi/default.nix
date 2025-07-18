@@ -1968,6 +1968,7 @@ pkgStruct = {
       nlopt
       (blasPkg (openblas.withPrefs { variants = { threads = "none"; }; }) // {
         projection = "{name}/single-{version}";
+        default = true;
       })
       (blasPkg (openblas.withPrefs { variants = { threads = "openmp"; }; }) // {
         projection = "{name}/openmp-{version}";
