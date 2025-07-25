@@ -2185,6 +2185,7 @@ pkgStruct = {
         py-pexpect
         #py-pip
         py-pkgconfig
+        py-pre-commit
         #py-primefac
         py-prompt-toolkit
         py-pybind11
@@ -2408,6 +2409,22 @@ pkgStruct = {
       postscript = ''
         whatis("Short description: Meson is a portable open source build system meant to be both extremely fast, and as user friendly as possible.")
         help([[Meson is a portable open source build system meant to be both extremely fast, and as user friendly as possible.]])
+      '';
+    }
+    { name = "pre-commit";
+      inherit (py.packs.pkgs.py-pre-commit.spec) version;
+      projection = "{name}";
+      prefix = linkfiles "pre-commit" [
+        "${py.view}/bin/pre-commit"
+      ];
+      environment = {
+        prepend_path = {
+          PATH = "{prefix}";
+        };
+      };
+      postscript = ''
+        whatis("Short description: A framework for managing and maintaining multi-language pre-commit hooks.")
+        help([[A framework for managing and maintaining multi-language pre-commit hooks.]])
       '';
     }
     { path = ".modulerc";
