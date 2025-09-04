@@ -413,6 +413,11 @@ corePacks = import ../packs {
         '';
       };
     };
+    intel-oneapi-compilers = {
+      variants = {
+        nvidia = true;
+      };
+    };
     intel-tbb = {
       # for openvdb
       version = "2021";
