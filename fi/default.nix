@@ -2385,7 +2385,7 @@ pkgStruct = {
     /* -------- misc modules --------- */
     { name = "disBatch";
       inherit (py.packs.pkgs.py-disbatch.spec) version;
-      projection = "{name}";
+      projection = "{name}/{version}";
       prefix = linkfiles "disBatch" [
         "${py.view}/bin/disBatch"
         "${py.view}/bin/disbatch"
@@ -2402,7 +2402,7 @@ pkgStruct = {
     }
     { name = "meson";
       inherit (py.packs.pkgs.meson.spec) version;
-      projection = "{name}";
+      projection = "{name}/{version}";
       prefix = linkfiles "meson" [
         "${py.view}/bin/meson"
       ];
@@ -2418,7 +2418,7 @@ pkgStruct = {
     }
     { name = "pre-commit";
       inherit (py.packs.pkgs.py-pre-commit.spec) version;
-      projection = "{name}";
+      projection = "{name}/{version}";
       prefix = linkfiles "pre-commit" [
         "${py.view}/bin/pre-commit"
       ];
