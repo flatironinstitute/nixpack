@@ -21,7 +21,7 @@ def getJson(var: str):
 if not sys.executable: # why not?
     sys.executable = getVar('builder')
 
-def linktree(src, dst):
+def linktree(src: str, dst: str):
     os.mkdir(dst)
     for srcentry in os.scandir(src):
         srcname = os.path.join(src, srcentry.name)
@@ -35,22 +35,11 @@ def linktree(src, dst):
 os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
 
 import spack.main # otherwise you get recursive import errors
-import archspec.cpu
-import llnl.util.tty
+import spack.vendor.archspec.cpu
+import spack.util.spack_yaml as syaml
+import spack.llnl.util.tty
 
-# spack backwards compatibility
-try:
-    import spack.target
-except ImportError:
-    try:
-        spack.target = spack.architecture
-    except AttributeError:
-        spack.target = None
-
-try:
-    from spack.solver.asp import _inject_patches_variant as inject_patches_variant
-except ImportError:
-    from spack.spec.Spec import inject_patches_variant
+from spack.solver.asp import _inject_patches_variant as inject_patches_variant
 
 # monkeypatch store.layout for the few things we need
 class NixLayout():
@@ -71,10 +60,10 @@ class NixStore():
     unpadded_root = spack.paths.prefix
 spack.store.STORE = NixStore()
 
-try:
-    spack.main.add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split())
-except AttributeError:
-    spack.config._add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split())
+def add_environment_scope(priority):
+    raise Error("unexpected environment scope")
+
+spack.main.add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split(), add_environment_scope)
 spack.config.CONFIG.remove_scope('system')
 spack.config.CONFIG.remove_scope('user')
 spack.config.CONFIG.push_scope(spack.config.InternalConfigScope("nixpack"))
@@ -102,7 +91,7 @@ repoArgs = {}
 if hasattr(spack.repo, "from_path"):
     repoArgs['cache'] = spack.caches.MISC_CACHE
 
-def linkPkg(repo, path, name):
+def linkPkg(repo: spack.repo.Repo, path: str, name: str):
     try:
         os.symlink(path, repo.dirname_for_package_name(name))
         # clear cache:
@@ -111,19 +100,33 @@ def linkPkg(repo, path, name):
         # just trust that it should be identical
         pass
 
-dynRepos = {}
-for i, r in enumerate(repos):
-    if os.path.isfile(r):
-        d = os.path.join(os.environ['TMPDIR'], 'repos', str(i))
-        pd = os.path.join(d, 'packages')
-        os.makedirs(pd)
-        os.symlink(r, os.path.join(d, 'repo.yaml'))
-        repo = spack.repo.Repo(d, **repoArgs)
-        repos[i] = repo
-        dynRepos[repo.namespace] = repo
+repodir = os.path.join(os.environ['TMPDIR'], 'repos', 'spack_repo')
+os.makedirs(repodir)
 
-repoPath = spack.repo.RepoPath(*repos, **repoArgs)
-spack.repo.PATH.put_first(repoPath)
+dynRepos = {}
+def prepRepo(a: str):
+    if os.path.isdir(a):
+        # whole repo, use as-is and link
+        c = os.path.join(a, spack.repo.repo_config_name)
+        l = True
+    else:
+        # repo config file, create skeleton
+        c = a
+        l = False
+    with open(c, encoding="utf-8") as f:
+        n = syaml.load(f)["repo"]["namespace"]
+    d = os.path.join(repodir, n)
+    if l:
+        os.symlink(a, d)
+    else:
+        os.mkdir(d)
+        os.symlink(a, os.path.join(d, spack.repo.repo_config_name))
+    r = spack.repo.Repo(d, **repoArgs)
+    if not l:
+        dynRepos[n] = r
+    return r
+
+spack.repo.PATH = spack.repo.RepoPath(*map(prepRepo, repos))
 
 nixLogFd = int(getVar('NIX_LOG_FD', -1))
 nixLogFile = None
@@ -140,75 +143,75 @@ system = getVar('system')
 basetarget, platform = system.split('-', 1)
 archos = getVar('os')
 
-nullCompiler = None
-
-class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
-    path_keys = {'cc', 'cxx', 'f77', 'fc'}
-    _class_keys = {
-        spack.util.environment.SetEnv: 'set',
-        #spack.util.environment.PushEnv: 'push',
-        spack.util.environment.UnsetEnv: 'unset',
-        spack.util.environment.PrependPath: 'prepend_path',
-        spack.util.environment.AppendPath: 'append_path',
-        spack.util.environment.RemovePath: 'remove_path',
-    }
-
-    @property
-    def config(self):
-        """
-        Try to convert the set of environment modifications to json configuration.
-        This is not at all perfect, and in particular loses order, but should
-        be good enough for most compilers.
-        """
-        try:
-            return self._config
-        except AttributeError:
-            pass
-        paths = {k: None for k in self.path_keys}
-        environment = {}
-        import spack.util.environment as env
-        for m in self:
-            try:
-                t = self._class_keys[type(m)]
-            except KeyError:
-                continue
-            nl = m.name.lower()
-            if nl in paths:
-                paths[nl] = str(m.value) if t == 'set' else None
-            elif t == 'unset':
-                environment.setdefault(t, []).append(m.name)
-            elif t == 'remove_path':
-                # will loose multiples (but largely unused)
-                environment.setdefault(t, {})[m.name] = str(m.value)
-            else:
-                m.execute(environment.setdefault(t, {}))
-        self._config = {'paths': paths, 'environment': environment}
-        self._env = dict()
-        self.apply_modifications(self._env)
-        return self._config
-
-    @property
-    def path_files(self):
-        "All files in directories in PATH environment."
-        try:
-            return self._path_files
-        except AttributeError:
-            pass
-        try:
-            path = self._env['PATH'].split(':')
-        except KeyError:
-            path = []
-        self._path_files = llnl.util.filesystem.files_in(*path)
-        return self._path_files
-
-    def find_path(self, compiler_cls, lang):
-        "Find files in PATH that match the compiler_cls patterns for lang."
-        if not hasattr(compiler_cls, f"{lang}_names"):
-            return iter([])
-        return (full_path
-            for regexp in compiler_cls.search_regexps(lang)
-            for (file, full_path) in self.path_files
-            if regexp.match(file))
+#nullCompiler = None
+#
+#class CompilerEnvironment(spack.util.environment.EnvironmentModifications):
+#    path_keys = {'cc', 'cxx', 'f77', 'fc'}
+#    _class_keys = {
+#        spack.util.environment.SetEnv: 'set',
+#        #spack.util.environment.PushEnv: 'push',
+#        spack.util.environment.UnsetEnv: 'unset',
+#        spack.util.environment.PrependPath: 'prepend_path',
+#        spack.util.environment.AppendPath: 'append_path',
+#        spack.util.environment.RemovePath: 'remove_path',
+#    }
+#
+#    @property
+#    def config(self):
+#        """
+#        Try to convert the set of environment modifications to json configuration.
+#        This is not at all perfect, and in particular loses order, but should
+#        be good enough for most compilers.
+#        """
+#        try:
+#            return self._config
+#        except AttributeError:
+#            pass
+#        paths = {k: None for k in self.path_keys}
+#        environment = {}
+#        import spack.util.environment as env
+#        for m in self:
+#            try:
+#                t = self._class_keys[type(m)]
+#            except KeyError:
+#                continue
+#            nl = m.name.lower()
+#            if nl in paths:
+#                paths[nl] = str(m.value) if t == 'set' else None
+#            elif t == 'unset':
+#                environment.setdefault(t, []).append(m.name)
+#            elif t == 'remove_path':
+#                # will loose multiples (but largely unused)
+#                environment.setdefault(t, {})[m.name] = str(m.value)
+#            else:
+#                m.execute(environment.setdefault(t, {}))
+#        self._config = {'paths': paths, 'environment': environment}
+#        self._env = dict()
+#        self.apply_modifications(self._env)
+#        return self._config
+#
+#    @property
+#    def path_files(self):
+#        "All files in directories in PATH environment."
+#        try:
+#            return self._path_files
+#        except AttributeError:
+#            pass
+#        try:
+#            path = self._env['PATH'].split(':')
+#        except KeyError:
+#            path = []
+#        self._path_files = llnl.util.filesystem.files_in(*path)
+#        return self._path_files
+#
+#    def find_path(self, compiler_cls, lang):
+#        "Find files in PATH that match the compiler_cls patterns for lang."
+#        if not hasattr(compiler_cls, f"{lang}_names"):
+#            return iter([])
+#        return (full_path
+#            for regexp in compiler_cls.search_regexps(lang)
+#            for (file, full_path) in self.path_files
+#            if regexp.match(file))
 
 class NixSpec(spack.spec.Spec):
     # to re-use identical specs so id is reasonable
@@ -291,8 +294,8 @@ class NixSpec(spack.spec.Spec):
                     linkPkg(repo, os.path.join(pkgdir, p), p)
 
         depends = nixspec['depends'].copy()
-        compiler = depends.pop('compiler', None)
-        self.compiler = self.get(compiler, top=False).as_compiler if compiler else nullCompiler
+        #compiler = depends.pop('compiler', None)
+        #self.compiler = self.get(compiler, top=False).as_compiler if compiler else nullCompiler
 
         for n, d in sorted(depends.items()):
             dtype = nixspec['deptypes'].get(n) or ()
@@ -375,81 +378,81 @@ class NixSpec(spack.spec.Spec):
                 patches.append(spack.patch.FilePatch(package_class, p, 1, '.', ordering_key = ('~nixpack', i)))
             spack.repo.PATH.patch_index.update_package(self.fullname)
 
-    def supports_target(self, target):
-        try:
-            target.optimization_flags(self.compiler.name, self.compiler.version.dotted_numeric_string)
-            return True
-        except archspec.cpu.UnsupportedMicroarchitecture:
-            return False
-
-    def adjust_target(self):
-        """replicate spack.concretize.Concretizer.adjust_target (which has too many limitations)"""
-        target = self.architecture.target
-        if self.supports_target(target):
-            return
-        for ancestor in target.ancestors:
-            if spack.target:
-                candidate = spack.target.Target(ancestor)
-            else:
-                candidate = ancestor
-            if self.supports_target(candidate):
-                print(f"Downgrading target {target} -> {candidate} for {self.compiler}")
-                self.architecture.target = candidate
-                self.nixspec['target'] = str(candidate)
-                return
-
-    def concretize(self):
-        if self._concrete:
-            return
-        if self.compiler:
-            self.adjust_target()
-        inject_patches_variant(self)
-        self._mark_concrete()
+#    def supports_target(self, target):
+#        try:
+#            target.optimization_flags(self.compiler.name, self.compiler.version.dotted_numeric_string)
+#            return True
+#        except archspec.cpu.UnsupportedMicroarchitecture:
+#            return False
+#
+#    def adjust_target(self):
+#        """replicate spack.concretize.Concretizer.adjust_target (which has too many limitations)"""
+#        target = self.architecture.target
+#        if self.supports_target(target):
+#            return
+#        for ancestor in target.ancestors:
+#            if spack.target:
+#                candidate = spack.target.Target(ancestor)
+#            else:
+#                candidate = ancestor
+#            if self.supports_target(candidate):
+#                print(f"Downgrading target {target} -> {candidate} for {self.compiler}")
+#                self.architecture.target = candidate
+#                self.nixspec['target'] = str(candidate)
+#                return
+#
+#    def concretize(self):
+#        if self._concrete:
+#            return
+#        if self.compiler:
+#            self.adjust_target()
+#        inject_patches_variant(self)
+#        self._mark_concrete()
 
     def copy(self, deps=True, **kwargs):
         # no!
         return self
 
-    @property
-    def as_compiler(self):
-        try:
-            return self._as_compiler
-        except AttributeError:
-            pass
-        self._as_compiler = spack.spec.CompilerSpec(self.nixspec.get('compiler_spec', self.name))
-        if self._as_compiler.versions == spack.version.VersionList(':'):
-            self._as_compiler.versions = self.versions
-        name = str(self._as_compiler)
-        compiler_cls = spack.compilers.class_for_compiler_name(self._as_compiler.name)
-        if name not in self.compilers:
-            # we may have duplicate specs, but we only keep the first (topmost)
-            # as there is no way to have two compilers with the same spec
-            # (and adding something to version messes up modules)
-            config = {
-                    'spec': name,
-                    'modules': [],
-                    'operating_system': self.architecture.os,
-                    'target': basetarget,
-                }
-            self.concretize()
-            if self.paths:
-                # extern packages should specify paths directly,
-                # bypassing the extra_attributes.compilers settings
-                config['paths'] = self.paths
-            else:
-                env = CompilerEnvironment()
-                self.package.setup_run_environment(env)
-                config.update(env.config)
-                for lang in env.path_keys:
-                    if config['paths'][lang] is None:
-                        opts = env.find_path(compiler_cls, lang)
-                        config['paths'][lang] = next(opts, None)
-                        assert next(opts, None) is None, f"Multiple matching paths for {name} {lang} compiler"
-            self.compilers[name] = {'compiler': config}
-            spack.config.set('compilers', list(self.compilers.values()), 'nixpack')
-            # clear compilers cache since we changed config:
-            spack.compilers._cache_config_file = None
-        return self._as_compiler
+#    @property
+#    def as_compiler(self):
+#        try:
+#            return self._as_compiler
+#        except AttributeError:
+#            pass
+#        self._as_compiler = spack.spec.CompilerSpec(self.nixspec.get('compiler_spec', self.name))
+#        if self._as_compiler.versions == spack.version.VersionList(':'):
+#            self._as_compiler.versions = self.versions
+#        name = str(self._as_compiler)
+#        compiler_cls = spack.compilers.class_for_compiler_name(self._as_compiler.name)
+#        if name not in self.compilers:
+#            # we may have duplicate specs, but we only keep the first (topmost)
+#            # as there is no way to have two compilers with the same spec
+#            # (and adding something to version messes up modules)
+#            config = {
+#                    'spec': name,
+#                    'modules': [],
+#                    'operating_system': self.architecture.os,
+#                    'target': basetarget,
+#                }
+#            self.concretize()
+#            if self.paths:
+#                # extern packages should specify paths directly,
+#                # bypassing the extra_attributes.compilers settings
+#                config['paths'] = self.paths
+#            else:
+#                env = CompilerEnvironment()
+#                self.package.setup_run_environment(env)
+#                config.update(env.config)
+#                for lang in env.path_keys:
+#                    if config['paths'][lang] is None:
+#                        opts = env.find_path(compiler_cls, lang)
+#                        config['paths'][lang] = next(opts, None)
+#                        assert next(opts, None) is None, f"Multiple matching paths for {name} {lang} compiler"
+#            self.compilers[name] = {'compiler': config}
+#            spack.config.set('compilers', list(self.compilers.values()), 'nixpack')
+#            # clear compilers cache since we changed config:
+#            spack.compilers._cache_config_file = None
+#        return self._as_compiler
 
     def dag_hash(self, length=None):
         try:
@@ -468,22 +471,22 @@ class NixSpec(spack.spec.Spec):
     def _installed_explicitly(self):
         return getattr(self, '_top', False)
 
-nullCompilerSpec = NixSpec({
-        'name': 'gcc',
-        'namespace': 'builtin',
-        'version': '0',
-        'extern': '/null-compiler',
-        'variants': {},
-        'flags': {},
-        'tests': False,
-        'paths': {
-            'cc': '/bin/false',
-            'cxx': None,
-            'f77': None,
-            'fc': None,
-        },
-        'depends': {},
-        'patches': [],
-        'package': getVar('gccPkg', '/null-compiler'),
-    }, '/null-compiler', top=False)
-nullCompiler = nullCompilerSpec.as_compiler
+#nullCompilerSpec = NixSpec({
+#        'name': 'gcc',
+#        'namespace': 'builtin',
+#        'version': '0',
+#        'extern': '/null-compiler',
+#        'variants': {},
+#        'flags': {},
+#        'tests': False,
+#        'paths': {
+#            'cc': '/bin/false',
+#            'cxx': None,
+#            'f77': None,
+#            'fc': None,
+#        },
+#        'depends': {},
+#        'patches': [],
+#        'package': getVar('gccPkg', '/null-compiler'),
+#    }, '/null-compiler', top=False)
+#nullCompiler = nullCompilerSpec.as_compiler
