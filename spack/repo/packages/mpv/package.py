@@ -1,3 +1,4 @@
+from spack_repo.builtin.build_systems.waf import WafPackage
 from spack.package import *
 
 class Mpv(WafPackage):
