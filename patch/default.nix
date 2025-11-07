@@ -27,9 +27,9 @@ in
 
   /* add compiler paths, providers */
   gcc = spec: old: {
-    provides = old.provides or {} // {
-      compiler = ":";
-    };
+    #provides = old.provides or {} // {
+    #  compiler = ":";
+    #};
     paths = {
       # gcc bin detection is non-deterministic
       cc = packs.lib.when spec.variants.languages.c "bin/gcc";
@@ -37,9 +37,9 @@ in
       f77 = packs.lib.when spec.variants.languages.fortran "bin/gfortran";
       fc = packs.lib.when spec.variants.languages.fortran "bin/gfortran";
     };
-    depends = old.depends // {
-      compiler = { deptype = ["build"]; };
-    };
+    #depends = old.depends // {
+    #  compiler = { deptype = ["build"]; };
+    #};
     build = {
       # make cc -> gcc symlink
       post = ''

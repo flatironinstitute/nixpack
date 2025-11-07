@@ -24,7 +24,7 @@ nixpack.getVar('name')
 nixspec = nixpack.getJson('spec')
 
 spec = nixpack.NixSpec.get(nixspec, nixpack.getVar('out'))
-spec.concretize()
+spec._mark_concrete()
 
 pkg = spec.package
 pkg.run_tests = spec.tests

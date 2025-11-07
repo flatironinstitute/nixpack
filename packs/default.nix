@@ -17,7 +17,6 @@ defaultSpackConfig = {
     };
     misc_cache = "$tempdir/cache"; /* overridden by spackCache (except for extern spackSrc) */
   };
-  compilers = [];
 };
 
 /* fill in package descriptor with defaults */
@@ -32,14 +31,9 @@ fillDesc = name: /* simple name of package */
   , provides ? {} /* set of provided virtuals to (version ranges or unioned list thereof) */
   , paths ? {} /* set of tools to path prefixes */
   , build ? {} /* extra build variables to set */
-  , compiler_spec ? name
   }: {
-    inherit name namespace dir version variants patches paths build compiler_spec;
-    depends = {
-      compiler = {
-        deptype = ["build" "link"];
-      };
-    } // builtins.mapAttrs (n: lib.prefsIntersection) depends;
+    inherit name namespace dir version variants patches paths build;
+    depends = builtins.mapAttrs (n: lib.prefsIntersection) depends;
     provides = builtins.mapAttrs (n: versionsUnion) provides;
     conflicts = lib.remove null conflicts;
   };
@@ -115,6 +109,12 @@ lib.fix (packs: with packs; {
     src = ../spack/nixpack.py;
   });
 
+  skelRepos = map (r: (builtins.path {
+    name = "repo";
+    path = r;
+    filter = path: type: type != "directory" || baseNameOf path != "packages";
+  })) repos;
+
   /* common attributes for running spack */
   spackBuilder = attrs: builtins.removeAttrs (derivation (spackEnv // {
     inherit (packs) system os spackConfig;
@@ -123,21 +123,8 @@ lib.fix (packs: with packs; {
     LC_ALL = "en_US.UTF-8"; # work around spack bugs processing log files
     repos = if attrs ? withRepos
       then lib.when attrs.withRepos repos
-      else map (r: (builtins.path { name="repo.yaml"; path="${r}/repo.yaml"; })) repos;
-    spackCache = lib.when (packPrefs.spackCache or true) (if packPrefs.spackCacheRepos or true && attrs.withRepos or false then spackCacheRepos else spackCache);
-  } // attrs)) ["PYTHONPATH" "PATH" "LC_ALL" "spackConfig" "spackCache" "passAsFile"];
-
-  /* pre-generated spack repo index cache (both with and without overlay repos) */
-  makeSpackCache = withRepos: lib.when (builtins.isAttrs spackSrc)
-    (spackBuilder {
-      name = "spack-cache" + (if withRepos then "-repos" else "");
-      args = [../spack/cache.py];
-      spackCache = null;
-      inherit withRepos;
-    });
-
-  spackCache      = makeSpackCache false;
-  spackCacheRepos = makeSpackCache true;
+      else skelRepos;
+  } // attrs)) ["PYTHONPATH" "PATH" "LC_ALL" "spackConfig" "passAsFile"];
 
   isVirtual = name: builtins.isList repo.${name} or null;
 
@@ -178,7 +165,6 @@ lib.fix (packs: with packs; {
     , target ? packs.target
     , paths ? {}
     , build ? {} # only used by builder
-    , compiler_spec ? null
     , verbose ? false # only used by builder
     } @ prefs:
     prefs // {
@@ -298,7 +284,6 @@ lib.fix (packs: with packs; {
           verbose = pprefs.verbose or false;
           spec = builtins.toJSON spec;
           passAsFile = ["spec"];
-          gccPkg = pkgs.gcc.spec.package; /* for nullCompiler */
         } // desc.build // pprefs.build or {}) // {
           inherit spec;
           withPrefs = p: resolvePackage pname gen (lib.prefsUpdate pprefs p);
@@ -322,7 +307,6 @@ lib.fix (packs: with packs; {
             depends = if prefs.extern != null then {}
                   else resolveDepends  desc.depends  prefs;
             deptypes = builtins.mapAttrs (n: d: d.deptype or null) spec.depends;
-            compiler_spec = prefs.compiler_spec or desc.compiler_spec;
           };
         in
         if lib.isPkg pprefs then pprefs
@@ -385,7 +369,7 @@ lib.fix (packs: with packs; {
 
   /* use this packs to bootstrap another with the specified compiler */
   withCompiler = compiler: packs.withPrefs {
-    package = { inherit compiler; };
+    package = { c = compiler; cxx = compiler; fortran = compiler; };
   };
 
   /* create a view (or an "env" in nix terms): a merged set of packages */

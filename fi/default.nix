@@ -66,7 +66,9 @@ corePacks = import ../packs {
         then null else corePacks;
   };
   package = {
-    compiler = bootstrapPacks.pkgs.gcc;
+    c = bootstrapPacks.pkgs.gcc;
+    cxx = bootstrapPacks.pkgs.gcc;
+    fortran = bootstrapPacks.pkgs.gcc;
 
     /* ---------- global package preferences ------------
      * Default settings and versions for specific packages should be added here (in alphabetical order).
@@ -1360,7 +1362,13 @@ bootstrapPacks = corePacks.withPrefs {
     tests = false;
   };
   package = {
-    compiler = {
+    c = {
+      name = "gcc";
+    } // rpmExtern "gcc";
+    cxx = {
+      name = "gcc";
+    } // rpmExtern "gcc";
+    fortran = {
       name = "gcc";
     } // rpmExtern "gcc";
 

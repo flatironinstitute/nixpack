@@ -255,12 +255,6 @@ def conditions(c, p, s, dep=None):
         if s.variants:
             for n, v in sorted(s.variants.items()):
                 c.append(App("variantMatches", Select(a,'variants',n), unlist(v.value)))
-        if s.compiler:
-            notExtern = Eq(Select(a,'extern'), None)
-            if s.compiler.name:
-                c.append(And(notExtern, Eq(Select(deps,'compiler','spec','name'), s.compiler.name)))
-            if s.compiler.versions != any_version:
-                c.append(And(notExtern, App("versionMatches", Select(deps,'compiler','spec','version'), str(s.compiler.versions))))
         for d in s.dependencies():
             if dep and d.name == dep.spec.name:
                 print(f"{dep}: skipping recursive dependency conditional {d}", file=sys.stderr)
@@ -379,7 +373,7 @@ n = 0
 for p in spack.repo.PATH.all_package_classes():
     desc = dict()
     desc['namespace'] = p.namespace
-    desc['dir'] = p.package_dir
+    desc['dir'] = os.path.realpath(p.package_dir)
     vers = [(i.get('preferred',False), not (v.isdevelop() or i.get('deprecated',False)), v)
             for v, i in p.versions.items()]
     vers.sort(reverse = True)
@@ -400,8 +394,6 @@ for p in spack.repo.PATH.all_package_classes():
                 provides[v.name].append((w, v.versions))
                 virtuals[v.name].add(p.name)
         desc['provides'] = {v: provide(p, c) for v, c in sorted(provides.items())}
-    if getattr(p, 'family', None) == 'compiler' or 'compiler' in getattr(p, 'tags', []):
-        desc.setdefault('provides', {}).setdefault('compiler', ':')
     output(p.name, Fun('spec', desc))
     n += 1
 print(f"Generated {n} packages")

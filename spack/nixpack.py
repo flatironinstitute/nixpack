@@ -32,7 +32,7 @@ def linktree(src: str, dst: str):
         else:
             os.symlink(srcname, dstname)
 
-os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
+#os.W_OK = 0 # hack hackity to disable writability checks (mainly for cache)
 
 import spack.main # otherwise you get recursive import errors
 import spack.vendor.archspec.cpu
@@ -76,16 +76,17 @@ if enableParallelBuilding:
 if cores > 0:
     spack.config.set('config:build_jobs', cores, 'nixpack')
 
+spack.paths.set_working_dir()
 # add in dynamic overlay repos
 repos = getVar('repos', '').split()
-cache = getVar('spackCache', None)
-if cache:
-    if any(map(os.path.isfile, repos)):
-        # copy repo cache so we can add more to it
-        tmpcache = os.path.join(os.environ['TMPDIR'], 'spack-cache')
-        linktree(cache, tmpcache)
-        cache = tmpcache
-    spack.config.set('config:misc_cache', cache, 'nixpack')
+#cache = getVar('spackCache', None)
+#if cache:
+#    if any(map(os.path.isfile, repos)):
+#        # copy repo cache so we can add more to it
+#        tmpcache = os.path.join(os.environ['TMPDIR'], 'spack-cache')
+#        linktree(cache, tmpcache)
+#        cache = tmpcache
+#    spack.config.set('config:misc_cache', cache, 'nixpack')
 
 repoArgs = {}
 if hasattr(spack.repo, "from_path"):
@@ -104,25 +105,24 @@ repodir = os.path.join(os.environ['TMPDIR'], 'repos', 'spack_repo')
 os.makedirs(repodir)
 
 dynRepos = {}
+
 def prepRepo(a: str):
-    if os.path.isdir(a):
-        # whole repo, use as-is and link
-        c = os.path.join(a, spack.repo.repo_config_name)
-        l = True
-    else:
-        # repo config file, create skeleton
-        c = a
-        l = False
-    with open(c, encoding="utf-8") as f:
+    with open(os.path.join(a, spack.repo.repo_config_name), encoding="utf-8") as f:
         n = syaml.load(f)["repo"]["namespace"]
     d = os.path.join(repodir, n)
-    if l:
+    if os.path.isdir(os.path.join(a, "packages")):
+        # whole repo, symlink whole as-is
         os.symlink(a, d)
+        dyn = False
     else:
+        # skeleton repo, symlink files
         os.mkdir(d)
-        os.symlink(a, os.path.join(d, spack.repo.repo_config_name))
+        for f in os.listdir(a):
+            os.symlink(os.path.join(a, f), os.path.join(d, f))
+        os.mkdir(os.path.join(d, "packages"))
+        dyn = True
     r = spack.repo.Repo(d, **repoArgs)
-    if not l:
+    if dyn:
         dynRepos[n] = r
     return r
 
@@ -470,23 +470,3 @@ class NixSpec(spack.spec.Spec):
 
     def _installed_explicitly(self):
         return getattr(self, '_top', False)
-
-#nullCompilerSpec = NixSpec({
-#        'name': 'gcc',
-#        'namespace': 'builtin',
-#        'version': '0',
-#        'extern': '/null-compiler',
-#        'variants': {},
-#        'flags': {},
-#        'tests': False,
-#        'paths': {
-#            'cc': '/bin/false',
-#            'cxx': None,
-#            'f77': None,
-#            'fc': None,
-#        },
-#        'depends': {},
-#        'patches': [],
-#        'package': getVar('gccPkg', '/null-compiler'),
-#    }, '/null-compiler', top=False)
-#nullCompiler = nullCompilerSpec.as_compiler
