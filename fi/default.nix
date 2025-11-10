@@ -65,11 +65,7 @@ corePacks = import ../packs {
       if isRLDep deptype
         then null else corePacks;
   };
-  package = {
-    c = bootstrapPacks.pkgs.gcc;
-    cxx = bootstrapPacks.pkgs.gcc;
-    fortran = bootstrapPacks.pkgs.gcc;
-
+  package = lib.compilers bootstrapPacks.pkgs.gcc // {
     /* ---------- global package preferences ------------
      * Default settings and versions for specific packages should be added here (in alphabetical order).
      */
@@ -1361,16 +1357,16 @@ bootstrapPacks = corePacks.withPrefs {
     resolver = null;
     tests = false;
   };
-  package = {
-    c = {
+  package = lib.compilers ({
       name = "gcc";
-    } // rpmExtern "gcc";
-    cxx = {
-      name = "gcc";
-    } // rpmExtern "gcc";
-    fortran = {
-      name = "gcc";
-    } // rpmExtern "gcc";
+      extraAttributes = {
+        compilers = {
+          c = "/usr/bin/gcc";
+          cxx = "/usr/bin/g++";
+          fortran = "/usr/bin/gfortran";
+        };
+      };
+    } // rpmExtern "gcc") // {
 
     autoconf = rpmExtern "autoconf";
     automake = rpmExtern "automake";

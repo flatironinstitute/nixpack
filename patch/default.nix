@@ -1,7 +1,6 @@
 /* patches/additions for the repo */
 packs:
 let
-  nocompiler = spec: old: { depends = old.depends or {} // { compiler = null; }; };
   tmphome = {
     build = {
       setup = ''
@@ -22,24 +21,8 @@ let
   };
 in
 {
-  /* compiler pseudo-virtual */
-  compiler = ["gcc" "llvm"];
-
   /* add compiler paths, providers */
   gcc = spec: old: {
-    #provides = old.provides or {} // {
-    #  compiler = ":";
-    #};
-    paths = {
-      # gcc bin detection is non-deterministic
-      cc = packs.lib.when spec.variants.languages.c "bin/gcc";
-      cxx = packs.lib.when spec.variants.languages."c++" "bin/g++";
-      f77 = packs.lib.when spec.variants.languages.fortran "bin/gfortran";
-      fc = packs.lib.when spec.variants.languages.fortran "bin/gfortran";
-    };
-    #depends = old.depends // {
-    #  compiler = { deptype = ["build"]; };
-    #};
     build = {
       # make cc -> gcc symlink
       post = ''
@@ -48,28 +31,8 @@ in
     };
   };
 
-  llvm = spec: old: {
-    depends = old.depends // {
-      compiler = { deptype = ["build"]; };
-    };
-    compiler_spec = "clang";
-  };
-
-  nvhpc = spec: old: {
-    provides = old.provides or {} // {
-      compiler = ":";
-    };
-  };
-
   aocc = spec: old: {
-    paths = {
-      cc = "bin/clang";
-      cxx = "bin/clang++";
-      f77 = "bin/flang";
-      fc = "bin/flang";
-    };
     depends = old.depends // {
-      compiler = null;
       llvm = {
         # uses llvm package
         deptype = ["build"];
@@ -81,23 +44,6 @@ in
     depends = old.depends // {
       # imports package
       singularityce = { deptype = ["build"]; };
-    };
-  };
-
-  intel-oneapi-compilers = spec: old: {
-    compiler_spec = "oneapi"; # can be overridden as "intel" with prefs
-    provides = old.provides or {} // {
-      compiler = ":";
-    };
-  };
-
-  intel-parallel-studio = spec: old: {
-    compiler_spec = "intel@19.1.3.304"; # version may need correcting
-    provides = old.provides or {} // {
-      compiler = ":";
-    };
-    depends = old.depends or {} // {
-      compiler = null;
     };
   };
 
@@ -216,18 +162,6 @@ in
       boost = { deptype = ["build"]; };
     };
   };
-
-  /* some things don't use a compiler */
-  intel-mkl = nocompiler;
-  intel-mpi = nocompiler;
-  intel-oneapi-mkl = nocompiler;
-  intel-oneapi-mpi = nocompiler;
-  intel-oneapi-tbb = nocompiler;
-  cuda = nocompiler;
-  cudnn = nocompiler;
-  ghostscript-fonts = nocompiler;
-  matlab = nocompiler;
-  mathematica = nocompiler;
 
   lua-bit32 = noluajit;
   lua-bitlib = noluajit;

@@ -385,6 +385,8 @@ for p in spack.repo.PATH.all_package_classes():
             desc['variants'] = {n: variant(p, e) for n, e in p.variants.items()}
     if p.dependencies:
         desc['depends'] = {n: depend(p, d) for n, d in p.dependencies_by_name(when=True).items()}
+        if 'c' in desc['depends'] or 'cxx' in desc['depends'] or 'fortran' in desc['depends']:
+            desc['depends']['compiler-wrapper'] = {'deptype': ['build']}
     if p.conflicts:
         desc['conflicts'] = [conflict(p, c, w, m) for c, wm in sorted(p.conflicts.items()) for w, m in wm]
     if p.provided:

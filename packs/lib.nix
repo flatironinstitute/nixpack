@@ -288,4 +288,6 @@ rec {
     builder = ./capture.sh;
     args = args;
   } // env));
+
+  compilers = compiler: { c = compiler; cxx = compiler; fortran = compiler; };
 }

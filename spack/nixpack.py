@@ -357,20 +357,19 @@ class NixSpec(spack.spec.Spec):
             else:
                 v = spack.variant.SingleValuedVariant(n, s)
             self.variants[n] = v
-        valid_flags = self.compiler_flags.valid_compiler_flags()
+        for f in self.compiler_flags.valid_compiler_flags():
+            self.compiler_flags[f] = []
         for n, s in nixspec['flags'].items():
-            assert n in valid_flags and type(s) is list, f"{self.name} has invalid compiler flag {n}"
+            assert n in self.compiler_flags and type(s) is list, f"{self.name} has invalid compiler flag {n}"
             self.compiler_flags[n] = s
         self.tests = nixspec['tests']
-        self.paths = {n: p and os.path.join(prefix, p) for n, p in nixspec['paths'].items()}
+        self.extra_attributes.update(nixspec['extraAttributes'])
         if self.external:
             # not really unique but shouldn't matter
             self._hash = spack.util.hash.b32_hash(self.external_path)
         else:
             self._nix_hash, nixname = key.split('-', 1)
 
-        for f in self.compiler_flags.valid_compiler_flags():
-            self.compiler_flags[f] = []
 
         if not self.external and nixspec['patches']:
             patches = package_class.patches.setdefault(spack.spec.Spec(), [])

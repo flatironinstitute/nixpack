@@ -29,10 +29,9 @@ fillDesc = name: /* simple name of package */
   , depends ? {} /* dependencies, set of name to {deptype; Constrants} */
   , conflicts ? [] /* list of conflict messages (package is not buildable if non-empty) */
   , provides ? {} /* set of provided virtuals to (version ranges or unioned list thereof) */
-  , paths ? {} /* set of tools to path prefixes */
   , build ? {} /* extra build variables to set */
   }: {
-    inherit name namespace dir version variants patches paths build;
+    inherit name namespace dir version variants patches build;
     depends = builtins.mapAttrs (n: lib.prefsIntersection) depends;
     provides = builtins.mapAttrs (n: versionsUnion) provides;
     conflicts = lib.remove null conflicts;
@@ -163,12 +162,12 @@ lib.fix (packs: with packs; {
     , fixedDeps ? false
     , resolver ? null
     , target ? packs.target
-    , paths ? {}
+    , extraAttributes ? {}
     , build ? {} # only used by builder
     , verbose ? false # only used by builder
     } @ prefs:
     prefs // {
-      inherit version variants flags patches depends extern tests provides fixedDeps target paths;
+      inherit version variants flags patches depends extern tests provides fixedDeps target extraAttributes;
       resolver = deptype: name: let r = lib.applyOptional (lib.applyOptional resolver deptype) name; in
         if builtins.isFunction r then r
         else (lib.coalesce r packs).getResolver name;
@@ -295,10 +294,9 @@ lib.fix (packs: with packs; {
           prefs = fillPrefs pprefs;
           spec = {
             inherit (desc) name namespace provides;
-            inherit (prefs) flags extern tests;
+            inherit (prefs) flags extern tests extraAttributes;
             target = spackTarget prefs.target;
             package = builtins.path { name="repo-pkgs-${pname}"; path=desc.dir; };
-            paths = desc.paths // prefs.paths;
             version = if prefs.extern != null && lib.versionIsConcrete prefs.version
                    then prefs.version
                    else resolveVersion desc.version  prefs.version;
@@ -369,7 +367,7 @@ lib.fix (packs: with packs; {
 
   /* use this packs to bootstrap another with the specified compiler */
   withCompiler = compiler: packs.withPrefs {
-    package = { c = compiler; cxx = compiler; fortran = compiler; };
+    package = lib.compilers compiler;
   };
 
   /* create a view (or an "env" in nix terms): a merged set of packages */
