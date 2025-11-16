@@ -9,7 +9,7 @@ packs:
    { name = "name"; static = "content"; }
    { name = "name"; static = { template variables }; }
    */
-, coreCompilers ? [packs.pkgs.compiler]
+, coreCompilers ? [packs.pkgs.c]
 }:
 let
 jsons = {

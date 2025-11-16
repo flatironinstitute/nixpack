@@ -1,5 +1,6 @@
 let
 
+lib = import packs/lib.nix;
 packs = import ./packs {
   /* packs prefs */
   system = builtins.currentSystem;
@@ -15,8 +16,8 @@ packs = import ./packs {
   spackSrc = {
     /* default:
     url = "https://github.com/spack/spack"; */
-    ref = "develop";
-    rev = "9c255381b1a4a5ba065ba80f875fc20815f14e0a";
+    ref = "releases/1.0";
+    rev = "734c5db2121b01c373eed6538e452f18887e9e44";
   };
   /* extra config settings for spack itself.  Can contain any standard spack
      configuration, but don't put compilers (automatically generated), packages
@@ -40,22 +41,18 @@ packs = import ./packs {
      omit to disable. */
   nixpkgsSrc = {
     #url = "https://github.com/NixOS/nixpkgs";
-    ref = "release-23.11";
+    ref = "release-24.11";
     #rev = "c8c5faff75fd017e468e8733312525b51cea1af2";
   };
 
-  /* additional spack repos to include by path, managed by nixpack.
-     These should be normal spack repos, including repo.yaml, and are prepended
-     to any configured spack repos.
+  /* spack repos to include by path, managed by nixpack.
+     These should be normal spack repos, including repo.yaml.
      Repos specified here have the advantage of correctly managing nix
      dependencies, so changing a package will only trigger rebuilds of
-     it and dependent packages.
-     Theoretically you could copy the entire spack builtins repo here and
-     manage package updates that way, leaving spackSrc at a fixed revision.
-     However, if you update the repo, you'll need to ensure compatibility with
-     the spack core libraries, too. */
+     it and dependent packages. */
   repos = [
     spack/repo
+    spack-packages/repos/spack_repo/builtin
   ];
   /* updates to the spack repo (see patch/default.nix for examples)
   repoPatch = {
@@ -103,9 +100,9 @@ packs = import ./packs {
     resolver = [deptype: [name: <packs | prefs: pkg>]]; */
   };
   /* package-specific preferences */
-  package = {
-    /* compiler is an implicit virtual dependency for every package */
-    compiler = bootstrapPacks.pkgs.gcc;
+  package = 
+    /* set all compiler virtuals */
+    lib.compilers bootstrapPacks.pkgs.gcc // {
     /* preferences for individual packages or virtuals */
     /* get cpio from system:
     cpio = {
@@ -149,14 +146,20 @@ packs = import ./packs {
    This set is used to bootstrap gcc, but other packs could also be used to set
    different virtuals, versions, variants, compilers, etc.  */
 bootstrapPacks = packs.withPrefs {
-  package = {
+  package = lib.compilers {
     /* must be set to an external compiler capable of building compiler (above) */
-    compiler = {
       name = "gcc";
-      version = "4.8.5";
+      version = "8.5.0";
       extern = "/usr"; /* install prefix */
+      extraAttributes = {
+        compilers = {
+          c = "/usr/bin/gcc";
+          cxx = "/usr/bin/g++";
+          fortran = "/usr/bin/gfortran";
+        };
+      };
       /* can also have multiple layers of bootstrapping, where each compiler is built by another */
-    };
+    } // {
     /* can speed up bootstrapping by providing more externs
     zlib = {
       extern = "/usr";
@@ -165,16 +168,22 @@ bootstrapPacks = packs.withPrefs {
   };
 };
 
+gcc10Packs = packs.withPrefs {
+  package = lib.compilers (packs.pkgs.gcc.withPrefs { #override package defaults
+    version = "10";
+  });
+};
+
 in
 
 packs // {
   mods = packs.modules {
-    /* this correspond to module config in spack */
+    /* this corresponds to module config in spack */
     /* modtype = "lua"; */
-    coreCompilers = [packs.pkgs.compiler bootstrapPacks.pkgs.compiler];
-    /*
+    coreCompilers = [packs.pkgs.c bootstrapPacks.pkgs.c];
     config = {
-      hiearchy = ["mpi"];
+    /*
+      hierarchy = ["mpi"];
       hash_length = 0;
       projections = {
         # warning: order is lost
@@ -193,20 +202,20 @@ packs // {
           };
         };
       };
-    };
     */
-    pkgs = with packs.pkgs; [
+    };
+    pkgs = (with packs.pkgs; [
       gcc
-      { pkg = gcc.withPrefs { # override package defaults
-          version = "10";
-        };
+      zlib
+    ]) ++ (with gcc10Packs.pkgs; [
+      { pkg = c;
         default = true; # set as default version
         # extra content to append to module file
         postscript = ''
           LModMessage("default gcc loaded")
         '';
       }
-      perl
+      zlib
       /*
       { # a custom module, not from spack
         name = "other-package";
@@ -224,6 +233,6 @@ packs // {
         };
       }
       */
-    ];
+    ]);
   };
 }

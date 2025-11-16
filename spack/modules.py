@@ -5,6 +5,7 @@ import datetime
 
 import nixpack
 import spack
+import spack.modules
 
 try:
     from spack.package_base import PackageBase
@@ -16,11 +17,10 @@ name = nixpack.getVar('name')
 modtype = nixpack.getVar('modtype')
 
 coreCompilers = [nixpack.NixSpec.get(p, top=False) for p in nixpack.getJson('coreCompilers')]
-coreCompilers.append(nixpack.nullCompilerSpec)
 
 modconf = nixpack.getJson('config')
 modconf.setdefault('core_compilers', [])
-modconf['core_compilers'].extend(str(comp.as_compiler) for comp in coreCompilers)
+modconf['core_compilers'].extend(str(comp) for comp in coreCompilers)
 core_specs = modconf.setdefault('core_specs', [])
 
 cls = spack.modules.module_types[modtype]

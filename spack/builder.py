@@ -24,7 +24,7 @@ nixpack.getVar('name')
 nixspec = nixpack.getJson('spec')
 
 spec = nixpack.NixSpec.get(nixspec, nixpack.getVar('out'))
-spec._mark_concrete()
+spec.concretize()
 
 pkg = spec.package
 pkg.run_tests = spec.tests
@@ -52,8 +52,9 @@ if setup:
     exec(setup)
 
 origenv = os.environ.copy()
+opts['unmodified_env'] = origenv
 # create and stash some metadata
-spack.build_environment.setup_package(pkg, True, context=Context.BUILD)
+opts['env_modifications'] = spack.build_environment.setup_package(pkg, True, context=Context.BUILD)
 os.makedirs(pkg.metadata_dir, exist_ok=True)
 
 # log build phases to nix
@@ -82,9 +83,9 @@ os.umask(0o002)
 spack.installer.build_process(pkg, opts)
 
 # we do this even if not testing as it may create more things (e.g., perl "extensions")
-os.environ.clear()
-os.environ.update(origenv)
-spack.build_environment.setup_package(pkg, True, context=Context.TEST)
+#os.environ.clear()
+#os.environ.update(origenv)
+#spack.build_environment.setup_package(pkg, True, context=Context.TEST)
 
 with open(os.path.join(spec.prefix, nixpack.NixSpec.nixSpecFile), 'w') as sf:
     json.dump(spec.nixspec, sf)
