@@ -69,6 +69,13 @@ corePacks = import ../packs {
     /* ---------- global package preferences ------------
      * Default settings and versions for specific packages should be added here (in alphabetical order).
      */
+    amdlibm = {
+      depends = {
+        scons = {
+          version = "4.8.1";
+        };
+      };
+    };
     aocc = {
       variants = {
         license-agreed = true;
@@ -81,7 +88,12 @@ corePacks = import ../packs {
         python = true;
         parquet = true;
         dataset = true;
+        filesystem = true;
       };
+    };
+    assimp = {
+      # for qt
+      version = "5";
     };
     at-spi2-core = {
       # for gtkplus
@@ -126,7 +138,7 @@ corePacks = import ../packs {
         random = true;
         regex = true;
         serialization = true;
-        signals = true;
+        #signals = true;
         #stacktrace = true;
         system = true;
         test = true;
@@ -151,7 +163,7 @@ corePacks = import ../packs {
     cgal = {
       depends = {
         cmake = {
-          version = "3.29";
+          version = "3";
         };
       };
     };
@@ -176,14 +188,14 @@ corePacks = import ../packs {
     };
     cuda = {
       # make sure this is compatible with the image driver
-      version = "12.5";
+      version = "12.9";
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
     };
     cudnn = {
       # for torch, tensorflow, etc
-      version = "8.9";
+      version = "9";
     };
     curl = {
       variants = {
@@ -221,7 +233,7 @@ corePacks = import ../packs {
       };
     };
     ffmpeg = {
-      version = "4"; # 5 has incorrect configure args
+      #version = "4"; # 5 has incorrect configure args
       variants = {
         libaom = true;
       };
@@ -239,7 +251,7 @@ corePacks = import ../packs {
     };
     fmt = {
       # for seacas, for vtk
-      version = "9";
+      version = "10";
     };
     gcc = {
       version = "13";
@@ -271,9 +283,9 @@ corePacks = import ../packs {
     };
     gdbm = {
       # for perl
-      version = "1.23";
+      #version = "1.23";
       # failing
-      tests = false;
+      #tests = false;
     };
     gdrcopy = {
       version = "2.5"; # match kernel module
@@ -283,7 +295,7 @@ corePacks = import ../packs {
       };
     };
     glib = {
-      version = "2.79:";
+      version = "2.82";
     };
     gloo = {
       # for py-torch
@@ -336,7 +348,7 @@ corePacks = import ../packs {
     gtk-doc = {
       depends = {
         docbook-xml = {
-          version = "4.3";
+          #version = "4.3";
         };
       };
     };
@@ -355,7 +367,7 @@ corePacks = import ../packs {
       };
     };
     hdf5 = {
-      version = "1.12";
+      version = "1.14";
       variants = {
         hl = true;
         fortran = true;
@@ -382,7 +394,7 @@ corePacks = import ../packs {
           };
         };
         hdf5 = {
-          version = "1.14";
+          #version = "1.14";
           variants = {
             java = true;
           };
@@ -428,15 +440,16 @@ corePacks = import ../packs {
     };
     kokkos = {
       # for trilinos
-      version = "4.3.01";
+      version = "4.5.01";
       variants = {
         complex_align = false;
         openmp = true;
+        pic = true;
       };
     };
     kokkos-kernels = {
       # for trilinos
-      version = "4.3.01";
+      version = "4.5.01";
     };
     libaio = {
       # needs mke2fs?
@@ -469,7 +482,7 @@ corePacks = import ../packs {
     };
     libmicrohttpd = {
       # for elfutils
-      version = "0.9.50";
+      #version = "0.9.50";
     };
     libunwind = {
       # failing
@@ -490,7 +503,7 @@ corePacks = import ../packs {
       };
     };
     llvm = {
-      version = "18";
+      version = "20";
       variants = {
         lua = false;
       };
@@ -528,6 +541,8 @@ corePacks = import ../packs {
       };
     };
     netcdf-c = {
+      # for seacas
+      version = "4.9.2";
       variants = {
         # just to force curl dep
         dap = true;
@@ -562,8 +577,8 @@ corePacks = import ../packs {
       extern = "/usr";
     };
     openjdk = {
-      # for bazel
-      version = "11";
+      # for hdfview
+      version = "21";
     };
     openldap = {
       # for python-ldap
@@ -662,15 +677,20 @@ corePacks = import ../packs {
     };
     postgresql = {
       # for py-psycopg2
-      version = "15";
+      version = "17";
     };
     proj = {
       # for vtk, paraview
-      version = "8.1.0";
+      #version = "8.1.0";
     };
     protobuf = {
       # for py-protobuf
       version = "3.28";
+    };
+    prrte = {
+      variants = {
+        schedulers = ["slurm"];
+      };
     };
     py-astropy = {
       variants = {
@@ -685,10 +705,26 @@ corePacks = import ../packs {
         mpi = true;
       };
     };
+    py-bleach = {
+      # for py-nbconvert
+      variants = {
+        css = true;
+      };
+    };
     py-botocore = {
+      # for py-aiobotocore
       version = "1.34.44";
     };
+    py-charset-normalizer = {
+      depends = {
+        py-mypy = {
+          # for py-charset-normalizer
+          version = "1.15.0";
+        };
+      };
+    };
     py-cryptography = {
+      version = "41";
       build = opensslPkgconfig;
     };
     py-cupy = {
@@ -698,7 +734,7 @@ corePacks = import ../packs {
       };
       depends = {
         py-cython = {
-          version = ":2";
+          #version = ":2";
         };
       };
     };
@@ -709,17 +745,17 @@ corePacks = import ../packs {
         };
       };
     };
-    py-distributed = {
-      depends = {
-        py-versioneer = {
-          version = "0.28";
-        };
-      };
-    };
     py-fastrlock = {
       depends = {
         py-pip = {
-          version = ":23.0";
+          #version = ":23.0";
+        };
+      };
+    };
+    py-flatbuffers = {
+      depends = {
+        py-setuptools = {
+          version = "76";
         };
       };
     };
@@ -733,7 +769,7 @@ corePacks = import ../packs {
     };
     py-gast = {
       # py-pythran
-      version = "0.5.3";
+      #version = "0.5.3";
     };
     py-globus-sdk = {
       # for py-globus-cli
@@ -753,19 +789,19 @@ corePacks = import ../packs {
       };
     };
     py-jax = {
-      version = "0.4.28";
+      #version = "0.4.28";
       variants = {
         inherit cuda_arch;
       };
     };
     py-jaxlib = {
-      version = "0.4.28";
+      #version = "0.4.28";
       variants = {
         inherit cuda_arch;
       };
       depends = {
         bazel = {
-          version = "6.5.0";
+          #version = "6.5.0";
         };
       };
     };
@@ -778,20 +814,27 @@ corePacks = import ../packs {
       version = "3";
     };
     py-libclang = {
-      version = "15";
+      version = "17";
       depends = {
-        llvm = llvm15;
+        llvm = llvm17;
       };
     };
     py-llvmlite = {
       depends = {
-        llvm = llvm15;
+        #llvm = llvm15;
       };
     };
     py-m2r = {
       depends = {
         py-mistune = {
           version = ":1";
+        };
+      };
+    };
+    py-matplotlib = {
+      depends = {
+        py-meson-python = {
+          version = "0.16";
         };
       };
     };
@@ -819,7 +862,7 @@ corePacks = import ../packs {
     };
     py-py-cpuinfo = {
       # for py-hdf5plugin
-      version = "8.0.0";
+      #version = "8.0.0";
     };
     py-pyarrow = {
       variants = {
@@ -862,6 +905,24 @@ corePacks = import ../packs {
         };
       };
     };
+    py-python-dateutil = {
+      depends = {
+        py-setuptools-scm = {
+          version = "7";
+        };
+      };
+    };
+    py-rfc3986 = {
+      # for py-httpx
+      version = "1";
+      variants = { 
+        idna2008 = true;
+      };
+    };
+    py-ruff = {
+      # extant rust
+      version = "0.11";
+    };
     py-runtests = {
       variants = {
         mpi = true;
@@ -887,21 +948,37 @@ corePacks = import ../packs {
     };
     py-sphinx = {
       # for python 3.10
-      version = "8.1";
+      #version = "8.1";
+    };
+    bazel = {
+      depends = {
+        openjdk = {
+          version = "11";
+        };
+      };
     };
     py-tensorflow = {
       # for py-keras
-      version = "=2.18.0";
+      version = "=2.18.1";
       variants = {
         inherit cuda_arch;
         xla = true;
         rocm = false;
       };
       depends = {
+        cudnn = {
+          version = "8";
+        };
         bazel = {
           version = "6.5.0";
+          depends = {
+            java = {
+              name = "openjdk";
+              version = "11";
+            };
+          };
         };
-        compiler = {
+        c = {
           variants = {
             # needs newer assembler
             binutils = true;
@@ -911,7 +988,15 @@ corePacks = import ../packs {
     };
     py-urllib3 = {
       # for py-google-auth
-      version = "1";
+      #version = "1";
+      # for py-botocore
+      version = "2.0";
+      depends = {
+        py-hatch-vcs = {
+          # for py-urllib3
+          version = "0.4.0";
+        };
+      };
     };
     re2 = {
       # for py-tensorflow
@@ -928,11 +1013,14 @@ corePacks = import ../packs {
       depends = blasVirtuals {
         name = "openblas"; # doesn't find flexiblas
       } // {
-        compiler = {
+        /* c = {
           variants = {
             # needs newer assembler
             binutils = true;
           };
+        }; */
+        py-setuptools = {
+          version = "79";
         };
       };
     };
@@ -977,6 +1065,11 @@ corePacks = import ../packs {
         cuda = true;
         inherit cuda_arch;
       };
+      depends = {
+        py-setuptools = {
+          version = "76";
+        };
+      };
     };
     py-torch-sparse = {
       variants = {
@@ -995,6 +1088,13 @@ corePacks = import ../packs {
         py-numpy = {
           # build only
           #version = "2";
+        };
+      };
+    };
+    py-zope-interface = {
+      depends = {
+        py-setuptools = {
+          version = ":73";
         };
       };
     };
@@ -1039,12 +1139,12 @@ corePacks = import ../packs {
     };
     seacas = {
       # for vtk
-      version = "2022";
+      version = "2024-06-27";
     };
     shadow = rpmExtern "shadow-utils";
     sleef = {
       # for py-torch
-      version = "3.6.0_2024-03-20";
+      #version = "3.6.0_2024-03-20";
     };
     slurm = rpmExtern "slurm" // {
       version = slurmVersion;
@@ -1061,6 +1161,10 @@ corePacks = import ../packs {
         shared = false;
       };
     };
+    spdlog = {
+      # for seacas via fmt
+      version = "1.14";
+    };
     sox = {
       variants = {
         mp3 = true;
@@ -1076,6 +1180,7 @@ corePacks = import ../packs {
       variants = {
         # python<3.11
         python = false;
+        build_system = "cmake";
       };
     };
     trilinos = {
@@ -1136,7 +1241,7 @@ corePacks = import ../packs {
     };
     vtk = {
       # 9.4 spack package deps broken
-      version = "9.3";
+      #version = "9.3";
     };
     zlib-api = { name = "zlib"; };
     zlib-ng = {
@@ -1215,10 +1320,6 @@ corePacks = import ../packs {
                 "[invalid if_inexclude]\nIgnoring value for oob_tcp_if_%s on %s (%s: %s).\n(You can safely ignore this message.)\n#\n"))
         '' else "");
       };
-    };
-    intel-oneapi-mpi = spec: old: {
-      /* hack so we can have a separate set of intel-mpi packages (intel compiler + intel mpi vs. core compiler + intel mpi) */
-      depends = removeAttrs old.depends ["compiler"];
     };
     /* Blender dependency. Wants ccache and tries to build with -Werror. Override that. */
     openimageio = { build =
@@ -1638,12 +1739,12 @@ preExtensions = pre: view: pkgExtensions
 pyExtensions = preExtensions "py-";
 rExtensions = preExtensions "r-";
 
-llvm15 = {
-  version = "15";
+llvm17 = {
+  version = "17";
   # https://github.com/llvm/llvm-project/issues/62396
-  patches = [(builtins.fetchurl 
-    "https://github.com/llvm/llvm-project/commit/484e64f7e7b2c0494d7b2dbfdd528bcd707ee652.patch"
-  )];
+  #patches = [(builtins.fetchurl 
+  #  "https://github.com/llvm/llvm-project/commit/484e64f7e7b2c0494d7b2dbfdd528bcd707ee652.patch"
+  #)];
 };
 
 /* julia needs very specific package versions for which dependency resolution isn't enough */
@@ -1950,7 +2051,7 @@ pkgStruct = {
   compilers = mkCompilers corePacks (comp: comp // rec {
     pkgs = with comp.packs.pkgs; [
       /* ---------- compiler modules ---------- */
-      (comp.defaulting compiler)
+      (comp.defaulting c)
       cfitsio
       cgal
       eigen
@@ -2036,9 +2137,9 @@ pkgStruct = {
         ++
         lib.optionals mpi.isCudaAware [
           gromacs
-          { pkg = gromacs.withPrefs { version = "=2023"; variants = { plumed = true; }; };
-            projection = "{name}/mpi-plumed-{version}"; }
-          plumed
+          /* { pkg = gromacs.withPrefs { version = "=2023"; variants = { plumed = true; }; };
+            projection = "{name}/mpi-plumed-{version}"; } */
+          #plumed
         ]
         ++
         lib.optionals comp.isCore [
@@ -2238,7 +2339,7 @@ pkgStruct = {
         #py-ws4py
         #py-xattr #broken: missing pip dep
         #py-yep
-        #py-yt
+        py-yt
 
         py-protobuf
         py-torch
@@ -2312,9 +2413,9 @@ pkgStruct = {
       { pkg = mpiPacks.pkgs.gromacs.withPrefs { variants = { mpi = true; }; };
         projection = "{name}/skylake-mpi-{version}";
       }
-      { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "=2023"; variants = { mpi = true; plumed = true; }; };
+      /* { pkg = mpiPacks.pkgs.gromacs.withPrefs { version = "=2023"; variants = { mpi = true; plumed = true; }; };
         projection = "{name}/skylake-mpi-plumed-{version}";
-      }
+      } */
     ];
   };
 
@@ -2521,8 +2622,8 @@ jupyter = jupyterBase.extendView (
       builtins.concatMap (py: with py;
         let k = {
           pkg = view;
-          prefix = "${py.packs.pkgs.python.name}-${py.packs.pkgs.compiler.name}";
-          note = "${lib.specName py.packs.pkgs.python.spec}%${lib.specName py.packs.pkgs.compiler.spec}";
+          prefix = "${py.packs.pkgs.python.name}-${py.packs.pkgs.c.name}";
+          note = "${lib.specName py.packs.pkgs.python.spec}%${lib.specName py.packs.pkgs.c.spec}";
         }; in [
           (k // {
             env = builtins.mapAttrs (var: path:
@@ -2607,7 +2708,7 @@ modPkgs = with pkgStruct;
   ++
   /*
   map (pkg: pkgMod pkg // { projection = "{name}/libcpp-{version}";
-    autoload = [clangcpp.packs.pkgs.compiler]; })
+    autoload = [clangcpp.packs.pkgs.c]; })
     clangcpp.pkgs
   ++ */
   map (pkg: pkgMod pkg // { projection = "{name}/nvhpc-{version}"; })
@@ -2635,7 +2736,7 @@ modPkgs = with pkgStruct;
 ;
 
 mods = corePacks.modules {
-  coreCompilers = map (p: p.pkgs.compiler) [
+  coreCompilers = map (p: p.pkgs.c) [
     corePacks
     bootstrapPacks
     pkgStruct.clangcpp.packs
