@@ -19,6 +19,9 @@ let
       '';
     };
   };
+  needc = spec: old: {
+    depends = { c = { deptype = ["build"]; }; } // old.depends;
+  };
 in
 {
   /* add compiler paths, providers */
@@ -170,4 +173,8 @@ in
   lua-luaposix = noluajit;
   lua-mpack = noluajit;
   lua-sol2 = noluajit;
+
+  /* these have cxx deps only but also need a c compiler */
+  gpu-burn = needc;
+  ilmbase = needc;
 }

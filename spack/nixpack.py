@@ -37,7 +37,7 @@ import spack.vendor.archspec.cpu
 import spack.util.spack_yaml as syaml
 import spack.llnl.util.tty
 
-from spack.solver.asp import _inject_patches_variant as inject_patches_variant
+from spack.spec import _inject_patches_variant as inject_patches_variant
 
 # monkeypatch store.layout for the few things we need
 class NixLayout():
@@ -58,10 +58,7 @@ class NixStore():
     unpadded_root = spack.paths.prefix
 spack.store.STORE = NixStore()
 
-def add_environment_scope(priority):
-    raise Error("unexpected environment scope")
-
-spack.main.add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split(), add_environment_scope)
+spack.main.add_command_line_scopes(spack.config.CONFIG, getVar('spackConfig').split())
 spack.config.CONFIG.remove_scope('system')
 spack.config.CONFIG.remove_scope('user')
 spack.config.CONFIG.push_scope(spack.config.InternalConfigScope("nixpack"))

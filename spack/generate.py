@@ -269,7 +269,7 @@ def conditions(c, p, s, dep=None):
             if s.architecture.target:
                 # this isn't actually correct due to fancy targets but good enough for this
                 c.append(Eq(Expr('target'), str(s.architecture.target).rstrip(':')))
-    if s.name is not None and s.name != p.name:
+    if s.name and s.name != p.name:
         # spack sometimes interprets this to mean p provides a virtual of s.name, and sometimes to refer to the named package anywhere in the dep tree
         print(f"{p.name}: ignoring unsupported named condition {s}")
         c.append(False)

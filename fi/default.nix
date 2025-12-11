@@ -1,7 +1,7 @@
 /* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
 { os ? "rocky8"
 , target ? "broadwell"
-, cudaarch ? "70,80,90"
+, cudaarch ? "80,89,90,120"
 , gitrev ? null
 , slurmVersion ? "24.11"
 }:
@@ -25,8 +25,8 @@ corePacks = import ../packs {
   spackSrc = {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
-    ref = "nixpack/1.0";
-    rev = "32ac1781957177100b91a8649ff4eb74d1ae999e";
+    ref = "nixpack/1.1";
+    rev = "148366782275e0f2a056f414f856f980ab712bdc";
   };
 
   spackConfig = {
@@ -69,6 +69,12 @@ corePacks = import ../packs {
     /* ---------- global package preferences ------------
      * Default settings and versions for specific packages should be added here (in alphabetical order).
      */
+    abseil-cpp = {
+      # for protobuf
+      variants = {
+        cxxstd = "17";
+      };
+    };
     amdlibm = {
       depends = {
         scons = {
@@ -211,6 +217,10 @@ corePacks = import ../packs {
       variants = {
         fuse2fs = true;
       };
+    };
+    eigen = {
+      # for vtk
+      version = "3";
     };
     elfutils = {
       # for gdb
@@ -685,7 +695,7 @@ corePacks = import ../packs {
     };
     protobuf = {
       # for py-protobuf
-      version = "3.28";
+      #version = "3.28";
     };
     prrte = {
       variants = {
@@ -812,6 +822,11 @@ corePacks = import ../packs {
     };
     py-jupyterhub = {
       version = "3";
+    };
+    py-keras = {
+      variants = {
+        backend = ["jax" "torch"];
+      };
     };
     py-libclang = {
       version = "17";
@@ -959,24 +974,24 @@ corePacks = import ../packs {
     };
     py-tensorflow = {
       # for py-keras
-      version = "=2.18.1";
+      #version = "=2.18.1";
       variants = {
         inherit cuda_arch;
         xla = true;
         rocm = false;
       };
       depends = {
-        cudnn = {
-          version = "8";
-        };
+        #cudnn = {
+        #  version = "8";
+        #};
         bazel = {
-          version = "6.5.0";
-          depends = {
-            java = {
-              name = "openjdk";
-              version = "11";
-            };
-          };
+          version = "7.4.1";
+          #depends = {
+            #java = {
+              #name = "openjdk";
+              #version = "11";
+            #};
+          #};
         };
         c = {
           variants = {
@@ -2350,7 +2365,7 @@ pkgStruct = {
 
         #py-horovod #incompatible py-torch 2.1
         py-jax
-        py-keras
+        #py-keras #overly constrains old tensorflow, jax
         #py-lightning-fabric #included in pytorch-lightning
         py-pytensor
         py-pytorch-lightning

@@ -6,6 +6,7 @@ import json
 
 import nixpack
 import spack
+import spack.installer
 
 try:
     from spack.context import Context
