@@ -69,17 +69,20 @@ class Attr(Nix):
         printNix(self.val, indent, out)
         out.write(';\n')
 
+def printAttrs(a, indent, out):
+    first = True
+    for k, v in sorted(a.items()):
+        if first:
+            out.write('\n')
+            first = False
+        Attr(k, v).print(indent+2, out)
+    if not first:
+        out.write(' '*indent)
+
 class AttrSet(Nix, dict):
     def print(self, indent, out):
         out.write('{')
-        first = True
-        for k, v in sorted(self.items()):
-            if first:
-                out.write('\n')
-                first = False
-            Attr(k, v).print(indent+2, out)
-        if not first:
-            out.write(' '*indent)
+        printAttrs(self, indent, out)
         out.write('}')
 
 class Select(Nix):
@@ -197,6 +200,21 @@ class If(Nix):
         out.write(' else ')
         self.paren(self.e, indent, out)
 
+class Let(Nix):
+    prec = 20
+    def __init__(self, e, **a):
+        self.a = a
+        self.e = e
+    def print(self, indent, out):
+        out.write('let ')
+        printAttrs(self.a, indent, out)
+        out.write('in ')
+        self.paren(self.e, indent, out)
+
+class Let1(Let):
+    def __init__(self, var, val, e):
+        super().__init__(e, **{var: val})
+
 nixStrEsc = str.maketrans({'"': '\\"', '\\': '\\\\', '$': '\\$', '\n': '\\n', '\r': '\\r', '\t': '\\t'})
 def printNix(x, indent=0, out=sys.stdout):
     if isinstance(x, Nix):
@@ -226,6 +244,10 @@ def unlist(l):
         return l[0]
     return l
 
+virtuals = defaultdict(set)
+provides = dict()
+packages = []
+
 def specPrefs(s):
     p = {}
     if s.versions != any_version:
@@ -247,37 +269,45 @@ def depPrefs(d):
         print(f"{d} has unsupported dependency patches", file=sys.stderr)
     return p
 
-def conditions(c, p, s, dep=None):
+def conditions(p, s, dep=None):
     def addConditions(a, s):
+        res = []
         deps = Select(a,'depends')
+        if s.name:
+            res.append(Eq(Select(a,'name'), s.name))
         if s.versions != any_version:
-            c.append(App("versionMatches", Select(a,'version'), str(s.versions)))
+            res.append(App("versionMatches", Select(a,'version'), str(s.versions)))
         if s.variants:
             for n, v in sorted(s.variants.items()):
-                c.append(App("variantMatches", Select(a,'variants',n), unlist(v.value)))
+                res.append(App("variantMatches", Select(a,'variants',n), unlist(v.value)))
         for d in s.dependencies():
             if dep and d.name == dep.spec.name:
                 print(f"{dep}: skipping recursive dependency conditional {d}", file=sys.stderr)
                 continue
-            c.append(Ne(SelectOr(deps,d.name,None),None))
-            addConditions(Select(deps,d.name,'spec'), d)
+            v = d.name # maybe should uniquify?
+            if d.name in provides:
+                prov = provides[d.name]
+                if a == 'spec':
+                    # optimization when we know our own dependencies
+                    prov = prov.intersection(p.dependency_names())
+                e = App('virtualDep', deps, d.name, prov)
+            else:
+                e = None
+            res.append(Let1(v, SelectOr(deps, d.name, e),
+                And(Ne(Expr(v),None), *addConditions(Select(Expr(v),'spec'), d))))
         if s.architecture:
             if s.architecture.os:
-                c.append(Eq(Expr('os'), s.architecture.os))
+                res.append(Eq(Expr('os'), s.architecture.os))
             if s.architecture.platform:
-                c.append(Eq(Expr('platform'), s.architecture.platform))
+                res.append(Eq(Expr('platform'), s.architecture.platform))
             if s.architecture.target:
                 # this isn't actually correct due to fancy targets but good enough for this
-                c.append(Eq(Expr('target'), str(s.architecture.target).rstrip(':')))
-    if s.name and s.name != p.name:
-        # spack sometimes interprets this to mean p provides a virtual of s.name, and sometimes to refer to the named package anywhere in the dep tree
-        print(f"{p.name}: ignoring unsupported named condition {s}")
-        c.append(False)
-    addConditions('spec', s)
+                res.append(Eq(Expr('target'), str(s.architecture.target).rstrip(':')))
+        return res
+    return addConditions('spec', s)
 
 def whenCondition(p, s, a, dep=None):
-    c = []
-    conditions(c, p, s, dep)
+    c = conditions(p, s, dep)
     if not c:
         return a
     return App('when', And(*c), a)
@@ -319,8 +349,7 @@ def variant(p, v):
         a = variant1(p, v[0])
         l = []
         for w in v[1]:
-            c = []
-            conditions(c, p, w)
+            c = conditions(p, w)
             if not c:
                 return a
             l.append(And(*c))
@@ -333,8 +362,7 @@ def variant_definitions(p, l):
         return None
     w, v = l[0]
     a = variant1(p, v)
-    c = []
-    conditions(c, p, w)
+    c = conditions(p, w)
     if not c:
         return a
     # fold right
@@ -356,10 +384,9 @@ def provide(p, wv):
     return List(c)
 
 def conflict(p, c, w, m):
-    l = []
-    conditions(l, p, spack.spec.Spec(c))
-    conditions(l, p, w)
-    return App('when', And(*l), str(c) + (' ' + m if m else ''))
+    l = conditions(p, spack.spec.Spec(w))
+    l.extend(conditions(p, c))
+    return App('when', And(*l), str(w) + (' ' + m if m else ''))
 
 namespaces = ', '.join(r.namespace for r in spack.repo.PATH.repos)
 print(f"Generating package repo for {namespaces}...")
@@ -368,9 +395,19 @@ print("spackLib: with spackLib; {", file=f)
 def output(k, v):
     printNix(Attr(k, v), out=f)
 
-virtuals = defaultdict(set)
-n = 0
 for p in spack.repo.PATH.all_package_classes():
+    if p.virtual:
+        continue
+    packages.append(p)
+    if p.provided:
+        s = set()
+        for w, vs in p.provided.items():
+            for v in vs:
+                s.add(v.name)
+                virtuals[v.name].add(p.name)
+        provides[p.name] = s
+
+for p in packages:
     desc = dict()
     desc['namespace'] = p.namespace
     desc['dir'] = os.path.realpath(p.package_dir)
@@ -388,17 +425,15 @@ for p in spack.repo.PATH.all_package_classes():
         if 'c' in desc['depends'] or 'cxx' in desc['depends'] or 'fortran' in desc['depends']:
             desc['depends']['compiler-wrapper'] = {'deptype': ['build']}
     if p.conflicts:
-        desc['conflicts'] = [conflict(p, c, w, m) for c, wm in sorted(p.conflicts.items()) for w, m in wm]
+        desc['conflicts'] = [conflict(p, c, w, m) for w, wm in sorted(p.conflicts.items()) for c, m in wm]
     if p.provided:
-        provides = defaultdict(list)
+        prov = defaultdict(list)
         for w, vs in sorted(p.provided.items()):
             for v in vs:
-                provides[v.name].append((w, v.versions))
-                virtuals[v.name].add(p.name)
-        desc['provides'] = {v: provide(p, c) for v, c in sorted(provides.items())}
+                prov[v.name].append((w, v.versions))
+        desc['provides'] = {v: provide(p, c) for v, c in sorted(prov.items())}
     output(p.name, Fun('spec', desc))
-    n += 1
-print(f"Generated {n} packages")
+print(f"Generated {len(packages)} packages")
 
 # use spack config for provider ordering
 prefs = spack.config.get("packages:all:providers", {})

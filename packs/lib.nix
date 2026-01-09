@@ -144,6 +144,9 @@ rec {
     if isList v then elem m v else
     v == m) (toList ms);
 
+  virtualDep = p: dn:
+    foldl' (r: d: let dep = p.${d} or null; in if dep != null && dep.spec.name == dn then dep else r) null;
+
   deptypeChars = dt:
     concatStringsSep "" (map (t:
         if elem t dt then substring 0 1 t else " ")

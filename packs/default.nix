@@ -352,7 +352,7 @@ lib.fix (packs: with packs; {
   repo = patchRepo repoPatch (patchRepo (import ../patch packs)
     (import spackRepo {
       /* utilities needed by the repo */
-      inherit (lib) when versionMatches variantMatches;
+      inherit (lib) when versionMatches variantMatches virtualDep;
       inherit platform os target;
     }));
 

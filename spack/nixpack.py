@@ -285,8 +285,7 @@ class NixSpec(spack.spec.Spec):
         else:
             self._nix_hash, nixname = key.split('-', 1)
 
-
-        if not self.external and nixspec['patches']:
+        if top and not self.external and nixspec['patches']:
             patches = package_class.patches.setdefault(spack.spec.Spec(), [])
             for i, p in enumerate(nixspec['patches']):
                 patches.append(spack.patch.FilePatch(package_class, p, 1, '.', ordering_key = ('~nixpack', i)))

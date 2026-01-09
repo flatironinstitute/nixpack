@@ -35,12 +35,12 @@ in
   };
 
   aocc = spec: old: {
-    depends = old.depends // {
+    depends = {
       llvm = {
         # uses llvm package
         deptype = ["build"];
       };
-    };
+    } // old.depends;
   };
 
   apptainer = spec: old: {
