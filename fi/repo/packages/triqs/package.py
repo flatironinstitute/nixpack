@@ -18,6 +18,8 @@ class Triqs(CMakePackage):
     variant('libclang', default=True, description='Build against libclang to enable c++2py support. ')
 
     # TRIQS Dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
     depends_on('blas', type=('build', 'link'))

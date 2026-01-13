@@ -9,6 +9,9 @@ class Stkfmm(CMakePackage):
 
     maintainers = ['blackwer', 'wenyan4work']
     version('1.1.0', commit='56bfce38397b19a245cca2a1a8c47a221aa2da40')
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('blas', type=('build', 'link'))
     depends_on('mpi', type=('build', 'link'))
     depends_on('eigen', type=('build'))

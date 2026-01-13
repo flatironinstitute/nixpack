@@ -21,3 +21,5 @@ class Libass(AutotoolsPackage):
     version('0.13.3', sha256='86c8c45d14e4fd23b5aa45c72d9366c46b4e28087da306e04d52252e04a87d0a')
     version('0.13.2', sha256='8baccf663553b62977b1c017d18b3879835da0ef79dc4d3b708f2566762f1d5e')
     version('0.13.1', sha256='9741b9b4059e18b4369f8f3f77248416f988589896fd7bf9ce3da7dfb9a84797')
+
+    depends_on("c", type="build")

@@ -20,6 +20,7 @@ class PyPmesh(PythonPackage):
 
     variant("abopt", default=False, description="Add support for abopt")
 
+    depends_on("c", type="build")
     depends_on("py-setuptools", type="build")
     depends_on("py-cython", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))

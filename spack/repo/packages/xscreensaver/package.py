@@ -12,6 +12,8 @@ class Xscreensaver(AutotoolsPackage):
 
     version('6.01', sha256='085484665d91f60b4a1dedacd94bcf9b74b0fb096bcedc89ff1c245168e5473b')
 
+    depends_on("c", type="build")
+
     @run_before('configure')
     def fix_GTK_paths(self):
         filter_file(r'(@GTK_DATADIR@)|(@PO_DATADIR@)', '@datadir@', 

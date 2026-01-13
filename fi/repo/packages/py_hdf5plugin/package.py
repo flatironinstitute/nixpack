@@ -14,6 +14,7 @@ class PyHdf5plugin(PythonPackage):
 
     version("4.1.1", sha256="96a989679f1f38251e0dcae363180d382ba402f6c89aab73ca351a391ac23b36")
 
+    depends_on("c", type="build")
     # Don't link against compression libs in the spec. hdf5plugin is doing static inclusions.
     depends_on('hdf5')
     depends_on('py-setuptools', type='build')

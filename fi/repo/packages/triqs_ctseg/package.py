@@ -10,6 +10,8 @@ class TriqsCtseg(CMakePackage):
     version('3.3.0', sha256='2fc8c358e339b22d40c7d8b8b60f2a6f61bce786045f3fe0831b86447e2e9c8f')
 
     # TRIQS Dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
     depends_on('nfft', type=('build', 'link'))

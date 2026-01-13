@@ -11,6 +11,7 @@ class Mpv(WafPackage):
 
     version('0.33.1', sha256='100a116b9f23bdcda3a596e9f26be3a69f166a4f1d00910d1789b6571c46f3a9')
 
+    depends_on("c", type="build")
     depends_on('libass')
     depends_on('ffmpeg')
     

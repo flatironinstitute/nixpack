@@ -17,3 +17,5 @@ class Mplayer(AutotoolsPackage):
     version('1.2',   sha256='ffe7f6f10adf2920707e8d6c04f0d3ed34c307efc6cd90ac46593ee8fba2e2b6')
     version('1.1.1', sha256='ce8fc7c3179e6a57eb3a58cb7d1604388756b8a61764cc93e095e7aff3798c76')
     version('1.1',   sha256='76cb47eadb52b420ca028276ebd8112114ad0ab3b726af60f07fb2f39dae6c9c')
+
+    depends_on("c", type="build")

@@ -12,6 +12,8 @@ class TriqsOmegamaxentInterface(CMakePackage):
     version('3.0.0', sha256='fef80d36bea614820bdb2fa650ff545d6099cd4c478276a96d0ff30ed8844338')
 
     # TRIQS Dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
     depends_on('triqs', type=('build', 'link'))

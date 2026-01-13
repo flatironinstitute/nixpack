@@ -11,6 +11,8 @@ class Wecall(MakefilePackage):
     patch('cmake-rhel-regex.patch')
     patch('ncurses.patch')
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('ncurses')
     depends_on('zlib')
     depends_on('boost+regex+test')

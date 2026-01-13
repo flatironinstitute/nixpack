@@ -15,6 +15,7 @@ class PyPfftPython(PythonPackage):
 
     version("0.1.21", sha256="2c5bf26170dffbe06c897f1edbbcf35961baf48fb3a383eedcc3103648e4d334")
 
+    depends_on("c", type="build")
     depends_on("py-setuptools", type="build")
     
     depends_on("py-numpy", type=("build", "run"))

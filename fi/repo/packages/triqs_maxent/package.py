@@ -14,6 +14,8 @@ class TriqsMaxent(CMakePackage):
     version('1.0.0', sha256='798383792902b5085ec3da01ddd2866fa337037bfdffe1df42475624fe0cb1a8')
 
     # TRIQS Dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
     depends_on('triqs', type=('build', 'link'))

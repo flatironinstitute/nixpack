@@ -10,6 +10,8 @@ class TriqsHubbardi(CMakePackage):
     version('3.3.0', sha256='374fb0d7c5a52f9bda3763cb6910a9bdeb8f2e3d1494dfe1024f3e0be098edf6')
 
     # TRIQS Dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
     depends_on('triqs', type=('build', 'link'))

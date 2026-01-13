@@ -17,6 +17,8 @@ class Mupdf(MakefilePackage):
     version('1.13.0',     sha256='746698e0d5cd113bdcb8f65d096772029edea8cf20704f0d15c96cb5449a4904')
     version('1.12.0',     sha256='577b3820c6b23d319be91e0e06080263598aa0662d9a7c50af500eb6f003322d')
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('openssl')
     depends_on('curl')
     depends_on('libxext')

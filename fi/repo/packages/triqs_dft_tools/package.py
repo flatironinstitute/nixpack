@@ -15,6 +15,8 @@ class TriqsDftTools(CMakePackage):
     version('3.0.0', sha256='646d1d2dca5cf6ad90e18d0706124f701aa94ec39c5236d8fcf36dc5c628a3f6')
 
     # TRIQS Dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
     depends_on('triqs', type=('build', 'link'))

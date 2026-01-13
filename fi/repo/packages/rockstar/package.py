@@ -25,6 +25,7 @@ class Rockstar(MakefilePackage):
 
     variant("hdf5", description="HDF5 support", default=True)
 
+    depends_on("c", type="build")
     depends_on("hdf5", when="+hdf5")
     depends_on('libtirpc')
 
