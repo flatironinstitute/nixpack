@@ -114,6 +114,11 @@ corePacks = import ../packs {
         compress_debug_sections = "none";
       };
     };
+    blast-plus = {
+      variants = {
+        python = false; # needs python 3.11
+      };
+    };
     blender = {
       variants = {
         cycles = true;
@@ -197,6 +202,9 @@ corePacks = import ../packs {
       version = "12.9";
       depends = {
         libxml2 = rpmExtern "libxml2";
+      };
+      variants = {
+        allow-unsupported-compilers = true;
       };
     };
     cudnn = {
@@ -305,7 +313,7 @@ corePacks = import ../packs {
       };
     };
     glib = {
-      version = "2.82";
+      #version = "2.82";
     };
     gloo = {
       # for py-torch
@@ -734,7 +742,7 @@ corePacks = import ../packs {
       };
     };
     py-cryptography = {
-      version = "41";
+      version = "43";
       build = opensslPkgconfig;
     };
     py-cupy = {
@@ -813,7 +821,7 @@ corePacks = import ../packs {
         bazel = {
           #version = "6.5.0";
         };
-      };
+      } // lib.compilers (corePacks.pkgs.llvm.withPrefs { version = "21"; });
     };
     py-jsonschema = {
       variants = {
@@ -1682,7 +1690,7 @@ withPython = packs: py: let
   };
   in pyPacks;
 
-corePython = { version = "3.11"; };
+corePython = { version = "3.12"; };
 
 mkPython = base: version:
   let python = {
@@ -1700,8 +1708,8 @@ mkPython = base: version:
 mkPythons = base: gen:
   builtins.map (version: gen (mkPython base version))
   [ /* -------- pythons -------- */
-    "3.11"
     "3.12"
+    "3.13"
   ];
 
 pyCensor = [
@@ -1861,7 +1869,7 @@ pkgStruct = {
       autoload = [hwloc];
     }
     { pkg = llvm.withPrefs {
-        version = "19";
+        version = "21";
       };
       autoload = [hwloc];
     }
@@ -1892,7 +1900,7 @@ pkgStruct = {
     { pkg = cuda;
       default = true;
     }
-    (cuda.withPrefs { version = "12.8"; })
+    (cuda.withPrefs { version = "13"; })
     { pkg = cudnn;
       default = true;
     }
@@ -1988,12 +1996,12 @@ pkgStruct = {
     postgresql
     proj
     protobuf
-    {
+    /* { build failing
       pkg = py-py-spy;
       # remove leading py-
       projection = "py-spy/{version}";
-    }
-    (python.withPrefs { version = "3.13"; })
+    } */
+    #(python.withPrefs { version = "3.13"; })
     {
       pkg = python.withPrefs { version = "3.13"; variants = { freethreading = true; }; };
       projection = "{name}/freethreading-{version}";
@@ -2140,7 +2148,7 @@ pkgStruct = {
         lib.optionals mpi.isCore [
           pvfmm
           stkfmm
-          trilinos
+          #trilinos
         ]
         ++
         lib.optionals (comp.isCore && mpi.isCore) [
@@ -2257,7 +2265,7 @@ pkgStruct = {
         #py-deeptools #pysam broken
         #py-einsum2
         py-emcee
-        py-fitsio
+        #py-fitsio #broken with numpy 2?
         py-flask
         py-flask-socketio
         py-fusepy
@@ -2315,7 +2323,7 @@ pkgStruct = {
         py-prompt-toolkit
         py-pybind11
         py-pycairo
-        py-pycuda
+        #py-pycuda # numpy 2 build issue?
         #py-cupy #py-numpy 1
         py-pyfftw
         py-pygments
@@ -2721,11 +2729,10 @@ modPkgs = with pkgStruct;
   map (pkg: pkgMod pkg // { projection = "{name}/intel-mpi-{version}"; })
     intel.mpi.pkgs
   ++
-  /*
   map (pkg: pkgMod pkg // { projection = "{name}/libcpp-{version}";
     autoload = [clangcpp.packs.pkgs.c]; })
     clangcpp.pkgs
-  ++ */
+  ++
   map (pkg: pkgMod pkg // { projection = "{name}/nvhpc-{version}"; })
     nvhpc.pkgs
   ++
