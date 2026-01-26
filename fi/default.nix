@@ -2485,6 +2485,7 @@ jupyterBase = pyView {} (with jupyterPacks.pkgs; [
   node-js
   py-bash-kernel
   py-jupyter-remote-desktop-proxy
+  py-jupyter-app-launcher
   #py-jupyterlmod
 ]);
 
