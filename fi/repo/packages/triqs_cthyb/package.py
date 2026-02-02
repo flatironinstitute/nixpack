@@ -15,6 +15,7 @@ class TriqsCthyb(CMakePackage):
     # TRIQS Dependencies
     depends_on("c", type="build")
     depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
     depends_on('nfft', type=('build', 'link'))

@@ -935,6 +935,11 @@ corePacks = import ../packs {
         };
       };
     };
+    py-relion = {
+      variants = {
+        inherit cuda_arch;
+      };
+    };
     py-rfc3986 = {
       # for py-httpx
       version = "1";
@@ -2155,7 +2160,7 @@ pkgStruct = {
           mpi-rockstar
           { pkg = netlib-scalapack;  # MKL provies Intel ScaLAPACK
             projection = "scalapack/{version}"; }
-          (relion.withPrefs { version = "4"; })
+          #relion 4 broken (download), 5 needs numpy 1
         ]
         ++
         lib.optionals mpi.isCudaAware [
@@ -2372,7 +2377,7 @@ pkgStruct = {
         py-tensorflow
 
         #py-horovod #incompatible py-torch 2.1
-        py-jax
+        #py-jax FIXME
         #py-keras #overly constrains old tensorflow, jax
         #py-lightning-fabric #included in pytorch-lightning
         py-pytensor

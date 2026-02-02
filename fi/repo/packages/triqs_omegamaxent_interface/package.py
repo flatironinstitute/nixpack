@@ -14,6 +14,7 @@ class TriqsOmegamaxentInterface(CMakePackage):
     # TRIQS Dependencies
     depends_on("c", type="build")
     depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
     depends_on('cmake', type='build')
     depends_on('mpi', type=('build', 'link'))
     depends_on('triqs', type=('build', 'link'))
