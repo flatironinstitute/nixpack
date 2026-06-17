@@ -221,16 +221,10 @@ class NixSpec(spack.spec.Spec):
             if d:
                 dep = self.get(d, top=False)
                 cdep = None # any current dep on this package
-                if hasattr(self, 'add_dependency_edge'):
-                    try:
-                        cdeps = self._dependencies.select(child=dep.name, depflag=dtype)
-                    except TypeError:
-                        cdeps = self._dependencies.select(child=dep.name, deptypes=dtype)
-                    if len(cdeps) == 1:
-                        # if multiple somehow, _add_dependency should catch it
-                        cdep = cdeps[0]
-                else:
-                    cdep = self._dependencies.get(dep.name)
+                cdeps = self.edges_to_dependencies(name=dep.name, depflag=dtype)
+                if len(cdeps) == 1:
+                    # if multiple somehow, _add_dependency should catch it
+                    cdep = cdeps[0]
                 if n != dep.name:
                     virtuals = (n,)
                 else:

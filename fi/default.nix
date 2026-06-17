@@ -25,8 +25,8 @@ corePacks = import ../packs {
   spackSrc = {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
-    ref = "nixpack/1.1";
-    rev = "148366782275e0f2a056f414f856f980ab712bdc";
+    ref = "nixpack/1.2";
+    rev = "4ab0d6bc76949629c6b2e3dbaa1b420ec607565b";
   };
 
   spackConfig = {
