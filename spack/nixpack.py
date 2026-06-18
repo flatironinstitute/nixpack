@@ -283,7 +283,7 @@ class NixSpec(spack.spec.Spec):
             patches = package_class.patches.setdefault(spack.spec.Spec(), [])
             for i, p in enumerate(nixspec['patches']):
                 patches.append(spack.patch.FilePatch(package_class, p, 1, '.', ordering_key = ('~nixpack', i)))
-            spack.repo.PATH.patch_index.update_package(self.fullname)
+            spack.repo.PATH.get_patch_index().update_packages({self.fullname})
 
     def concretize(self):
         if self._concrete:
