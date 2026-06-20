@@ -108,7 +108,7 @@ corePacks = import ../packs {
     binutils = {
       variants = {
         gas = true;
-        gold = true;
+        #gold = true;
         headers = true;
         ld = true;
         compress_debug_sections = "none";
@@ -272,7 +272,7 @@ corePacks = import ../packs {
       version = "10";
     };
     gcc = {
-      version = "13";
+      version = "14";
       target = if target == "skylake-avx512" then "skylake" else target;
       variants = {
         languages = ["c" "c++" "fortran" "jit"];
@@ -326,6 +326,10 @@ corePacks = import ../packs {
       variants = {
         X = true;
       };
+    };
+    gnutls = {
+      # missing nettle 3.10
+      version = "3.8.10";
     };
     googletest = {
       variants = {
@@ -381,6 +385,7 @@ corePacks = import ../packs {
     };
     harfbuzz = {
       variants = {
+        gobject = true;
         graphite2 = true;
       };
     };
@@ -568,6 +573,10 @@ corePacks = import ../packs {
         build_system = "cmake";
       };
     };
+    nettle = {
+      # for gnutls
+      version = "3";
+    };
     nix = {
       variants = {
         storedir = builtins.getEnv "NIX_STORE_DIR";
@@ -703,7 +712,7 @@ corePacks = import ../packs {
     };
     protobuf = {
       # for py-protobuf
-      #version = "3.28";
+      version = "32";
     };
     prrte = {
       variants = {
@@ -787,7 +796,7 @@ corePacks = import ../packs {
     };
     py-gast = {
       # py-pythran
-      #version = "0.5.3";
+      version = "0.6";
     };
     py-globus-sdk = {
       # for py-globus-cli
@@ -861,12 +870,23 @@ corePacks = import ../packs {
         };
       };
     };
+    py-msgpack = {
+      depends = {
+        py-cython = {
+          version = "3.1";
+        };
+      };
+    };
     py-nose = {
       depends = {
         py-setuptools = {
           version = "57";
         };
       };
+    };
+    py-numpy = {
+      # for py-numba
+      version = "2.3";
     };
     py-pillow = {
       variants = {
@@ -987,7 +1007,7 @@ corePacks = import ../packs {
     };
     py-tensorflow = {
       # for py-keras
-      #version = "=2.18.1";
+      version = "=2.20.0";
       variants = {
         inherit cuda_arch;
         xla = true;
@@ -1695,7 +1715,7 @@ withPython = packs: py: let
   };
   in pyPacks;
 
-corePython = { version = "3.12"; };
+corePython = { version = "3.13"; };
 
 mkPython = base: version:
   let python = {
@@ -1780,7 +1800,7 @@ juliaPacks = corePacks.withPrefs {
   label = "julia";
   package = {
     julia = {
-      version = "1.11";
+      version = "1.12";
       build = {
         # https://github.com/spack/spack/issues/32085
         post = ''
@@ -1790,7 +1810,7 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     llvm = {
-      version = "16.0.6";
+      version = "18.1.8";
       variants = {
         internal_unwind = false;
         libunwind = "none";
@@ -1806,25 +1826,28 @@ juliaPacks = corePacks.withPrefs {
           webassembly = true;
         };
         version_suffix = "jl";
-        shlib_symbol_version = "JL_LLVM_16.0";
+        shlib_symbol_version = "JL_LLVM_18.0";
       };
-      patches = [(builtins.fetchurl 
-        "https://raw.githubusercontent.com/spack/patches/d042ae8f41493547d4263d249a13546f2c971972/julia/4997cd3006a3171d9b33f9a72ff9fdadc84e91a7c86aa044dcf495eef3a02893.patch"
+      patches = [(builtins.fetchurl
+        "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4.patch"
       )];
     };
     libuv-julia = {
-      version = "1.48.0";
+      version = "1.48.1rc1";
     };
     mbedtls = {
-      version = "2.28";
+      version = "2";
       variants = {
         libs = ["shared"];
         pic = true;
-        build_system = "cmake"; # for pkgconfig for curl for elfutils
+        build_system = "cmake";
       };
     };
+    openssl = {
+      version = "3.5";
+    };
     nghttp2 = {
-      version = "1.59";
+      version = "1.64";
     };
     openblas = {
       variants = {
@@ -1837,6 +1860,7 @@ juliaPacks = corePacks.withPrefs {
       version = "0.8";
     };
     curl = {
+      version = "8.15";
       variants = {
         libssh2 = true;
         nghttp2 = true;
@@ -1844,10 +1868,10 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     libblastrampoline = {
-      version = "5.11:";
+      version = "5.13:";
     };
     libgit2 = {
-      version = "1.7";
+      version = "1.9";
     };
     libssh2 = {
       version = "1.11";
@@ -1856,7 +1880,7 @@ juliaPacks = corePacks.withPrefs {
       };
     };
     suite-sparse = {
-      version = "7.7.0";
+      version = "7.8.3";
     };
   } // blasVirtuals {
     /* don't use flexiblas */
@@ -1868,7 +1892,8 @@ pkgStruct = {
   pkgs = with corePacks.pkgs; [
     /* ------------ Core modules ------------ */
     (gcc.withPrefs { version = "11"; })
-    (gcc.withPrefs { version = "14"; })
+    (gcc.withPrefs { version = "13"; })
+    (gcc.withPrefs { version = "15"; })
     { pkg = llvm;
       default = true;
       autoload = [hwloc];
@@ -1946,6 +1971,7 @@ pkgStruct = {
     libffi
     libtiff
     libtirpc
+    libxml2
     libzmq
     likwid
     mercurial
@@ -2006,7 +2032,7 @@ pkgStruct = {
       # remove leading py-
       projection = "py-spy/{version}";
     } */
-    #(python.withPrefs { version = "3.13"; })
+    (python.withPrefs { version = "3.12"; })
     {
       pkg = python.withPrefs { version = "3.13"; variants = { freethreading = true; }; };
       projection = "{name}/freethreading-{version}";

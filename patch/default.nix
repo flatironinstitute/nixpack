@@ -177,4 +177,11 @@ in
   /* these have cxx deps only but also need a c compiler */
   gpu-burn = needc;
   ilmbase = needc;
+
+  lftp = spec: old: {
+    build = {
+      # broken test doesn't include stdio.h
+      ac_cv_need_trio = "no";
+    };
+  };
 }
