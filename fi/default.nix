@@ -105,6 +105,13 @@ corePacks = import ../packs {
       # for gtkplus
       version = "2.48";
     };
+    bazel = {
+      depends = {
+        openjdk = {
+          version = "11";
+        };
+      };
+    };
     binutils = {
       variants = {
         gas = true;
@@ -132,7 +139,7 @@ corePacks = import ../packs {
         chrono = true;
         container = true;
         context = true;
-        coroutine = true;
+        #coroutine = true;
         date_time = true;
         exception = true;
         fiber = true;
@@ -171,6 +178,10 @@ corePacks = import ../packs {
         zlib = true;
       };
     };
+    cfitsio = {
+      # for healpix-cxx
+      version = "3";
+    };
     cgal = {
       depends = {
         cmake = {
@@ -199,7 +210,7 @@ corePacks = import ../packs {
     };
     cuda = {
       # make sure this is compatible with the image driver
-      version = "12.9";
+      version = "12";
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
@@ -209,7 +220,7 @@ corePacks = import ../packs {
     };
     cudnn = {
       # for torch, tensorflow, etc
-      version = "9";
+      version = "=9.21.0.82-12";
     };
     curl = {
       variants = {
@@ -425,6 +436,8 @@ corePacks = import ../packs {
       };
     };
     icu4c = {
+      # for qt
+      version = "74";
       # for boost
       variants = {
         cxxstd = "17";
@@ -453,7 +466,7 @@ corePacks = import ../packs {
     };
     intel-tbb = {
       # for openvdb
-      version = "2021";
+      #version = "2021";
     };
     keepassxc = {
       variants = {
@@ -532,6 +545,8 @@ corePacks = import ../packs {
       };
     };
     magma = {
+      # for py-torch
+      version = "2.9";
       variants = {
         inherit cuda_arch;
       };
@@ -590,6 +605,10 @@ corePacks = import ../packs {
         stdpar = builtins.head (lib.splitRegex "," cudaarch);
       };
     };
+    nvtx = {
+      # for py-torch
+      version = "3.3.0";
+    };
     openblas = {
       variants = {
         threads = "pthreads";
@@ -597,7 +616,7 @@ corePacks = import ../packs {
     };
     openexr = {
       # for openvdb
-      version = "3.1";
+      #version = "3.1";
     };
     opengl = {
       version = "4.6";
@@ -654,13 +673,14 @@ corePacks = import ../packs {
     };
     openvdb = {
       variants = {
-        python = true;
+        # needs python 3.11
+        #python = true;
       };
-      depends = {
-        c-blosc = {
-          version = "1.17.0";
-        };
-      };
+      #depends = {
+      #  c-blosc = {
+      #    version = "1.17.0";
+      #  };
+      #};
     };
     pango = {
       variants = {
@@ -745,13 +765,19 @@ corePacks = import ../packs {
     py-charset-normalizer = {
       depends = {
         py-mypy = {
-          # for py-charset-normalizer
           version = "1.15.0";
+        };
+        py-setuptools = {
+          version = "80";
         };
       };
     };
+    py-click = {
+      # for py-typer
+      version = "8.1.8";
+    };
     py-cryptography = {
-      version = "43";
+      #version = "43";
       build = opensslPkgconfig;
     };
     py-cupy = {
@@ -782,7 +808,7 @@ corePacks = import ../packs {
     py-flatbuffers = {
       depends = {
         py-setuptools = {
-          version = "76";
+          #version = "76";
         };
       };
     };
@@ -794,9 +820,12 @@ corePacks = import ../packs {
         http = true;
       };
     };
-    py-gast = {
-      # py-pythran
-      version = "0.6";
+    py-gevent = {
+      depends = {
+        py-setuptools = {
+          version = "80";
+        };
+      };
     };
     py-globus-sdk = {
       # for py-globus-cli
@@ -806,6 +835,13 @@ corePacks = import ../packs {
           variants = {
             crypto = true;
           };
+        };
+      };
+    };
+    py-html5lib = {
+      depends = {
+        py-setuptools = {
+          version = "80";
         };
       };
     };
@@ -832,13 +868,22 @@ corePacks = import ../packs {
         };
       } // lib.compilers (corePacks.pkgs.llvm.withPrefs { version = "21"; });
     };
+    py-jmespath = {
+      # for py-globus-cli
+      version = "1.0.1";
+    };
     py-jsonschema = {
       variants = {
         format-nongpl = true;
       };
     };
     py-jupyterhub = {
-      version = "3";
+      # should match k8s server
+      #version = "3";
+    };
+    py-jupyterlab = {
+      # for py-notebook
+      version = "4.4";
     };
     py-keras = {
       variants = {
@@ -870,6 +915,10 @@ corePacks = import ../packs {
         };
       };
     };
+    py-maturin = {
+      # for py-ast-serialize
+      version = "1.9";
+    };
     py-msgpack = {
       depends = {
         py-cython = {
@@ -896,6 +945,13 @@ corePacks = import ../packs {
         #webpmux = true;
         jpeg2000 = true;
         imagequant = true;
+      };
+    };
+    py-propcache = {
+      depends = {
+        py-setuptools = {
+          #version = "82";
+        };
       };
     };
     py-protobuf = {
@@ -929,6 +985,16 @@ corePacks = import ../packs {
         '';
       };
     };
+    py-pythran = {
+      depends = {
+        py-gast = {
+          version = "0.6";
+        };
+        py-beniget = {
+          version = "0.4";
+        };
+      };
+    };
     py-pyslurm = {
       version = slurmVersion;
     };
@@ -951,7 +1017,7 @@ corePacks = import ../packs {
     py-python-dateutil = {
       depends = {
         py-setuptools-scm = {
-          version = "7";
+          #version = "7";
         };
       };
     };
@@ -982,6 +1048,9 @@ corePacks = import ../packs {
         pyproject = true;
       };
     };
+    py-setuptools = {
+      #version = "80";
+    };
     py-setuptools-scm = {
       variants = {
         toml = true;
@@ -998,15 +1067,15 @@ corePacks = import ../packs {
       # for python 3.10
       #version = "8.1";
     };
-    bazel = {
+    py-tensorboard = {
       depends = {
-        openjdk = {
-          version = "11";
+        py-setuptools = {
+          version = "80";
         };
       };
     };
     py-tensorflow = {
-      # for py-keras
+      # for py-keras, not rocm
       version = "=2.20.0";
       variants = {
         inherit cuda_arch;
@@ -1057,6 +1126,7 @@ corePacks = import ../packs {
         inherit cuda_arch;
         valgrind = false;
         custom-protobuf = true;
+        cusparselt = false; # cuda 12
       };
       depends = blasVirtuals {
         name = "openblas"; # doesn't find flexiblas
@@ -1130,6 +1200,10 @@ corePacks = import ../packs {
         cuda = true;
         inherit cuda_arch;
       };
+    };
+    py-wrapt = {
+      # for py-aiobotocore
+      version = "1";
     };
     py-yt = {
       depends = {
@@ -1864,7 +1938,7 @@ juliaPacks = corePacks.withPrefs {
       variants = {
         libssh2 = true;
         nghttp2 = true;
-        tls = { mbedtls = true; openssl = false; };
+        tls = { openssl = true; };
       };
     };
     libblastrampoline = {
@@ -1876,7 +1950,7 @@ juliaPacks = corePacks.withPrefs {
     libssh2 = {
       version = "1.11";
       variants = {
-        crypto = "mbedtls";
+        crypto = "openssl";
       };
     };
     suite-sparse = {
@@ -1934,7 +2008,7 @@ pkgStruct = {
     { pkg = cudnn;
       default = true;
     }
-    (cudnn.withPrefs { version = "9"; })
+    (cudnn.withPrefs { version = "9"; depends = { cuda = cuda.withPrefs { version = "13"; }; }; })
     curl
     distcc
     doxygen
@@ -2086,7 +2160,7 @@ pkgStruct = {
   map (v: mathematica.withPrefs
     { version = v;
     })
-    ["13.2.1" "14.0.0"]
+    []#"13.2.1" "14.0.0"]
   ++
   map (v: matlab.withPrefs
     { version = v;
@@ -2094,7 +2168,7 @@ pkgStruct = {
         key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
       };
     })
-    ["R2024b" "R2025a"]
+    []#"R2024b" "R2025a"]
   ++
   map (v: idl.withPrefs
     { version = v;

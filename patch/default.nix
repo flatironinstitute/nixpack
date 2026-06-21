@@ -184,4 +184,13 @@ in
       ac_cv_need_trio = "no";
     };
   };
+
+  py-packaging = spec: old: {
+    # cyclic deps, not needed
+    depends = removeAttrs old.depends ["py-wheel" "py-setuptools" "py-pyparsing" "py-six" "py-attrs"];
+  };
+  py-flit-core = spec: old: {
+    # cyclic deps, not needed
+    depends = removeAttrs old.depends ["py-wheel"];
+  };
 }
