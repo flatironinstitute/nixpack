@@ -464,10 +464,6 @@ corePacks = import ../packs {
         nvidia = true;
       };
     };
-    intel-tbb = {
-      # for openvdb
-      #version = "2021";
-    };
     keepassxc = {
       variants = {
         # missing minizip dep otherwise
@@ -676,11 +672,14 @@ corePacks = import ../packs {
         # needs python 3.11
         #python = true;
       };
-      #depends = {
+      depends = {
+        intel-tbb = {
+          version = "2022";
+        };
       #  c-blosc = {
       #    version = "1.17.0";
       #  };
-      #};
+      };
     };
     pango = {
       variants = {
@@ -1842,7 +1841,7 @@ hdf5Pkgs = packs: with packs.pkgs; [
 optMpiPkgs = packs: with packs.pkgs; [
   arpack-ng
   boost
-  (fftw.withPrefs { version = "2"; variants = { precision = { long_double = false; quad = false; }; }; })
+  #(fftw.withPrefs { version = "2"; variants = { precision = { long_double = false; quad = false; }; }; })
   fftw
 ] ++ hdf5Pkgs packs;
 
@@ -1903,7 +1902,7 @@ juliaPacks = corePacks.withPrefs {
         shlib_symbol_version = "JL_LLVM_18.0";
       };
       patches = [(builtins.fetchurl
-        "https://raw.githubusercontent.com/spack/patches/24ff44c4c5439400747941473c0298a74c1fbcb1/julia/10cb42f80c2eaad3e9c87cb818b6676f1be26737bdf972c77392d71707386aa4.patch"
+        "https://raw.githubusercontent.com/spack/patches/4d9ce09c4793f4899a588741fdc459530e26b313/julia/900363d08b2090bb44240aa33c1ee26558a183016db4fb7e048be4c1665c436e.patch"
       )];
     };
     libuv-julia = {
