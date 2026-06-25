@@ -1,0 +1,22 @@
+https://bugs.gentoo.org/870799
+
+--- motif-2.3.8/lib/Xm/XpmI.h
++++ motif-2.3.8/lib/Xm/XpmI.h
+@@ -129,7 +129,7 @@
+ extern FILE *popen();
+ #endif
+ 
+-#if defined(SYSV) || defined(SVR4) || defined(VMS) || defined(WIN32) || defined (_SVID_SOURCE)
++#if defined(HAVE_STRING_H)
+ #include <string.h>
+ 
+ #ifndef index
+@@ -140,7 +140,7 @@
+ #define rindex strrchr
+ #endif
+ 
+-#else  /* defined(SYSV) || defined(SVR4) || defined(VMS) */
++#else
+ #include <strings.h>
+ #endif
+ 

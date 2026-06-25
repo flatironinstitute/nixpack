@@ -1,0 +1,13 @@
+Disable compilation of demo binaries.
+
+--- motif-2.3.8-orig/Makefile.am
++++ motif-2.3.8/Makefile.am
+@@ -27,7 +27,6 @@
+              include \
+              tools \
+              clients \
+-             doc \
+-             demos
++             doc
+ AUTOMAKE_OPTIONS = 1.4
+ ACLOCAL_AMFLAGS = -I .

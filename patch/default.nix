@@ -81,6 +81,7 @@ in
   py-maturin = cargohome;
   py-rpds-py = cargohome;
   py-ruff = cargohome;
+  py-ast-serialize = cargohome;
 
   /* for pdflatex */
   r = {
@@ -192,5 +193,10 @@ in
   py-flit-core = spec: old: {
     # cyclic deps, not needed
     depends = removeAttrs old.depends ["py-wheel"];
+  };
+
+  motif = {
+    /* stolen from gentoo */
+    patches = [./motif-no-demos.patch ./motif-string_h.patch];
   };
 }

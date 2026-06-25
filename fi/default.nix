@@ -33,6 +33,7 @@ corePacks = import ../packs {
     config = {
       source_cache = "/mnt/home/spack/cache";
       license_dir = "/mnt/sw/fi/licenses";
+      #deprecated = true;
     };
   };
   spackPython = "/usr/bin/python3";
@@ -797,6 +798,13 @@ corePacks = import ../packs {
         };
       };
     };
+    py-fastprogress = {
+      depends = {
+        py-setuptools = {
+          version = "80";
+        };
+      };
+    };
     py-fastrlock = {
       depends = {
         py-pip = {
@@ -995,7 +1003,7 @@ corePacks = import ../packs {
       };
     };
     py-pyslurm = {
-      version = slurmVersion;
+      version = "${slurmVersion}.x";
     };
     py-pytensor = {
       depends = {
@@ -1125,7 +1133,7 @@ corePacks = import ../packs {
         inherit cuda_arch;
         valgrind = false;
         custom-protobuf = true;
-        cusparselt = false; # cuda 12
+        #cusparselt = false; # cuda 12
       };
       depends = blasVirtuals {
         name = "openblas"; # doesn't find flexiblas
@@ -1282,13 +1290,20 @@ corePacks = import ../packs {
         shared = false;
       };
     };
+    sox = {
+      variants = {
+        mp3 = true;
+      };
+    };
     spdlog = {
       # for seacas via fmt
       version = "1.14";
     };
-    sox = {
-      variants = {
-        mp3 = true;
+    sra-tools = {
+      depends = {
+        libxml2 = {
+          version = "2.13"; # 2.15 removed ATTRIBUTE_UNUSED
+        };
       };
     };
     suite-sparse = {
@@ -1874,13 +1889,13 @@ juliaPacks = corePacks.withPrefs {
   package = {
     julia = {
       version = "1.12";
-      build = {
+      #build = {
         # https://github.com/spack/spack/issues/32085
-        post = ''
-          os.symlink("/etc/ssl/certs/ca-certificates.crt", os.path.join(pkg.prefix.share, "julia/cert.pem"))
-          os.symlink(os.path.join(pkg.spec["llvm"].prefix, "bin", "lld"), os.path.join(pkg.prefix.bin, "lld"))
-        '';
-      };
+        #post = ''
+        #  os.symlink("/etc/ssl/certs/ca-certificates.crt", os.path.join(pkg.prefix.share, "julia/cert.pem"))
+        #  os.symlink(os.path.join(pkg.spec["llvm"].prefix, "bin", "lld"), os.path.join(pkg.prefix.bin, "lld"))
+        #'';
+      #};
     };
     llvm = {
       version = "18.1.8";
@@ -2026,7 +2041,7 @@ pkgStruct = {
     gnuplot
     gperftools
     gpu-burn
-    grace
+    #grace # broken motif?
     graphviz
     hdfview
     imagemagick
@@ -2129,7 +2144,7 @@ pkgStruct = {
     ruby
     rust
     smartmontools
-    sox
+    #sox #broken build
     sra-tools
     #stress-ng #broken on r9
     subversion
@@ -2459,7 +2474,7 @@ pkgStruct = {
         py-sympy
         #py-tess
         py-toml
-        py-twisted
+        #py-twisted #deprecated: py-mistune
         py-typer
         py-virtualenv
         py-wcwidth
@@ -3006,6 +3021,11 @@ mods = corePacks.modules {
     uv = {
       filter = {
         exclude_env_vars = ["UV_ROOT" "UV_BASE"];
+      };
+      environment = {
+        set = {
+          UV_LINK_MODE = "hardlink";
+        };
       };
     };
   };
