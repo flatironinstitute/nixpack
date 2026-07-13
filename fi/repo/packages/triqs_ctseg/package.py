@@ -7,6 +7,7 @@ class TriqsCtseg(CMakePackage):
     homepage = "https://triqs.github.io/ctseg"
     url      = "https://github.com/TRIQS/ctseg/archive/refs/tags/3.3.0.tar.gz"
 
+    version('4.0.0', sha256='a0125d969544f5844c13b42ef8606dec0d5a1c2b99e7c588c2597b8d390eb19c')
     version('3.3.0', sha256='2fc8c358e339b22d40c7d8b8b60f2a6f61bce786045f3fe0831b86447e2e9c8f')
 
     # TRIQS Dependencies

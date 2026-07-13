@@ -7,6 +7,7 @@ class TriqsHubbardi(CMakePackage):
     homepage = "https://triqs.github.io/hubbardI"
     url      = "https://github.com/TRIQS/hubbardI/archive/refs/tags/3.3.0.tar.gz"
 
+    version('4.0.0', sha256='57b0a4c36560148797e65c3ff09d6988d73cdc09f597abd60490ba7ae276e519')
     version('3.3.0', sha256='374fb0d7c5a52f9bda3763cb6910a9bdeb8f2e3d1494dfe1024f3e0be098edf6')
 
     # TRIQS Dependencies

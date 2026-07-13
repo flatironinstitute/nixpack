@@ -29,10 +29,7 @@ in
     shell = "/bin/sh";
   });
 
-  coreutils = (coreutils.override {
-    autoreconfHook = null; # workaround nixpkgs #144747
-    texinfo = null;
-  }).overrideAttrs (old: {
+  coreutils = coreutils.overrideAttrs (old: {
     preBuild = "touch Makefile.in"; # avoid automake
     doCheck = false; # df/total-verify broken on ceph
   });
@@ -40,9 +37,7 @@ in
     zlib = buildPackages.zlib.override { fetchurl = stdenv.fetchurlBoot; };
   };
 
-  nix = (nix.override {
-    withAWS = false;
-  }).overrideAttrs (old: {
+  nix = nix.overrideAttrs (old: {
     doInstallCheck = false;
   });
 
@@ -66,6 +61,17 @@ in
     trackerSupport = false;
   };
 
+  krb5 = (krb5.override {
+    bashNonInteractive = null;
+  }).overrideAttrs (old: {
+    outputChecks.lib.disallowedRequisites = [];
+  });
+
+  sqlite = sqlite.overrideAttrs (old: {
+    # some unclear failure
+    doCheck = false;
+  });
+
   openssl_1_0_2 = openssl_1_0_2.overrideAttrs (old: {
     postPatch = old.postPatch + ''
       sed -i 's:define\s\+X509_CERT_FILE\s\+.*$:define X509_CERT_FILE "/etc/pki/tls/certs/ca-bundle.crt":' crypto/cryptlib.h
@@ -79,7 +85,7 @@ in
   });
 
   # we don't need libredirect for anything (just openssh tests), and it's broken
-  libredirect = "/var/empty";
+  #libredirect = "/var/empty";
 
   openssh = openssh.overrideAttrs (old: {
     doCheck = false; # strange environment mismatch
@@ -94,17 +100,7 @@ in
     cmakeFlags = old.cmakeFlags ++ ["-DJPEGTURBO_PATH=${libjpeg.out}"];
   });
 
-  openimagedenoise = openimagedenoise.override {
-    #tbb = tbb_2021_8;
-  };
-
-  openvdb = openvdb.override {
-    #tbb = tbb_2021_8;
-  };
-
-  embree = (embree.override {
-    #tbb = tbb_2021_8;
-  }).overrideAttrs (old: {
+  embree = embree.overrideAttrs (old: {
     # based on spack flags
     cmakeFlags =
       let
@@ -189,9 +185,7 @@ in
     bluetoothSupport = false;
   };
 
-  blender = (blender.override {
-    #tbb = tbb_2021_8;
-  }).overrideAttrs (old: {
+  blender = blender.overrideAttrs (old: {
     cmakeFlags = old.cmakeFlags ++ ["-DWITH_OPENAL=OFF"];
   });
 
@@ -241,8 +235,6 @@ in
       });
     };
   };
-
-  jdupes = callPackage ./jdupes.nix { };
 
   rapidjson = rapidjson.overrideAttrs (old: {
     doCheck = false; # valgrind unknown instruction

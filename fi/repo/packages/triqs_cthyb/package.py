@@ -7,6 +7,7 @@ class TriqsCthyb(CMakePackage):
     homepage = "https://triqs.github.io/cthyb"
     url      = "https://github.com/TRIQS/cthyb/archive/refs/tags/3.3.0.tar.gz"
 
+    version('4.0.0', sha256='eb88948035f616f5db426fc4503870568f877dc2b7cf82070d72836d575d5711')
     version('3.3.0', sha256='96635f2e2b6016a5f99e372aefc6bd7c5af7ef2ebe26c429bb1b479bc49b67ef')
     version('3.2.1', sha256='6f4cd36efcd19b0f1efbed2c9aa6d2640ef84f8fcf7b97675af8d54cdc327c9f')
     version('3.1.0', sha256='8d6d2c4d5b3928d062b72fad4ea9df9aae198e39dd9c1fd3cc5dc34a5019acc0')

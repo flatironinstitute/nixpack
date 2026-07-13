@@ -102,6 +102,7 @@ lib.fix (packs: with packs; {
   spackConfig = makeSpackConfig (lib.recursiveUpdate defaultSpackConfig packPrefs.spackConfig);
 
   spackNixLib = derivation (spackEnv // {
+    __noChroot = true;
     name = "nix-spack-py";
     inherit system;
     builder = ../spack/install.sh;
@@ -116,6 +117,7 @@ lib.fix (packs: with packs; {
 
   /* common attributes for running spack */
   spackBuilder = attrs: builtins.removeAttrs (derivation (spackEnv // {
+    __noChroot = true;
     inherit (packs) system os spackConfig;
     builder = spackPython;
     PYTHONPATH = "${spackNixLib}:${spack}/lib/spack:${spack}/lib/spack/external:${spack}/lib/spack/external/_vendoring";

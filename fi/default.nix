@@ -26,7 +26,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "nixpack/1.2";
-    rev = "4ab0d6bc76949629c6b2e3dbaa1b420ec607565b";
+    rev = "9507e29b7c3a05552d23111d12605d57084d92d8";
   };
 
   spackConfig = {
@@ -43,9 +43,9 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
-    url = "https://github.com/dylex/nixpkgs";
-    ref = "release-24.11";
-    rev = "94a0358690f59e81421117b0c72c2ec1bd8eb366";
+    url = "https://github.com/NixOS/nixpkgs";
+    ref = "release-26.05";
+    rev = "19c85740c6a085dcf4dc48483bef81e060b707d5";
   };
 
   repos = [
@@ -211,7 +211,7 @@ corePacks = import ../packs {
     };
     cuda = {
       # make sure this is compatible with the image driver
-      version = "12";
+      #version = "13.1";
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
@@ -221,7 +221,7 @@ corePacks = import ../packs {
     };
     cudnn = {
       # for torch, tensorflow, etc
-      version = "=9.21.0.82-12";
+      #version = "=9.21.0.82-12";
     };
     curl = {
       variants = {
@@ -354,6 +354,11 @@ corePacks = import ../packs {
     gpu-burn = {
       variants = {
         inherit cuda_arch;
+      };
+      depends = {
+        cuda = {
+          version = "12";
+        };
       };
     };
     grace = {
@@ -543,7 +548,7 @@ corePacks = import ../packs {
     };
     magma = {
       # for py-torch
-      version = "2.9";
+      #version = "2.9";
       variants = {
         inherit cuda_arch;
       };
@@ -636,6 +641,11 @@ corePacks = import ../packs {
         # cuda build fails with internal gcc compiler error (11, 12.2)
         inherit cuda_arch;
         cuda = true;
+      };
+      depends = {
+        cuda = {
+          version = "12";
+        };
       };
     };
     openmpi = {
@@ -859,13 +869,14 @@ corePacks = import ../packs {
       };
     };
     py-jax = {
-      #version = "0.4.28";
+      version = throw "disabled";
+      #version = "0.9.2";
       variants = {
         inherit cuda_arch;
       };
     };
     py-jaxlib = {
-      #version = "0.4.28";
+      #version = "0.9.2";
       variants = {
         inherit cuda_arch;
       };
@@ -873,7 +884,7 @@ corePacks = import ../packs {
         bazel = {
           #version = "6.5.0";
         };
-      } // lib.compilers (corePacks.pkgs.llvm.withPrefs { version = "21"; });
+      } // lib.compilers (corePacks.pkgs.llvm.withPrefs { version = "22"; });
     };
     py-jmespath = {
       # for py-globus-cli
@@ -1068,6 +1079,9 @@ corePacks = import ../packs {
         py-setuptools-scm = {
           version = "7";
         };
+        py-setuptools = {
+          version = "80";
+        };
       };
     };
     py-sphinx = {
@@ -1102,11 +1116,10 @@ corePacks = import ../packs {
             #};
           #};
         };
-        c = {
-          variants = {
-            # needs newer assembler
-            binutils = true;
-          };
+      } // lib.compilers {
+        variants = {
+          # needs newer assembler
+          binutils = true;
         };
       };
     };
@@ -1133,7 +1146,8 @@ corePacks = import ../packs {
         inherit cuda_arch;
         valgrind = false;
         custom-protobuf = true;
-        #cusparselt = false; # cuda 12
+        cusparselt = false; # cuda 12
+        magma = false; # cuda 12
       };
       depends = blasVirtuals {
         name = "openblas"; # doesn't find flexiblas
@@ -1574,6 +1588,13 @@ corePacks = import ../packs {
         llvm = {
           deptype = ["build" "link" "run"];
         };
+      };
+    };
+    cuda = {
+      build = {
+        post = ''
+          os.symlink("targets/x86_64-linux/lib", pkg.prefix.lib)
+        '';
       };
     };
   };
@@ -2593,7 +2614,7 @@ pkgStruct = {
     #jabref
     #keepassx2
     kubectl
-    linuxKernel.packages.linux_6_1.perf
+    perf
     #libreoffice
     #meshlab
     (withGL mplayer // { name = builtins.replaceStrings ["-unstable"] [""] mplayer.name; })
