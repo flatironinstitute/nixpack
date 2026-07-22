@@ -242,7 +242,7 @@ class NixSpec(spack.spec.Spec):
                 lrdep = dtype & (spack.deptypes.LINK | spack.deptypes.RUN)
             except AttributeError:
                 lrdep = 'link' in dtype or 'run' in dtype
-            if not lrdep and n != "c":
+            if not lrdep and n not in ("c", "cxx", "fortran"):
                 # trim build dep references (except compiler used in lmod hierachy)
                 del nixspec['depends'][n]
 

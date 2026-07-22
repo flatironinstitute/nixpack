@@ -17,6 +17,8 @@ name = nixpack.getVar('name')
 modtype = nixpack.getVar('modtype')
 
 coreCompilers = [nixpack.NixSpec.get(p, top=False) for p in nixpack.getJson('coreCompilers')]
+for c in coreCompilers:
+    c.concretize()
 
 modconf = nixpack.getJson('config')
 modconf.setdefault('core_compilers', [])
@@ -64,6 +66,7 @@ class FakeSpec(nixpack.NixSpec):
             'variants': {},
             'flags': {},
             'tests': False,
+            'extraAttributes': {},
             'paths': {},
             'depends': desc.get('depends', {}),
             'deptypes': {},
