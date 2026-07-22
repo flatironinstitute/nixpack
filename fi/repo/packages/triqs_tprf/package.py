@@ -7,7 +7,7 @@ class TriqsTprf(CMakePackage):
     homepage = "https://triqs.github.io/tprf"
     url      = "https://github.com/TRIQS/tprf/archive/refs/tags/3.3.1.tar.gz"
 
-    version('4.0.0', sha256='d5558cd419c8d46bdc958064cb97f963d1ea793866414c025906ec15033512ed')
+    version('4.0.0', sha256='5bb55c38b2f4bf8e581052c69022bed0b0805ef1419c544420dee7a76d353c6f')
     version('3.3.1', sha256='4a39648629888ec07c1a5c333ae5aa85ac04a46a7ec3b5d5d588cfe5246b7572')
     version('3.3.0', sha256='e703b490873293efa2835147c73b19b90860fe2e2d8b1ec9da79c8b602512b10')
     version('3.2.1', sha256='f1d4dd5986af4b37dc65f3af2a0be507455f0b4a74ea7d4de892739ccd86158c')
