@@ -175,6 +175,23 @@ in
     };
   };
 
+  python313 = python313.override {
+    packageOverrides = self: super: {
+      gunicorn = super.gunicorn.overridePythonAttrs (old: {
+        doCheck = false;
+      });
+      psutil = super.psutil.overridePythonAttrs (old: {
+        doCheck = false;
+      });
+      scipy = super.scipy.overridePythonAttrs (old: {
+        doCheck = false;
+      });
+      watchfiles = super.watchfiles.overridePythonAttrs (old: {
+        doCheck = false;
+      });
+    };
+  };
+
   pipewire = (pipewire.override {
     rocSupport = false; # temporarily workaround sox broken download (though probably don't need it anyway)
   }).overrideAttrs (old: {
@@ -248,4 +265,17 @@ in
       hash = "sha256-5jNA6WmeIOVjkEMZXB5ijxyfJT88alVndBif6dnUFdI=";
     };
   });
+
+  tinysparql = tinysparql.overrideAttrs (old: {
+    doCheck = false; # man page rendering
+  });
+
+  gjs = gjs.overrideAttrs (old: {
+    doCheck = false; # debugging?
+  });
+
+  xscreensaver = xscreensaver.override {
+    pam = null;
+  };
+
 }
