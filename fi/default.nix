@@ -26,7 +26,7 @@ corePacks = import ../packs {
     /* -------- upstream spack version -------- */
     url = "https://github.com/flatironinstitute/spack";
     ref = "nixpack/1.2";
-    rev = "9507e29b7c3a05552d23111d12605d57084d92d8";
+    rev = "e167fe6b05b4f7d49f49ba99eccdeb972e733fac";
   };
 
   spackConfig = {
@@ -43,9 +43,9 @@ corePacks = import ../packs {
 
   nixpkgsSrc = {
     /* -------- upstream nixpkgs version -------- */
-    url = "https://github.com/NixOS/nixpkgs";
+    url = "https://github.com/flatironinstitute/nixpkgs";
     ref = "release-26.05";
-    rev = "19c85740c6a085dcf4dc48483bef81e060b707d5";
+    rev = "c0e1bc7a5de17630ec8ba4191fc17dbe01a27584";
   };
 
   repos = [
@@ -753,6 +753,11 @@ corePacks = import ../packs {
       variants = {
         all = true;
       };
+      depends = {
+        py-setuptools = {
+          version = "79";
+        };
+      };
     };
     py-batchspawner = {
       version = "main.2023-11-01";
@@ -1105,17 +1110,17 @@ corePacks = import ../packs {
       };
       depends = {
         #cudnn = {
-        #  version = "8";
+        #  version = "9.8.0.87-12";
         #};
-        bazel = {
-          version = "7.4.1";
+        #bazel = {
+          #version = "7.4.1";
           #depends = {
             #java = {
               #name = "openjdk";
               #version = "11";
             #};
           #};
-        };
+        #};
       } // lib.compilers {
         variants = {
           # needs newer assembler
@@ -1326,6 +1331,11 @@ corePacks = import ../packs {
       };
     };
     tbb = { name = "intel-oneapi-tbb"; };
+    texlive = {
+      variants = {
+        dvipng = true;
+      };
+    };
     thrift = {
       variants = {
         # python<3.11
@@ -2037,14 +2047,14 @@ pkgStruct = {
     btop
     ccache
     cmake
+    (cuda.withPrefs { version = "12"; })
     { pkg = cuda;
       default = true;
     }
-    (cuda.withPrefs { version = "13"; })
+    (cudnn.withPrefs { version = "9.21.0.82-12"; depends = { cuda = cuda.withPrefs { version = "12"; }; }; })
     { pkg = cudnn;
       default = true;
     }
-    (cudnn.withPrefs { version = "9"; depends = { cuda = cuda.withPrefs { version = "13"; }; }; })
     curl
     distcc
     doxygen
@@ -2822,7 +2832,7 @@ jupyter = jupyterBase.extendView (
     ]
   ) ++
   [ (jupyterPacks.nixpkgs.x11vnc.overrideAttrs (old: {
-      patches = old.patches ++ [
+      patches = [
         (corePacks.nixpkgs.fetchpatch {
           name = "resize.patch";
           url = "https://github.com/LibVNC/x11vnc/pull/107/commits/4b64054bbc05395478cd97012ed5a004338d46ab.patch";

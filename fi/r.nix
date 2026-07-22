@@ -4,7 +4,7 @@ with packs.pkgs; [
   r-irkernel
   r-annotationdbi
   r-bh
-  r-bsgenome
+  #r-bsgenome
   r-biasedurn
   r-biocinstaller
   r-biocmanager
@@ -13,10 +13,10 @@ with packs.pkgs; [
   r-dt
   #r-diffbind
   r-formula
-  r-gostats
+  #r-gostats
   r-gseabase
   r-genomicalignments
-  r-genomicfeatures
+  #r-genomicfeatures
   r-genomicranges
   r-iranges
   r-keggrest
@@ -32,7 +32,7 @@ with packs.pkgs; [
   r-rsamtools
   r-rtsne
   r-tfmpvalue
-  r-vgam
+  #r-vgam
   #r-venndiagram
   r-acepack
   r-ade4
@@ -52,7 +52,7 @@ with packs.pkgs; [
   r-clisymbols
   r-crosstalk
   r-desc
-  r-devtools
+  #r-devtools
   r-dplyr
   r-evaluate
   r-formatr
@@ -92,7 +92,7 @@ with packs.pkgs; [
   r-memoise
   r-mime
   r-miniui
-  r-multtest
+  #r-multtest
   #r-nabor
   r-nloptr
   #r-pdsh
@@ -106,7 +106,7 @@ with packs.pkgs; [
   r-png
   r-polynom
   r-powerlaw
-  r-preprocesscore
+  #r-preprocesscore
   #r-preseqr
   r-processx
   r-progress
@@ -114,18 +114,18 @@ with packs.pkgs; [
   r-ps
   #r-pulsar
   r-purrr
-  r-randomforest
+  #r-randomforest
   r-rcmdcheck
   r-readr
   r-remotes
   r-rlang
   r-rprojroot
   r-rstudioapi
-  r-rtracklayer
+  #r-rtracklayer
   r-segmented
   r-seqinr
   r-sessioninfo
-  r-seurat
+  #r-seurat
   r-sf
   r-shape
   r-shiny
