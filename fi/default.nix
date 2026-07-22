@@ -1785,6 +1785,7 @@ opensslExtern = rpmExtern "openssl" // {
 };
 
 linkfiles = name: files: derivation {
+  __noChroot = true;
   system = builtins.currentSystem;
   inherit name;
   builder = ./linkfiles.sh;

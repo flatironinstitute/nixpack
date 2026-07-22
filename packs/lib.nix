@@ -286,6 +286,7 @@ rec {
     in pkgs: length (foldl' (seen: sst seen "" null null) [] (toList pkgs));
 
   capture = args: env: readFile (derivation ({
+    __noChroot = true;
     name = "capture-${baseNameOf (head args)}";
     system = currentSystem;
     builder = ./capture.sh;
