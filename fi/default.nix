@@ -1600,13 +1600,6 @@ corePacks = import ../packs {
         };
       };
     };
-    cuda = {
-      build = {
-        post = ''
-          os.symlink("targets/x86_64-linux/lib", pkg.prefix.lib)
-        '';
-      };
-    };
   };
 };
 

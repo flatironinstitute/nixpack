@@ -50,6 +50,30 @@ in
     };
   };
 
+  cuda = {
+    # prevent multiple simultaneous builds
+    build = {
+      setup = ''
+        oumask = os.umask(0o7)
+        try:
+          cudalock = open("/tmp/cuda-installer.lock", "r+")
+        except FileNotFoundError:
+          cudalock = open("/tmp/cuda-installer.lock", "a")
+        os.umask(oumask)
+        import fcntl
+        fcntl.flock(cudalock.fileno(), fcntl.LOCK_EX)
+        try:
+          os.unlink("/tmp/cuda-installer.log")
+        except FileNotFoundError:
+          pass
+      '';
+      post = ''
+        cudalock.close()
+        os.symlink("targets/x86_64-linux/lib", pkg.prefix.lib)
+      '';
+    };
+  };
+
   openssh = {
     /* disable installing with setuid */
     patches = [./openssh-keysign-setuid.patch];
