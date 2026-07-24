@@ -53,6 +53,7 @@ def tempProjection(projection):
         return NullContext()
 
 class FakePackage(PackageBase):
+    name = "static-module"
     extendees = ()
     provided = {}
 

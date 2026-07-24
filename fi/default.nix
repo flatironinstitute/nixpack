@@ -13,6 +13,8 @@ lib = corePacks.lib;
 isLDep = builtins.elem "link";
 isRDep = builtins.elem "run";
 isRLDep = d: isLDep d || isRDep d;
+justCompilers = lib.compilers true;
+isCompiler = p: justCompilers.${p} or false;
 
 rpmVersion = pkg: lib.capture ["/bin/rpm" "-q" "--queryformat=%{VERSION}" pkg] { inherit os; };
 rpmExtern = pkg: { extern = "/usr"; version = rpmVersion pkg; };
@@ -62,8 +64,8 @@ corePacks = import ../packs {
       mpi = false;
     };
     /* any runtime dependencies use the current packs, others fall back to core */
-    resolver = deptype:
-      if isRLDep deptype
+    resolver = deptype: name:
+      if isRLDep deptype || isCompiler name
         then null else corePacks;
   };
   package = lib.compilers bootstrapPacks.pkgs.gcc // {
@@ -311,21 +313,12 @@ corePacks = import ../packs {
         };
       };
     };
-    gdbm = {
-      # for perl
-      #version = "1.23";
-      # failing
-      #tests = false;
-    };
     gdrcopy = {
       version = "2.5"; # match kernel module
       variants = {
         cuda = true;
         inherit cuda_arch;
       };
-    };
-    glib = {
-      #version = "2.82";
     };
     gloo = {
       # for py-torch
@@ -434,7 +427,6 @@ corePacks = import ../packs {
           };
         };
         hdf5 = {
-          #version = "1.14";
           variants = {
             java = true;
           };
@@ -500,11 +492,6 @@ corePacks = import ../packs {
       };
     };
     libcap = rpmExtern "libcap";
-    libepoxy = {
-      variants = {
-        #glx = false; # ~glx breaks gtkplus
-      };
-    };
     libfabric = {
       variants = {
         fabrics = ["udp" "rxd" "shm" "sockets" "tcp" "rxm" "verbs" "mlx"];
@@ -517,10 +504,6 @@ corePacks = import ../packs {
       variants = {
         libs = ["shared" "static"];
       };
-    };
-    libmicrohttpd = {
-      # for elfutils
-      #version = "0.9.50";
     };
     libunwind = {
       # failing
@@ -544,11 +527,11 @@ corePacks = import ../packs {
       version = "20";
       variants = {
         lua = false;
+        libcxx = "runtime";
       };
     };
     magma = {
       # for py-torch
-      #version = "2.9";
       variants = {
         inherit cuda_arch;
       };
@@ -615,10 +598,6 @@ corePacks = import ../packs {
       variants = {
         threads = "pthreads";
       };
-    };
-    openexr = {
-      # for openvdb
-      #version = "3.1";
     };
     opengl = {
       version = "4.6";
@@ -687,9 +666,6 @@ corePacks = import ../packs {
         intel-tbb = {
           version = "2022";
         };
-      #  c-blosc = {
-      #    version = "1.17.0";
-      #  };
       };
     };
     pango = {
@@ -721,7 +697,6 @@ corePacks = import ../packs {
       version = "2.9.1";
     };
     pmix = {
-      #version = "4.2.2";
       variants = {
         munge = true;
       };
@@ -735,10 +710,6 @@ corePacks = import ../packs {
     postgresql = {
       # for py-psycopg2
       version = "17";
-    };
-    proj = {
-      # for vtk, paraview
-      #version = "8.1.0";
     };
     protobuf = {
       # for py-protobuf
@@ -800,11 +771,6 @@ corePacks = import ../packs {
         cuda = true;
         inherit cuda_arch;
       };
-      depends = {
-        py-cython = {
-          #version = ":2";
-        };
-      };
     };
     py-dask-expr = {
       depends = {
@@ -817,20 +783,6 @@ corePacks = import ../packs {
       depends = {
         py-setuptools = {
           version = "80";
-        };
-      };
-    };
-    py-fastrlock = {
-      depends = {
-        py-pip = {
-          #version = ":23.0";
-        };
-      };
-    };
-    py-flatbuffers = {
-      depends = {
-        py-setuptools = {
-          #version = "76";
         };
       };
     };
@@ -914,14 +866,11 @@ corePacks = import ../packs {
       };
     };
     py-libclang = {
-      version = "17";
+      version = "18";
       depends = {
-        llvm = llvm17;
-      };
-    };
-    py-llvmlite = {
-      depends = {
-        #llvm = llvm15;
+        llvm = {
+          version = "18";
+        };
       };
     };
     py-m2r = {
@@ -970,21 +919,10 @@ corePacks = import ../packs {
         imagequant = true;
       };
     };
-    py-propcache = {
-      depends = {
-        py-setuptools = {
-          #version = "82";
-        };
-      };
-    };
     py-protobuf = {
       variants = {
         cpp = true;
       };
-    };
-    py-py-cpuinfo = {
-      # for py-hdf5plugin
-      #version = "8.0.0";
     };
     py-pyarrow = {
       variants = {
@@ -1037,13 +975,6 @@ corePacks = import ../packs {
         };
       };
     };
-    py-python-dateutil = {
-      depends = {
-        py-setuptools-scm = {
-          #version = "7";
-        };
-      };
-    };
     py-relion = {
       variants = {
         inherit cuda_arch;
@@ -1088,10 +1019,6 @@ corePacks = import ../packs {
           version = "80";
         };
       };
-    };
-    py-sphinx = {
-      # for python 3.10
-      #version = "8.1";
     };
     py-tensorboard = {
       depends = {
@@ -1168,20 +1095,6 @@ corePacks = import ../packs {
         };
       };
     };
-    # py-torchaudio = {
-    #   build = {
-    #     # torchaudio will only build in a git checkout.
-    #     # spack caches git checkouts, without the .git directory.
-    #     # torchaudio will only build without a spack cache!
-    #     # TODO: find a better way to disable cache (installer use_cache=False?)
-    #     setup = ''
-    #       try:
-    #         os.unlink(os.path.join(spack.caches.FETCH_CACHE.root, "_source-cache", "git", "pytorch", "audio.git", "v%s.tar.gz"%(pkg.version)))
-    #       except OSError:
-    #         pass
-    #     '';
-    #   };
-    # };
     py-horovod = {
       build = {
         setup = ''
@@ -1230,14 +1143,6 @@ corePacks = import ../packs {
     py-wrapt = {
       # for py-aiobotocore
       version = "1";
-    };
-    py-yt = {
-      depends = {
-        py-numpy = {
-          # build only
-          #version = "2";
-        };
-      };
     };
     py-zope-interface = {
       depends = {
@@ -1290,10 +1195,6 @@ corePacks = import ../packs {
       version = "2024-06-27";
     };
     shadow = rpmExtern "shadow-utils";
-    sleef = {
-      # for py-torch
-      #version = "3.6.0_2024-03-20";
-    };
     slurm = rpmExtern "slurm" // {
       version = slurmVersion;
       variants = {
@@ -1848,6 +1749,7 @@ mkPythons = base: gen:
   [ /* -------- pythons -------- */
     "3.12"
     "3.13"
+    "3.14"
   ];
 
 pyCensor = [
@@ -1870,11 +1772,10 @@ rView = corePacks.view {
 };
 
 hdf5Pkgs = packs: with packs.pkgs; [
-  (hdf5.withPrefs { version = "1.10"; })
-  { pkg = hdf5; # default 1.12
+  (hdf5.withPrefs { version = "1.12"; })
+  { pkg = hdf5; # default 1.14
     default = true;
   }
-  (hdf5.withPrefs { version = "1.14"; })
 ];
 
 /* packages that we build both with and without mpi */
@@ -1899,14 +1800,6 @@ preExtensions = pre: view: pkgExtensions
 # XXX these spack names don't quite match the modules
 pyExtensions = preExtensions "py-";
 rExtensions = preExtensions "r-";
-
-llvm17 = {
-  version = "17";
-  # https://github.com/llvm/llvm-project/issues/62396
-  #patches = [(builtins.fetchurl 
-  #  "https://github.com/llvm/llvm-project/commit/484e64f7e7b2c0494d7b2dbfdd528bcd707ee652.patch"
-  #)];
-};
 
 /* julia needs very specific package versions for which dependency resolution isn't enough */
 juliaPacks = corePacks.withPrefs {
@@ -2125,9 +2018,9 @@ pkgStruct = {
     oneapi-level-zero
     openjdk
     openmm
-    ilmbase openexr # hidden, deps of openvdb
+    openexr # hidden, deps of openvdb
     { pkg = openvdb;
-      autoload = with openvdb.spec.depends; [ilmbase openexr intel-oneapi-tbb];
+      autoload = with openvdb.spec.depends; [openexr intel-oneapi-tbb];
     }
     p7zip
     papi
@@ -2145,7 +2038,7 @@ pkgStruct = {
       # remove leading py-
       projection = "py-spy/{version}";
     } */
-    (python.withPrefs { version = "3.12"; })
+    #(python.withPrefs { version = "3.12"; })
     {
       pkg = python.withPrefs { version = "3.13"; variants = { freethreading = true; }; };
       projection = "{name}/freethreading-{version}";
@@ -2155,6 +2048,7 @@ pkgStruct = {
         };
       };
     }
+    #(python.withPrefs { version = "3.14"; })
     qt
     { pkg = rView;
       environment = {
@@ -2453,7 +2347,7 @@ pkgStruct = {
         py-numba
         py-numpy
         py-olefile
-        py-optax
+        #py-optax XXX jaxlib
         #py-paho-mqtt
         py-pandas
         #py-parmap
@@ -2513,10 +2407,10 @@ pkgStruct = {
         py-torch-scatter
         # py-torchaudio  # breaks on import
         py-torchvision
-        py-tensorflow
+        #py-tensorflow # cuda 13
 
         #py-horovod #incompatible py-torch 2.1
-        #py-jax FIXME
+        #py-jax XXX jaxlib
         #py-keras #overly constrains old tensorflow, jax
         #py-lightning-fabric #included in pytorch-lightning
         py-pytensor
@@ -2546,13 +2440,13 @@ pkgStruct = {
   /* -------- clang libcpp modules --------- */
   clangcpp = let comp = mkCompiler corePacks corePacks.pkgs.llvm; in comp // {
     pkgs = [
-      (comp.packs.pkgs.boost.withPrefs {
+      /*(comp.packs.pkgs.boost.withPrefs {
         variants = corePacks.prefs.package.boost.variants // {
           clanglibcpp = true;
           python = false;
           numpy = false;
         };
-      })
+      }) -lc++ broken*/
     ];
   };
 
@@ -2748,7 +2642,7 @@ pkgStruct = {
         '' +
         builtins.concatStringsSep "" (builtins.map (n: ''
           hide_version("${n.spec.name}/${n.spec.version}")
-        '') (with corePacks.pkgs; [ ilmbase openexr ]))
+        '') (with corePacks.pkgs; [ openexr ]))
         ;
     }
   ];
