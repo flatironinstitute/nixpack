@@ -16,13 +16,17 @@ root = nixpack.getVar('out')
 name = nixpack.getVar('name')
 modtype = nixpack.getVar('modtype')
 
-coreCompilers = [nixpack.NixSpec.get(p, top=False) for p in nixpack.getJson('coreCompilers')]
-for c in coreCompilers:
-    c.concretize()
+coreCompilers = []
+for p in nixpack.getJson('coreCompilers'):
+    s = nixpack.NixSpec.get(p, top=False)
+    s.concretize()
+    coreCompilers.append(s)
+    # somehow this is changing the spec hash, which also happens in token_to_path, so need to make it match!
+    coreCompilers.append(spack.spec.Spec(s))
 
 modconf = nixpack.getJson('config')
 modconf.setdefault('core_compilers', [])
-modconf['core_compilers'].extend(str(comp) for comp in coreCompilers)
+modconf['core_compilers'].extend(map(str, coreCompilers))
 core_specs = modconf.setdefault('core_specs', [])
 
 cls = spack.modules.module_types[modtype]
