@@ -1,17 +1,23 @@
 packs:
 
 let docker = derivation rec {
+  __noChroot = true;
   inherit (packs) system;
   pname = "docker";
-  version = "28.0.1";
+  version = "29.6.2";
+  buildkit = "0.36.0";
   name = "${pname}-${version}";
   docker = builtins.fetchurl {
     url = "https://download.docker.com/linux/static/stable/${packs.target}/${name}.tgz";
-    sha256 = "0ij7ha9b596lq7pvcxd5r345nm76dlgdim5w1nn9w6bqbmmximjy";
+    sha256 = "0x5clc9bx7fz1v2qwmhm57wbhpifkmdqhp24sm9j93i3jbm4l86n";
   };
   rootless = builtins.fetchurl {
     url = "https://download.docker.com/linux/static/stable/${packs.target}/docker-rootless-extras-${version}.tgz";
-    sha256 = "1fsx7w5b91r23pad3hpwyvcljc62hw60b42nqqpp463ggvfzykil";
+    sha256 = "1naw78d0k0zrakqwglk6vhrvgllkckwihf2zx58w4wyq2pr67j3j";
+  };
+  buildx = builtins.fetchurl {
+    url = "https://github.com/docker/buildx/releases/download/v${buildkit}/buildx-v${buildkit}.linux-amd64";
+    sha256 = "07823fdfcd82a41be90155a8b16876c1a780a6462de805a9f3f63b3119ccfb99";
   };
   PATH = "/bin:/usr/bin";
   setupsh = ./setup.sh;

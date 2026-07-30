@@ -8,8 +8,7 @@ fi
 xdg=${XDG_CONFIG_HOME:-$HOME/.config}
 cfg=$xdg/systemd/user
 mkdir -p $cfg
-rm -f $cfg/docker.service
-cat <<- EOT > $cfg/docker.service
+cat <<- EOT > $cfg/docker.service.module
 	[Unit]
 	Description=Docker Application Container Engine (Rootless)
 	Documentation=https://docs.docker.com/go/rootless/
@@ -34,9 +33,10 @@ cat <<- EOT > $cfg/docker.service
 	NotifyAccess=all
 	KillMode=mixed
 EOT
-if [[ ! -f $xdg/docker/daemon.json ]] ; then
-	mkdir -p $xdg/docker
-	cat << EOT > $xdg/docker/daemon.json
+cp -f $cfg/docker.service{.module,}
+
+mkdir -p $xdg/docker
+cat << EOT > $xdg/docker/daemon.json.module
 {
     "runtimes": {
         "nvidia": {
@@ -46,5 +46,15 @@ if [[ ! -f $xdg/docker/daemon.json ]] ; then
     }
 }
 EOT
+if [[ ! -f $xdg/docker/daemon.json ]] ; then
+        cp $xdg/docker/daemon.json{.module,}
+fi
+
+mkdir -p $HOME/.docker
+cat << EOT > $HOME/.docker/config.json.module
+{"cliPluginsExtraDirs":["$DOCKER_ROOT/bin"]}
+EOT
+if [[ ! -f $HOME/.docker/config.json || $(jq -r 'keys[]' .docker/config.json) == cliPluginsExtraDirs ]] ; then
+        cp -f $HOME/.docker/config.json{.module,}
 fi
 systemctl --user daemon-reload

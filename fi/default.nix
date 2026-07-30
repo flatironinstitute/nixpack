@@ -370,6 +370,10 @@ corePacks = import ../packs {
         inherit cuda_arch;
       };
     };
+    gnupg = {
+      # for gpme (via libassuan)
+      version = "2.4";
+    };
     gsl = {
       # for fgsl
       version = "2.7";
@@ -490,6 +494,10 @@ corePacks = import ../packs {
       variants = {
         iconv = false;
       };
+    };
+    libassuan = {
+      # for gpgme
+      version = "2";
     };
     libcap = rpmExtern "libcap";
     libfabric = {
@@ -1186,6 +1194,9 @@ corePacks = import ../packs {
       version = "2024-06-27";
     };
     shadow = rpmExtern "shadow-utils";
+    slirp4netns = {
+      build = libcapPkgconfig;
+    };
     slurm = rpmExtern "slurm" // {
       version = slurmVersion;
       variants = {
@@ -1695,6 +1706,13 @@ opensslPkgconfig = {
   ];
 };
 
+libcapPkgconfig = {
+  PKG_CONFIG_PATH = linkfiles "libcap-pkgconfig" [
+    "/usr/lib64/pkgconfig/libcap.pc"
+    "/usr/lib64/pkgconfig/libpsx.pc"
+  ];
+};
+
 withPython = packs: py: let
   /* we can't have multiple python versions in a dep tree because of spack's
      environment polution, but anything that doesn't need python at runtime
@@ -2021,6 +2039,7 @@ pkgStruct = {
     petsc
     pixz
     pmix
+    podman
     postgresql
     proj
     protobuf
