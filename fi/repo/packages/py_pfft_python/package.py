@@ -11,9 +11,9 @@ class PyPfftPython(PythonPackage):
     """python binding of PFFT, a massively parallel FFT library"""
 
     homepage = "https://github.com/rainwoodman/pfft-python"
-    pypi = "pfft-python/pfft-python-0.1.21.tar.gz"
+    pypi = "pfft-python/pfft_python-0.1.21.tar.gz"
 
-    version("0.1.21", sha256="2c5bf26170dffbe06c897f1edbbcf35961baf48fb3a383eedcc3103648e4d334")
+    version("0.1.24", sha256="9c6adb258f34ff81a0a3800ab0f08976d4b8de8980d927503df544808fbd6471")
 
     depends_on("c", type="build")
     depends_on("py-setuptools", type="build")

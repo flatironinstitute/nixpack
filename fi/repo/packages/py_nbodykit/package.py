@@ -13,8 +13,8 @@ class PyNbodykit(PythonPackage):
 
     homepage = "https://nbodykit.readthedocs.io"
 
-    version("0.3.15-40-g376c9d78",
-        url='https://www.github.com/bccp/nbodykit/tarball/376c9d78204650afd9af81d148b172804432c02f',
+    version("0.3.15-101-gc29f379b",
+        url='https://www.github.com/bccp/nbodykit/tarball/c29f379b3b58b52d3294419b8f85f623d672f5a7',
         sha256="2a38ab2dd78893a542997af168bba57794e1916efbd5d436b0507487ae383dc5",
     )
 

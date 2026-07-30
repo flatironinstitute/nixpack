@@ -1,5 +1,5 @@
 /* these preferences can be overriden on the command-line (and are on popeye by fi/run) */
-{ os ? "rocky8"
+{ os ? "rocky9"
 , target ? "broadwell"
 , cudaarch ? "80,89,90,120"
 , gitrev ? null
@@ -826,22 +826,17 @@ corePacks = import ../packs {
       };
     };
     py-jax = {
-      version = throw "disabled";
-      #version = "0.9.2";
       variants = {
         inherit cuda_arch;
       };
     };
     py-jaxlib = {
-      #version = "0.9.2";
       variants = {
         inherit cuda_arch;
       };
-      depends = {
-        bazel = {
-          #version = "6.5.0";
-        };
-      } // lib.compilers (corePacks.pkgs.llvm.withPrefs { version = "22"; });
+      depends = lib.compilers (corePacks.pkgs.llvm.withPrefs {
+        version = "18";
+      });
     };
     py-jmespath = {
       # for py-globus-cli
@@ -862,7 +857,11 @@ corePacks = import ../packs {
     };
     py-keras = {
       variants = {
-        backend = ["jax" "torch"];
+        backend = {
+          jax = true;
+          torch = true;
+          tensorflow = false;
+        };
       };
     };
     py-libclang = {
@@ -896,6 +895,11 @@ corePacks = import ../packs {
         py-cython = {
           version = "3.1";
         };
+      };
+    };
+    py-nbodykit = {
+      variants = {
+        extras = false;
       };
     };
     py-nose = {
@@ -1035,20 +1039,7 @@ corePacks = import ../packs {
         xla = true;
         rocm = false;
       };
-      depends = {
-        #cudnn = {
-        #  version = "9.8.0.87-12";
-        #};
-        #bazel = {
-          #version = "7.4.1";
-          #depends = {
-            #java = {
-              #name = "openjdk";
-              #version = "11";
-            #};
-          #};
-        #};
-      } // lib.compilers {
+      depends = lib.compilers {
         variants = {
           # needs newer assembler
           binutils = true;
@@ -2216,17 +2207,13 @@ pkgStruct = {
           py-mpi4py
           py-h5py
           py-runtests
-
-          # need fixes for numpy 2 & cython 3
-          # py-nbodykit
-          # py-bigfile
-          # py-mpsort
-          # py-pfft-python
-          # py-pmesh
         ] ++
-        lib.optionals (
-          lib.versionMatches py.python.version ":3.11"
-        )[
+        lib.optionals mpi.isCore [
+          py-nbodykit
+          py-bigfile
+          py-mpsort
+          py-pfft-python
+          py-pmesh
         ]; };
         pkgs = lib.optionals (py.isCore && mpi.isCore && comp.isCore) (with py.packs.pkgs;
           [(pkgMod triqs // {
@@ -2407,11 +2394,10 @@ pkgStruct = {
         py-torch-scatter
         # py-torchaudio  # breaks on import
         py-torchvision
-        #py-tensorflow # cuda 13
 
         #py-horovod #incompatible py-torch 2.1
-        #py-jax XXX jaxlib
-        #py-keras #overly constrains old tensorflow, jax
+        py-jax
+        py-keras #overly constrains old tensorflow, jax
         #py-lightning-fabric #included in pytorch-lightning
         py-pytensor
         py-pytorch-lightning
@@ -2419,10 +2405,8 @@ pkgStruct = {
         py-pymc
         py-xarray
       ] ++
-      lib.optionals (
-        lib.versionMatches py.python.version ":3.11"
-        )[
-        py-halotools
+      lib.optionals (lib.versionMatches py.python.version ":3.13") [
+        #py-tensorflow # cuda 12
       ])
       );
     });
