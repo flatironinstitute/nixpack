@@ -352,6 +352,9 @@ corePacks = import ../packs {
         cuda = {
           version = "12";
         };
+        cudnn = {
+          version = "=9.21.0.82-12";
+        };
       };
     };
     grace = {
@@ -1047,7 +1050,11 @@ corePacks = import ../packs {
         xla = true;
         rocm = false;
       };
-      depends = lib.compilers {
+      depends = {
+        cuda = {
+          version = "12";
+        };
+      } // lib.compilers {
         variants = {
           # needs newer assembler
           binutils = true;
@@ -2000,7 +2007,6 @@ pkgStruct = {
       projection = "{name}/single-{version}";
     }
     nccl
-    #nix #too old/broken
     ninja
     node-js
     { pkg = npm;
@@ -2043,12 +2049,11 @@ pkgStruct = {
     postgresql
     proj
     protobuf
-    /* { build failing
+    {
       pkg = py-py-spy;
       # remove leading py-
       projection = "py-spy/{version}";
-    } */
-    #(python.withPrefs { version = "3.12"; })
+    }
     {
       pkg = python.withPrefs { version = "3.13"; variants = { freethreading = true; }; };
       projection = "{name}/freethreading-{version}";
@@ -2058,7 +2063,6 @@ pkgStruct = {
         };
       };
     }
-    #(python.withPrefs { version = "3.14"; })
     qt
     { pkg = rView;
       environment = {
@@ -2307,42 +2311,31 @@ pkgStruct = {
         py-dask
         py-disbatch
         #py-deeptools #pysam broken
-        #py-einsum2
         py-emcee
         #py-fitsio #broken with numpy 2?
         py-flask
         py-flask-socketio
         py-fusepy
-        #py-fuzzysearch
-        #py-fwrap
         py-globus-cli
         py-globus-sdk
-        #py-ggplot
-        #py-glueviz
-        #py-gmpy2
         py-gpustat
         py-graphviz
         py-h5py
         #py-hdf5plugin
         py-healpy
-        #py-husl
         py-hypothesis
         py-intervaltree
-        #py-ipdb #0.10.1 broken with new setuptools, needs update
+        py-ipdb
         py-ipykernel
         py-ipyparallel
         py-ipywidgets
         py-ipython
         py-jupyter-console
-        #py-jupyter-contrib-nbextensions
         py-jupyter-server
         py-jupyterlab
         py-jupyterlab-server
-        #py-kdcount  # for py-nbodykit
-        #py-leveldb
-        #py-llfuse
+        py-kdcount  # for py-nbodykit
         py-mako
-        #py-matlab-wrapper
         py-matplotlib
         py-meson-python
         py-mypy
@@ -2353,14 +2346,12 @@ pkgStruct = {
         py-numba
         py-numpy
         py-olefile
-        #py-optax XXX jaxlib
-        #py-paho-mqtt
+        py-optax
+        py-paho-mqtt
         py-pandas
-        #py-parmap
         py-partd
         py-pathos
         py-pexpect
-        #py-pip
         py-pkgconfig
         py-pre-commit
         #py-primefac
@@ -2374,38 +2365,29 @@ pkgStruct = {
         py-pylint
         #py-pyreadline
         py-pyslurm
-        #py-pysnmp
         #py-pystan
         py-pytest
-        #py-python-gflags
-        #py-python-hglib
         #py-python-ldap
         py-pyyaml
         #py-ray #needs bazel 3
         py-ruff
-        #py-s3fs # botocore deps
-        #py-scikit-cuda
+        py-s3fs
         py-scikit-image
         py-scikit-learn
         py-scipy
         py-seaborn
-        #py-setuptools
         py-shapely
         py-sharedmem
         #py-sip
         py-sphinx
         py-sqlalchemy
-        #py-statistics
         py-sympy
-        #py-tess
         py-toml
         #py-twisted #deprecated: py-mistune
         py-typer
         py-virtualenv
         py-wcwidth
-        #py-ws4py
         #py-xattr #broken: missing pip dep
-        #py-yep
         py-yt
 
         py-protobuf
@@ -2416,7 +2398,7 @@ pkgStruct = {
 
         #py-horovod #incompatible py-torch 2.1
         py-jax
-        py-keras #overly constrains old tensorflow, jax
+        py-keras
         #py-lightning-fabric #included in pytorch-lightning
         py-pytensor
         py-pytorch-lightning
