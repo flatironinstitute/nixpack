@@ -15,9 +15,10 @@ class Idl(Package):
     manual_download = False
     url = "file://{0}/idl8.8.3-linux.tar.gz".format("/mnt/sw/pkg")
 
-    version("8.8.3", sha256="5de8a95b1c552a9e3606848e426450268a79b785dbcd246aebfa3f1467f181c7")
-    version("8.9", sha256="55c10a8ffc48d6f6cb219660dfc3f9b49010310cb9977eb0fd26f20e6e3ea655")
+    version("9.2", sha256="f0bbc4ae9914b4d2e6e6bf54af2421dc379ab2d3b0296c8fe6ba5f205b56a6d9")
     version("9.0", sha256="8faf7ec8091ee77e6297f91a823e5c6216f2ab90909071955bec008c268b0f62")
+    version("8.9", sha256="55c10a8ffc48d6f6cb219660dfc3f9b49010310cb9977eb0fd26f20e6e3ea655")
+    version("8.8.3", sha256="5de8a95b1c552a9e3606848e426450268a79b785dbcd246aebfa3f1467f181c7")
 
     license_required = True
 

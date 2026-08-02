@@ -47,7 +47,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/flatironinstitute/nixpkgs";
     ref = "release-26.05";
-    rev = "c0e1bc7a5de17630ec8ba4191fc17dbe01a27584";
+    rev = "c4f54ec64c6267331690db25fe7d86d3d538054b";
   };
 
   repos = [
@@ -2107,7 +2107,7 @@ pkgStruct = {
   map (v: mathematica.withPrefs
     { version = v;
     })
-    []#"13.2.1" "14.0.0"]
+    ["14.0.0" "15.0.1"]
   ++
   map (v: matlab.withPrefs
     { version = v;
@@ -2115,12 +2115,12 @@ pkgStruct = {
         key = builtins.replaceStrings ["\n" " "] ["" ""] (builtins.readFile "/mnt/sw/fi/licenses/matlab/install-${v}.key");
       };
     })
-    []#"R2024b" "R2025a"]
+    ["R2025a" "R2026a"]
   ++
   map (v: idl.withPrefs
     { version = v;
     })
-    ["9.0"]
+    ["9.2"]
   ;
 
   compilers = mkCompilers corePacks (comp: comp // rec {
