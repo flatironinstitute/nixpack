@@ -1084,7 +1084,7 @@ corePacks = import ../packs {
         inherit cuda_arch;
         valgrind = false;
         custom-protobuf = true;
-        cusparselt = false; # cuda 12
+        #cusparselt = false; # cuda 12
         magma = false; # cuda 12
       };
       depends = blasVirtuals {
@@ -1958,6 +1958,7 @@ pkgStruct = {
       default = true;
     }
     curl
+    cusparselt
     distcc
     doxygen
     emacs
