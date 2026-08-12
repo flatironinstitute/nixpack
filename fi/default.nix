@@ -2765,7 +2765,7 @@ modPkgs = with pkgStruct;
     }
   ]
   ++
-  map (p: builtins.parseDrvName p.name // {
+  map (p: builtins.parseDrvName (builtins.replaceStrings ["+"] ["p"] p.name) // {
     prefix = p;
     context = {
       short_description = p.meta.description or null;

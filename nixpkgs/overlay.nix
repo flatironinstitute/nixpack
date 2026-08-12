@@ -37,9 +37,7 @@ in
     zlib = buildPackages.zlib.override { fetchurl = stdenv.fetchurlBoot; };
   };
 
-  nix = nix.overrideAttrs (old: {
-    doInstallCheck = false;
-  });
+  nix = (nixVersions.nixComponents_2_34.appendPatches [./nix-storeperm.patch]).nix-everything;
 
   bind = bind.overrideAttrs (old: {
     doCheck = false; # netmgr/tlsdns.c failure
