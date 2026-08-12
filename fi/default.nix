@@ -2396,6 +2396,8 @@ pkgStruct = {
         py-torch-scatter
         # py-torchaudio  # breaks on import
         py-torchvision
+        py-transformers
+        py-huggingface-hub
 
         #py-horovod #incompatible py-torch 2.1
         py-jax
