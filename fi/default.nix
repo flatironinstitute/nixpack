@@ -47,7 +47,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/flatironinstitute/nixpkgs";
     ref = "release-26.05";
-    rev = "c4f54ec64c6267331690db25fe7d86d3d538054b";
+    rev = "a4bcf79cd792b32f8dd2ef5949e0467b405cef6c";
   };
 
   repos = [
@@ -2396,9 +2396,11 @@ pkgStruct = {
         py-torch-scatter
         # py-torchaudio  # breaks on import
         py-torchvision
+        py-datasets
+        py-einops
+        py-tensorboard
         py-transformers
-        py-huggingface-hub
-
+        py-wandb
         #py-horovod #incompatible py-torch 2.1
         py-jax
         py-keras
