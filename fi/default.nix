@@ -213,7 +213,7 @@ corePacks = import ../packs {
     };
     cuda = {
       # make sure this is compatible with the image driver
-      #version = "13.1";
+      version = cuda_ver;
       depends = {
         libxml2 = rpmExtern "libxml2";
       };
@@ -223,13 +223,16 @@ corePacks = import ../packs {
     };
     cudnn = {
       # for torch, tensorflow, etc
-      #version = "=9.21.0.82-12";
+      version = "=9.21.0.82-${cuda_ver}";
     };
     curl = {
       variants = {
         libidn2 = true;
         nghttp2 = true;  # for rust
       };
+    };
+    cusparselt = {
+      version = "=0.8.1-${cuda_ver}";
     };
     dejagnu = {
       # failing
@@ -1571,6 +1574,8 @@ blasVirtuals = blas: {
 cuda_arch = { none = false; } // builtins.listToAttrs
   (map (a: { name = a; value = true; })
     (if builtins.isString cudaarch then lib.splitRegex "," cudaarch else cudaarch));
+
+cuda_ver = if lib.hasPrefix "70," cudaarch then "12" else "13";
 
 format_cudaarch = (dot: sep: builtins.concatStringsSep sep
   (map (v: let L = builtins.stringLength v; in
