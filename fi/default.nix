@@ -1954,14 +1954,10 @@ pkgStruct = {
     btop
     ccache
     cmake
-    (cuda.withPrefs { version = "12"; })
-    { pkg = cuda;
-      default = true;
-    }
-    (cudnn.withPrefs { version = "9.21.0.82-12"; depends = { cuda = cuda.withPrefs { version = "12"; }; }; })
-    { pkg = cudnn;
-      default = true;
-    }
+    { pkg = cuda.withPrefs { version = "12"; }; default = cuda_ver == "12"; }
+    { pkg = cuda.withPrefs { version = "13"; }; default = cuda_ver == "13"; }
+    { pkg = cudnn.withPrefs { version = "9.21.0.82-12"; depends = { cuda = cuda.withPrefs { version = "12"; }; }; }; default = cuda_ver == "12"; }
+    { pkg = cudnn.withPrefs { version = "9.21.0.82-13"; depends = { cuda = cuda.withPrefs { version = "13"; }; }; }; default = cuda_ver == "13"; }
     curl
     cusparselt
     distcc
