@@ -11,6 +11,7 @@ packs.lib.fix (makeView:
 , meta ? builtins.head pkgs /* behave as package in terms of modules and dependencies */
 } @ args:
 derivation {
+  __noChroot = true;
   inherit (packs) system;
   builder = packs.prefs.spackPython;
   args = [./builder.py];

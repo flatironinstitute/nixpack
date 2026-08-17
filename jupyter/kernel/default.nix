@@ -8,6 +8,7 @@ packs:
 }:
 
 derivation {
+  __noChroot = true;
   inherit (packs) system;
   builder = packs.prefs.spackPython;
   args = [./builder.py];

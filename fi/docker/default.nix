@@ -1,6 +1,7 @@
 packs:
 
 let docker = derivation rec {
+  __noChroot = true;
   inherit (packs) system;
   pname = "docker";
   version = "28.0.1";

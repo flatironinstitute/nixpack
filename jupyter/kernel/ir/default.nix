@@ -5,6 +5,7 @@ packs:
 }:
 
 derivation {
+  __noChroot = true;
   inherit (packs) system;
   builder = ./builder.sh;
   rBuilder = ./builder.R;

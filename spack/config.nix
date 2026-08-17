@@ -1,4 +1,5 @@
 packs: config: derivation ({
+  __noChroot = true;
   inherit (packs.prefs) system;
   name = "spackConfig";
   builder = ./config.sh;
