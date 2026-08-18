@@ -1864,11 +1864,11 @@ pkgStruct = {
     postgresql
     proj
     protobuf
-    {
+    /* {
       pkg = py-py-spy;
       # remove leading py-
       projection = "py-spy/{version}";
-    }
+    } */
     (python.withPrefs { version = "3.13"; })
     {
       pkg = python.withPrefs { version = "3.13"; variants = { freethreading = true; }; };
