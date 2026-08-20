@@ -863,7 +863,7 @@ corePacks = import ../packs {
     };
     py-jupyterhub = {
       # should match k8s server
-      #version = "3";
+      #version = "4";
     };
     py-jupyterlab = {
       # for py-notebook
