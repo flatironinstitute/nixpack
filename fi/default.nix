@@ -3,7 +3,7 @@
 , target ? "broadwell"
 , cudaarch ? "80,89,90,120"
 , gitrev ? null
-, slurmVersion ? "24.11"
+, slurmVersion ? "26.05"
 }:
 
 let
