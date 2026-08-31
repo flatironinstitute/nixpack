@@ -2057,11 +2057,11 @@ pkgStruct = {
       projection = "py-spy/{version}";
     }
     {
-      pkg = python.withPrefs { version = "3.13"; variants = { freethreading = true; }; };
+      pkg = python.withPrefs { version = "3.14"; variants = { freethreading = true; }; };
       projection = "{name}/freethreading-{version}";
       environment = {
         set = {
-          UV_PYTHON = "3.13t";
+          UV_PYTHON = "3.14t";
         };
       };
     }
