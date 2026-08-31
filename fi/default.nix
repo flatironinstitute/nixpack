@@ -2311,6 +2311,7 @@ pkgStruct = {
         py-coverage
         py-cython
         py-dask
+        py-dask-jobqueue
         py-disbatch
         #py-deeptools #pysam broken
         py-emcee
