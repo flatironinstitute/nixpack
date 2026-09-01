@@ -791,6 +791,17 @@ corePacks = import ../packs {
         };
       };
     };
+    py-dedalus = {
+      depends = {
+        fftw = {
+          variants = {
+            mpi = true;
+            # fftw mpi doesn't support quad precision
+            precision = ["float" "double" "long_double"];
+          };
+        };
+      };
+    };
     py-fastprogress = {
       depends = {
         py-setuptools = {
@@ -2240,6 +2251,13 @@ pkgStruct = {
             };
             core = true; # avoid hiding behind gcc/12
           })] ++
+          [{
+            pkg = py-dedalus;
+            projection = "dedalus/{version}-py{^python.version}";
+            postscript = ''
+              depends_on("python-mpi/${python.spec.version}")
+            '';
+          }] ++
           map (p: pkgMod p // { postscript = ''depends_on("triqs/mpi-${triqs.spec.version}")''; core = true; }) [
             triqs-cthyb
             { pkg = triqs-cthyb.withPrefs { variants = { complex = true; }; };
