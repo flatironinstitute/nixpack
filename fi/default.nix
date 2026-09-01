@@ -772,9 +772,16 @@ corePacks = import ../packs {
       build = opensslPkgconfig;
     };
     py-cupy = {
+      # don't resolve the "main" branch version
+      version = "14";
       variants = {
         cuda = true;
         inherit cuda_arch;
+      };
+      depends = {
+        py-cython = {
+          version = "3.1";
+        };
       };
     };
     py-dask-expr = {
@@ -2347,7 +2354,7 @@ pkgStruct = {
         py-pybind11
         py-pycairo
         #py-pycuda # numpy 2 build issue?
-        #py-cupy #py-numpy 1
+        py-cupy
         py-pyfftw
         py-pygments
         py-pylint
