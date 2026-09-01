@@ -181,10 +181,6 @@ corePacks = import ../packs {
         zlib = true;
       };
     };
-    cfitsio = {
-      # for healpix-cxx
-      version = "3";
-    };
     cgal = {
       depends = {
         cmake = {
@@ -2315,7 +2311,7 @@ pkgStruct = {
         py-disbatch
         #py-deeptools #pysam broken
         py-emcee
-        #py-fitsio #broken with numpy 2?
+        py-fitsio
         py-flask
         py-flask-socketio
         py-fusepy
