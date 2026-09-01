@@ -2320,7 +2320,7 @@ pkgStruct = {
         py-gpustat
         py-graphviz
         py-h5py
-        #py-hdf5plugin
+        py-hdf5plugin
         py-healpy
         py-hypothesis
         py-intervaltree
