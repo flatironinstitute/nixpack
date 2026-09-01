@@ -773,8 +773,8 @@ corePacks = import ../packs {
       };
     };
     py-click = {
-      # for py-typer
-      version = "8.1.8";
+      # for py-globus-cli
+      version = "8.4";
     };
     py-cryptography = {
       #version = "43";
@@ -817,7 +817,7 @@ corePacks = import ../packs {
     };
     py-globus-sdk = {
       # for py-globus-cli
-      version = "3.25.0";
+      version = "4.9.0";
       depends = {
         py-pyjwt = {
           variants = {
@@ -854,7 +854,7 @@ corePacks = import ../packs {
     };
     py-jmespath = {
       # for py-globus-cli
-      version = "1.0.1";
+      version = "1.1";
     };
     py-jsonschema = {
       variants = {
@@ -902,7 +902,7 @@ corePacks = import ../packs {
     };
     py-maturin = {
       # for py-ast-serialize
-      version = "1.9";
+      version = "1.13";
     };
     py-msgpack = {
       depends = {
@@ -1007,7 +1007,7 @@ corePacks = import ../packs {
     };
     py-ruff = {
       # extant rust
-      version = "0.11";
+      version = "0.15";
     };
     py-runtests = {
       variants = {
