@@ -563,11 +563,6 @@ corePacks = import ../packs {
       name = "openmpi";
     };
     munge = rpmExtern "munge";
-    music = {
-      variants = {
-        hdf5 = true;
-      };
-    };
     nccl = {
       variants = {
         inherit cuda_arch;
@@ -1996,14 +1991,7 @@ pkgStruct = {
     likwid
     mercurial
     mupdf
-    {
-      pkg = music.withPrefs {variants = { single_prec = false; }; };
-      projection = "{name}/double-{version}";
-    }
-    {
-      pkg = music.withPrefs {variants = { single_prec = true; }; };
-      projection = "{name}/single-{version}";
-    }
+    music2
     nccl
     ninja
     node-js
@@ -2202,6 +2190,7 @@ pkgStruct = {
         ]
         ++
         lib.optionals (comp.isCore && mpi.isCore) [
+          monofonic
           mpi-rockstar
           { pkg = netlib-scalapack;  # MKL provies Intel ScaLAPACK
             projection = "scalapack/{version}"; }
