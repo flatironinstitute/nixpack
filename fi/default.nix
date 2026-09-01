@@ -1151,13 +1151,6 @@ corePacks = import ../packs {
       # for py-aiobotocore
       version = "1";
     };
-    py-zope-interface = {
-      depends = {
-        py-setuptools = {
-          version = ":73";
-        };
-      };
-    };
     python = corePython;
     qt = {
       variants = {
@@ -2316,6 +2309,7 @@ pkgStruct = {
         py-gpustat
         py-graphviz
         py-h5py
+        py-halotools
         py-hdf5plugin
         py-healpy
         py-hypothesis
