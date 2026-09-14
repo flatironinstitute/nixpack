@@ -2042,7 +2042,23 @@ pkgStruct = {
     petsc
     pixz
     pmix
-    podman
+    { pkg = podman;
+      postscript = ''
+        if (mode() == "load") then
+          local home = pathJoin("/home", os.getenv("USER"))
+          if isDir(home) then
+            local cfg = pathJoin(os.getenv("HOME"), ".config/containers")
+            if not isFile(pathJoin(cfg, "containers.conf")) then
+              execute {cmd="mkdir -p " .. cfg, modeA={"load"}}
+              execute {cmd="echo -e '[network]\nnetwork_backend=\"cni\"' > " .. cfg .. "/containers.conf", modeA={"load"}}
+            end
+            if not isFile(pathJoin(cfg, "storage.conf")) then
+              execute {cmd="echo -e '[storage]\ndriver=\"overlay\"\ngraphroot=\"" .. home .. "/.local/share/containers/storage\"' > " .. cfg .. "/storage.conf", modeA={"load"}}
+            end
+          end
+        end
+      '';
+    }
     postgresql
     proj
     protobuf
@@ -2070,7 +2086,7 @@ pkgStruct = {
       postscript = rExtensions rView;
     }
     rclone
-    rocm-smi-lib
+    #rocm-smi-lib
     ruby
     rust
     smartmontools
