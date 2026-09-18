@@ -47,7 +47,7 @@ corePacks = import ../packs {
     /* -------- upstream nixpkgs version -------- */
     url = "https://github.com/flatironinstitute/nixpkgs";
     ref = "release-26.05";
-    rev = "a4bcf79cd792b32f8dd2ef5949e0467b405cef6c";
+    rev = "9c7b64c9b4581a5bfc80d70a155a5b444d5fba3e";
   };
 
   repos = [
