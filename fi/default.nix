@@ -1855,7 +1855,7 @@ juliaPacks = corePacks.withPrefs {
           webassembly = true;
         };
         version_suffix = "jl";
-        shlib_symbol_version = "JL_LLVM_18.0";
+        shlib_symbol_version = "JL_LLVM_18.1";
       };
       patches = [(builtins.fetchurl
         "https://raw.githubusercontent.com/spack/patches/4d9ce09c4793f4899a588741fdc459530e26b313/julia/900363d08b2090bb44240aa33c1ee26558a183016db4fb7e048be4c1665c436e.patch"
