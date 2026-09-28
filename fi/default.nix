@@ -1882,7 +1882,7 @@ juliaPacks = corePacks.withPrefs {
       variants = {
         ilp64 = true;
         symbol_suffix = "64_";
-        threads = "openmp";
+        threads = "pthreads";
       };
     };
     openlibm = {
