@@ -2540,14 +2540,7 @@ pkgStruct = {
     elinks
     #evince
     feh
-    (ffmpeg-full.override {
-      withSamba = false;
-      samba = null;
-      withFrei0r = false;
-      frei0r = null;
-      withXavs = false;
-      xavs = null;
-    } // { name = builtins.replaceStrings ["-full"] [""] ffmpeg-full.name; module = { default = true; }; })
+    (ffmpeg-full // { name = builtins.replaceStrings ["-full"] [""] ffmpeg-full.name; module = { default = true; }; })
     gimp
     #git
     #i3-env

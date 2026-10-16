@@ -74,7 +74,7 @@ case "$cmd" in
 					attrs="pkgs.zsh pkgs.tmux pkgs.git"
 					;;
 				(viswall)
-					attrs="nixpkgs.xscreensaver nixpkgs.mpv"
+					attrs="nixpkgs.xscreensaver nixpkgs.mpv nixpkgs.ffmpeg-full"
 					;;
 				(*)
 					echo "Unknown profile"

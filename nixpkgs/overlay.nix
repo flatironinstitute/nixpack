@@ -276,4 +276,12 @@ in
     pam = null;
   };
 
+  ffmpeg-full = ffmpeg-full.override {
+    withSamba = false;
+    samba = null;
+    withFrei0r = false;
+    frei0r = null;
+    withXavs = false;
+    xavs = null;
+  };
 }
