@@ -1668,6 +1668,37 @@ mkMpis = comp: gen:
         };
       };
     }
+    { name = "openmpi";
+      version = "5.0";
+      variants = {
+        cuda = true;
+        legacylaunchers = null;
+        pmi = null;
+      };
+      package = {
+        hwloc = {
+          variants = {
+            cuda = true;
+          };
+        };
+        ucx = {
+          variants = {
+            cuda = true;
+            gdrcopy = true;
+            thread_multiple = true;
+            cma = true;
+            rc = true;
+            dc = true;
+            ud = true;
+            mlx5_dv = true;
+            ib_hw_tm = true;
+            verbs = true;
+            rdmacm = true;
+            dm = true;
+          };
+        };
+      };
+    }
   ]);
 
 flexiBlases = {
